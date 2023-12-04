@@ -1,0 +1,66 @@
+[tool.poetry]
+name = "challenge-forge"
+version = "0.1.0"
+description = "Generation of challenge packs"
+license = "Apache-2.0"
+authors = ["Grand-Challenge support <support@grand-challenge.org>"]
+readme = "README.md"
+repository = "https://github.com/DIAGNijmegen/rse-challenge-orge"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "Operating System :: POSIX",
+]
+
+[tool.poetry.scripts]
+challenge-forge = "challenge_forge.cli:cli"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+cookiecutter = "^2.5.0"
+click = "*"
+jsonschema = "^4.20.0"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+known_first_party = ["challenge-forge", "tests"]
+line_length = 79
+
+[tool.black]
+line-length = 79
+target-version = ['py311']
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = [
+    "tests",
+]
+python_files = "tests.py test_*.py *_tests.py"
+addopts = "--strict-markers --showlocals"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = True
+envlist = py310, py311
+
+[gh-actions]
+python =
+    3.10: py310
+    3.11: py311
+
+[testenv]
+allowlist_externals = poetry
+commands =
+    poetry install -v
+    poetry run pytest {posargs}
+"""
