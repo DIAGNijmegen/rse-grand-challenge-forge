@@ -1,0 +1,131 @@
+[![CI](https://github.com/DIAGNijmegen/rse-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
+[![PyPI](https://img.shields.io/pypi/v/challenge-forge)](https://pypi.org/project/challenge-forge/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/challenge-forge)](https://pypi.org/project/challenge-forge/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+#  🛠️ challenge-forge
+
+A utility that generates distributable items that help challenge organizers set up their challenge more easily on
+[Grand-Challenge.org](https://grand-challenge.org/).
+
+## Install
+
+Install via PyPi:
+
+```shell
+pip install challenge-forge
+challenge-forge --help
+```
+
+## 🎒 Challenge packs
+
+A challenge pack consists of challenge-tailored examples for the following:
+* A script to _automate uploading_ data to an archive
+* A _submission algorithm_ that can be submitted to a challenge-phase
+* An _evaluation method_ that evaluates algorithm submissions and generates performance
+  metrics for ranking.
+
+
+### Usage
+```shell
+challenge-forge pack-context.json
+```
+Will use the context found in `pack-context.json` and generate a pack at the current working directory in
+a directory`dist/` (default).
+
+<details>
+
+<summary> Example of the content of `pack-context.json </summary>
+
+```JSON
+  {
+      "challenge": {
+          "slug": "challenge-slug",
+          "phases": [
+              {
+                  "slug": "phase-slug",
+                  "archive": {
+                      "url": "https://grand-challenge.org/archives/archive-slug/"
+                  },
+                  "inputs": [
+                      {
+                          "slug": "input-civ-slug",
+                          "relative_path": "images/input-value"
+                      },
+                      {
+                          "slug": "another-input-civ-slug",
+                          "relative_path": "images/another-input-value"
+                      }
+                  ],
+                  "outputs": [
+                      {
+                          "slug": "output-civ-slug",
+                          "relative_path": "images/output-value"
+                      }
+                  ]
+              },
+              {
+                  "slug": "another-phase-slug",
+                  "archive": {
+                      "url": "https://grand-challenge.org/archives/another-archive-slug/"
+                  },
+                  "inputs": [
+                      {
+                          "slug": "input-ci-slug",
+                          "relative_path": "images/input-value"
+                      },
+                      {
+                          "slug": "another-input-ci-slug",
+                          "relative_path": "images/another-input-value"
+                      }
+                  ],
+                  "outputs": [
+                      {
+                          "slug": "output-ci-slug",
+                          "relative_path": "images/output-value"
+                      }
+                  ]
+              }
+          ]
+      }
+  }
+```
+</details>
+
+Alternatively, you generate a pack by providing a JSON string directly:
+
+```shell
+challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
+```
+This will output a pack directory in the `/tmp` directory.
+
+## 🏗️ Development
+
+### Install locally
+Install locally challenge-forge locally (requires `poetry`):
+
+```shell
+git clone https://github.com/DIAGNijmegen/rse-challenge-forge.git
+cd rse-challenge-forge
+poetry install
+poetry run challenge-forge --help
+```
+
+### Pre-commit hooks
+Several linters and stylers run to check the formating during continuous integration. Ensure they are run before
+committing by installing [pre-commit](https://pre-commit.com/).
+
+
+### Running Tests
+use `tox` to run all tests across all supported python versions:
+```
+$ pip install tox
+$ tox
+```
+
+### Dependencies
+Under the hood challenge-forge uses:
+* [Click](https://palletsprojects.com/p/click/)
+  * a composable command line interface toolkit
+* [Cookiecutter](https://github.com/cookiecutter/cookiecutter)
+  * a utility that creates projects from project templates
