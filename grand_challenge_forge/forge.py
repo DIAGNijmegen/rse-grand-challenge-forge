@@ -2,8 +2,8 @@ import logging
 import os
 import shutil
 
-from challenge_forge.exceptions import OutputOverwriteError
-from challenge_forge.schemas import validate_pack_context
+from grand_challenge_forge.exceptions import OutputOverwriteError
+from grand_challenge_forge.schemas import validate_pack_context
 
 logger = logging.getLogger(__name__)
 

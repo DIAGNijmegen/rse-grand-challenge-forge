@@ -5,10 +5,10 @@ from pathlib import Path
 
 import click
 
-from challenge_forge import logger
-from challenge_forge.exceptions import ChallengeForgeError
-from challenge_forge.forge import generate_challenge_pack
-from challenge_forge.utils import truncate_with_epsilons
+from grand_challenge_forge import logger
+from grand_challenge_forge.exceptions import ChallengeForgeError
+from grand_challenge_forge.forge import generate_challenge_pack
+from grand_challenge_forge.utils import truncate_with_epsilons
 
 
 @click.command()

@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 [tool.poetry.scripts]
-challenge-forge = "challenge_forge.cli:cli"
+grand-challenge-forge = "grand_challenge_forge.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.10"
