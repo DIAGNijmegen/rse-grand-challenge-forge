@@ -27,5 +27,4 @@ def _create_dir(directory, force):
             raise OutputOverwriteError(
                 f"{directory} already exists! Use force to overwrite"
             )
-    else:
-        os.makedirs(directory)
+    os.makedirs(directory)

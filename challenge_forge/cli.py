@@ -36,6 +36,7 @@ from challenge_forge.utils import truncate_with_epsilons
 @click.option(
     "-f",
     "--force",
+    is_flag=True,
     default=False,
 )
 @click.argument(
