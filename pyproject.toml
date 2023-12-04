@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "challenge-forge"
+name = "grand-challenge-forge"
 version = "0.1.0"
 description = "Generation of challenge packs"
 license = "Apache-2.0"
 authors = ["Grand-Challenge support <support@grand-challenge.org>"]
 readme = "README.md"
-repository = "https://github.com/DIAGNijmegen/rse-challenge-orge"
+repository = "https://github.com/DIAGNijmegen/rse-grand-challenge-forge"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 [tool.poetry.scripts]
-challenge-forge = "challenge_forge.cli:cli"
+grand-challenge-forge = "grand_challenge_forge.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.10"

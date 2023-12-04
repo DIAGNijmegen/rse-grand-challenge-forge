@@ -2,8 +2,8 @@ from contextlib import nullcontext
 
 import pytest
 
-from challenge_forge.exceptions import InvalidContextError
-from challenge_forge.forge import generate_challenge_pack
+from grand_challenge_forge.exceptions import InvalidContextError
+from grand_challenge_forge.forge import generate_challenge_pack
 from tests.utils import pack_context_factory
 
 

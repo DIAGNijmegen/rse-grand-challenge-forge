@@ -2,8 +2,8 @@ import logging
 
 import jsonschema
 
-from challenge_forge.exceptions import InvalidContextError
-from challenge_forge.utils import truncate_with_epsilons
+from grand_challenge_forge.exceptions import InvalidContextError
+from grand_challenge_forge.utils import truncate_with_epsilons
 
 logger = logging.getLogger(__name__)
 
