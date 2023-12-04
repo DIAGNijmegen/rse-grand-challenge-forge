@@ -1,9 +1,9 @@
-[![CI](https://github.com/DIAGNijmegen/rse-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
-[![PyPI](https://img.shields.io/pypi/v/challenge-forge)](https://pypi.org/project/challenge-forge/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/challenge-forge)](https://pypi.org/project/challenge-forge/)
+[![CI](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
+[![PyPI](https://img.shields.io/pypi/v/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-#  🛠️ challenge-forge
+#  🛠️ grand-challenge-forge
 
 A utility that generates distributable items that help challenge organizers set up their challenge more easily on
 [Grand-Challenge.org](https://grand-challenge.org/).
@@ -13,8 +13,8 @@ A utility that generates distributable items that help challenge organizers set 
 Install via PyPi:
 
 ```shell
-pip install challenge-forge
-challenge-forge --help
+pip install grand-challenge-forge
+grand-challenge-forge --help
 ```
 
 ## 🎒 Challenge packs
@@ -28,7 +28,7 @@ A challenge pack consists of challenge-tailored examples for the following:
 
 ### Usage
 ```shell
-challenge-forge pack-context.json
+grand-challenge-forge pack-context.json
 ```
 Will use the context found in `pack-context.json` and generate a pack at the current working directory in
 a directory`dist/` (default).
@@ -95,20 +95,20 @@ a directory`dist/` (default).
 Alternatively, you generate a pack by providing a JSON string directly:
 
 ```shell
-challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
+grand-challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
 ```
 This will output a pack directory in the `/tmp` directory.
 
 ## 🏗️ Development
 
 ### Install locally
-Install locally challenge-forge locally (requires `poetry`):
+Install locally grand-challenge-forge locally (requires `poetry`):
 
 ```shell
-git clone https://github.com/DIAGNijmegen/rse-challenge-forge.git
-cd rse-challenge-forge
+git clone https://github.com/DIAGNijmegen/rse-grand-challenge-forge.git
+cd rse-grand-challenge-forge
 poetry install
-poetry run challenge-forge --help
+poetry run grand-challenge-forge --help
 ```
 
 ### Pre-commit hooks
@@ -124,7 +124,7 @@ $ tox
 ```
 
 ### Dependencies
-Under the hood challenge-forge uses:
+Under the hood grand-challenge-forge uses:
 * [Click](https://palletsprojects.com/p/click/)
   * a composable command line interface toolkit
 * [Cookiecutter](https://github.com/cookiecutter/cookiecutter)
