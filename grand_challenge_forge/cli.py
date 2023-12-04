@@ -12,7 +12,7 @@ from grand_challenge_forge.utils import truncate_with_epsilons
 
 
 @click.command()
-@click.version_option(metadata.version("challenge-forge"), "--version")
+@click.version_option(metadata.version("grand-challenge-forge"), "--version")
 @click.option(
     "-v",
     "--verbose",
