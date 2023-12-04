@@ -9,3 +9,7 @@ class ChallengeForgeError(Exception):
 
 class InvalidContextError(ChallengeForgeError):
     pass
+
+
+class OutputOverwriteError(ChallengeForgeError):
+    pass

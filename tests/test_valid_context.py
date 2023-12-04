@@ -28,6 +28,8 @@ from tests.utils import pack_context_factory
         ],
     ],
 )
-def test_fails(json_context, condition):
+def test_fails(json_context, condition, tmp_path):
     with condition:
-        generate_challenge_pack(context=json_context, output_directory=None)
+        generate_challenge_pack(
+            context=json_context, output_directory=tmp_path
+        )

@@ -33,11 +33,16 @@ from challenge_forge.utils import truncate_with_epsilons
     default="dist/",
     show_default=True,
 )
+@click.option(
+    "-f",
+    "--force",
+    default=False,
+)
 @click.argument(
     "contexts",
     nargs=-1,
 )
-def cli(output, contexts, verbose=0):
+def cli(output, force, contexts, verbose=0):
     """
     Generates a challenge pack using context
 
@@ -66,6 +71,7 @@ def cli(output, contexts, verbose=0):
                 generate_challenge_pack(
                     context=resolved_context,
                     output_directory=output_dir,
+                    force=force,
                 )
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
