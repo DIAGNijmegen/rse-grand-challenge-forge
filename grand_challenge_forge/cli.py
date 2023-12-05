@@ -77,15 +77,15 @@ def cli(output, force, contexts, no_quality_control, verbose=0):
             try:
                 quality_control_registry = None if no_quality_control else []
 
-                return generate_challenge_pack(
+                generate_challenge_pack(
                     context=resolved_context,
                     output_directory=output_dir,
                     force=force,
                     quality_control_registry=quality_control_registry,
                 )
-
-                for check in quality_control_registry:
-                    check()
+                if quality_control_registry:
+                    for check in quality_control_registry:
+                        check()
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
                     logger.error(e)
