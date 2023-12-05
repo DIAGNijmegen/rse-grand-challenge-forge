@@ -14,11 +14,11 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 },
                 "inputs": [
                     {
-                        "slug": "input-civ-slug",
+                        "slug": "input-ci-slug",
                         "relative_path": "images/input-value"
                     },
                     {
-                        "slug": "another-input-civ-slug",
+                        "slug": "another-input-ci-slug",
                         "relative_path": "images/another-input-value"
                     }
                 ],
