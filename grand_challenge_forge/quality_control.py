@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import MagicMock, patch
 
 from grand_challenge_forge.exceptions import QualityFailureError
@@ -6,9 +7,13 @@ from grand_challenge_forge.utils import (
     directly_import_module,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def upload_to_archive_script(script_dir):
     """Checks if the upload to archive script works as intended"""
+    logger.debug(f"Quality check over script in: {script_dir.stem}")
+
     try:
         with change_directory(script_dir):
             gcapi = MagicMock()

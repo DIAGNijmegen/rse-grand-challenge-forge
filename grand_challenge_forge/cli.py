@@ -71,21 +71,27 @@ def cli(output, force, contexts, no_quality_control, verbose=0):
         logger.setLevel(logging.DEBUG)
         ch.setLevel(logging.DEBUG)
 
-    for context in contexts:
+    for index, context in enumerate(contexts):
         resolved_context = _resolve_context(src=context)
         if resolved_context:
             try:
                 quality_control_registry = None if no_quality_control else []
-
-                generate_challenge_pack(
+                logger.info(
+                    f"🏗️Started working on pack [{index + 1} of {len(contexts)}]"
+                )
+                pack_dir = generate_challenge_pack(
                     context=resolved_context,
                     output_directory=output_dir,
                     force=force,
                     quality_control_registry=quality_control_registry,
                 )
+                logger.info(f"🎒 Created Pack {pack_dir.stem!r}")
                 if quality_control_registry:
+                    logger.info("🚨 Starting quality checks...")
                     for check in quality_control_registry:
                         check()
+                    logger.info("👮 Quality checks complete!")
+                logger.info(f"📢 Pack is here: {pack_dir}")
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
                     logger.error(e)
