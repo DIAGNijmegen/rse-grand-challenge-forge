@@ -7,4 +7,11 @@ def truncate_with_epsilons(value, max_length=32, epsilon="..."):
 
 
 def cookiecutter_context(context):
-    return {"cookiecutter": context}
+    return {
+        "cookiecutter": {
+            **context,
+            "_extensions": [
+                "grand_challenge_forge.partials.filters.extract_slug",
+            ],
+        }
+    }

@@ -12,8 +12,17 @@ It contains the following:
 * 🧮 An example _evaluation method_ that evaluates algorithm submissions and generates performance
   metrics for ranking.
 
-The examples are categorized per phase. Not that not all phases might be represented since some might be duplicates.
+The examples are categorized per phase.
 
 Please note that this is a supplementary pack to the [documentation](https://grand-challenge.org/documentation/challenges/).
 If the documentation does not answer your question, feel free to reach out to us at
 [support@grand-challenge.org](mailto:support@grandchallenge.org).
+
+## Archives
+Challenge phases pull their data from archives to test submissions on.
+
+Your challenge has the following archives:
+
+{% for phase in cookiecutter.challenge.phases -%}
+  * {{phase.archive.url}}
+{% endfor %}
