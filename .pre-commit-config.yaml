@@ -27,4 +27,3 @@ repos:
           - flake8-docstrings
           - mccabe
           - yesqa
-exclude: "grand_challenge_forge/partials/upload-to-archive-script"

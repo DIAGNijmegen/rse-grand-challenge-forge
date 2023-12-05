@@ -10,7 +10,7 @@ from cookiecutter.generate import generate_files
 from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.schemas import validate_pack_context
 from grand_challenge_forge.utils import cookiecutter_context as cc
-from grand_challenge_forge.utils import extract_slug
+from grand_challenge_forge.utils import extract_slug, remove_j2_suffix
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ def generate_challenge_pack(*, context, output_directory, force=False):
             context={"phase": phase},
             output_directory=phase_dir,
         )
+
+    remove_j2_suffix(pack_dir)
 
     return pack_dir
 

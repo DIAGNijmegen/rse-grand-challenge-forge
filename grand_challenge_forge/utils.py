@@ -1,3 +1,4 @@
+import os
 import re
 
 
@@ -34,3 +35,13 @@ def extract_slug(url):
     else:
         # Return None or handle the case where no match is found
         return None
+
+
+def remove_j2_suffix(directory):
+    for path, _, files in os.walk(directory):
+        for name in files:
+            if name.endswith(".j2"):
+                os.rename(
+                    os.path.join(path, name),
+                    os.path.join(path, name.rstrip(".j2")),
+                )
