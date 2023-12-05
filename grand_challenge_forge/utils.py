@@ -1,3 +1,4 @@
+import importlib
 import os
 import re
 from contextlib import contextmanager
@@ -60,3 +61,13 @@ def change_directory(new_path):
     finally:
         # Change back to the original working directory
         os.chdir(current_path)
+
+
+def directly_import_module(name, path):
+    """Returns the named Python module loaded from the path"""
+    assert path.exists()
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module
