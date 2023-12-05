@@ -22,23 +22,22 @@ BROKEN_UPLOAD_SCRIPT_CONTEXT = pack_context_factory(
 
 
 @pytest.mark.parametrize(
-    "json_content, condition",
+    "json_content, condition, num_checks",
     [
-        [pack_context_factory(), nullcontext()],
-        [
-            BROKEN_UPLOAD_SCRIPT_CONTEXT,
-            pytest.raises(QualityFailureError),
-        ],
+        [pack_context_factory(), nullcontext(), 2],
+        [BROKEN_UPLOAD_SCRIPT_CONTEXT, pytest.raises(QualityFailureError), 1],
     ],
 )
-def test_general_pack_quality_assurance(json_content, condition, tmp_path):
+def test_general_pack_quality_assurance(
+    json_content, condition, num_checks, tmp_path
+):
     checks = []
     generate_challenge_pack(
         context=json_content,
         output_directory=tmp_path,
         quality_control_registry=checks,
     )
-
+    assert len(checks) == num_checks
     with condition:
         for check in checks:
             check()

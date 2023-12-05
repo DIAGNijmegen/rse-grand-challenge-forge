@@ -36,7 +36,7 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 ARCHIVE_SLUG = "{{ cookiecutter.phase.archive.slug }}"
 
 EXPECTED_CASES = [
-    # for interfaces: {% for ci in cookiecutter.phase.inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
+    # for: {% for ci in cookiecutter.phase.inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
 {%- for expected_cases in cookiecutter.phase.expected_cases %}
     {{ expected_cases }},
 {%- endfor %}
@@ -70,7 +70,7 @@ def upload_files():
     for case in EXPECTED_CASES:
         print(f"Uploading {case} to {archive['title']}")
 
-        content = map_case_files_to_interface(case)
+        content = map_case_files_to_interfaces(case)
         archive_item = client.archive_items.create(archive=archive_api_url, values=[])
         client.update_archive_item(
             archive_item_pk=archive_item["pk"],
@@ -78,7 +78,7 @@ def upload_files():
         )
 
 
-def map_case_files_to_interface(case):
+def map_case_files_to_interfaces(case):
     return {
         {%- for ci in cookiecutter.phase.inputs %}
         "{{ ci.slug }}": [Path(case[{{ loop.index - 1}}])],
