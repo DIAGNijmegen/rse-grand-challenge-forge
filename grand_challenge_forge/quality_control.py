@@ -19,8 +19,9 @@ def upload_to_archive_script(script_dir):
                     path=script_dir / "upload_files.py",
                 )
 
-                # Run the script
-                upload_files.main()
+                # Run the script, but noop print
+                with patch("builtins.print"):
+                    upload_files.main()
 
             # Assert that it reaches out via gcapi
             try:
