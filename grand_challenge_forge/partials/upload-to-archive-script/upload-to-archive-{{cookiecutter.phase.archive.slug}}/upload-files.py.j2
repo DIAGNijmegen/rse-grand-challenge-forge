@@ -36,10 +36,10 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 ARCHIVE_SLUG = "{{cookiecutter.phase.archive.slug}}"
 
 EXPECTED_CASES = [
-    # for interfaces: {%+ for ci in cookiecutter.phase.inputs -%}{{ci.slug}}{%- if not loop.last -%}, {% endif -%}{%+ endfor %}
+    # for interfaces: {% for ci in cookiecutter.phase.inputs -%}{{ci.slug}}{%- if not loop.last -%}, {% endif -%}{% endfor %}
 {%- for expected_cases in cookiecutter.phase.expected_cases %}
     {{ expected_cases }},
-{%- endfor +%}
+{%- endfor %}
 ]
 
 
@@ -82,7 +82,7 @@ def map_case_files_to_interface(case):
     return {
         {%- for ci in cookiecutter.phase.inputs %}
         "{{ci.slug}}": [Path(case[{{loop.index}}])],
-        {%- endfor +%}
+        {%- endfor %}
     }
 
 if __name__ == "__main__":
