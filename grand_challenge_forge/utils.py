@@ -5,7 +5,6 @@ def truncate_with_epsilons(value, max_length=32, epsilon="..."):
         truncated_value = str(value)
     return truncated_value
 
-
 def cookiecutter_context(context):
     return {
         "cookiecutter": {
