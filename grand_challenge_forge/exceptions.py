@@ -13,3 +13,7 @@ class InvalidContextError(ChallengeForgeError):
 
 class OutputOverwriteError(ChallengeForgeError):
     pass
+
+
+class QualityFailureError(ChallengeForgeError):
+    pass

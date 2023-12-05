@@ -39,11 +39,17 @@ from grand_challenge_forge.utils import truncate_with_epsilons
     is_flag=True,
     default=False,
 )
+@click.option(
+    "-n",
+    "--no-quality-control",
+    is_flag=True,
+    default=False,
+)
 @click.argument(
     "contexts",
     nargs=-1,
 )
-def cli(output, force, contexts, verbose=0):
+def cli(output, force, contexts, no_quality_control, verbose=0):
     """
     Generates a challenge pack using context
 
@@ -69,11 +75,17 @@ def cli(output, force, contexts, verbose=0):
         resolved_context = _resolve_context(src=context)
         if resolved_context:
             try:
+                quality_control_registry = None if no_quality_control else []
+
                 return generate_challenge_pack(
                     context=resolved_context,
                     output_directory=output_dir,
                     force=force,
+                    quality_control_registry=quality_control_registry,
                 )
+
+                for check in quality_control_registry:
+                    check()
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
                     logger.error(e)

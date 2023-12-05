@@ -1,5 +1,6 @@
 import os
 import re
+from contextlib import contextmanager
 
 
 def truncate_with_epsilons(value, max_length=32, epsilon="..."):
@@ -45,3 +46,17 @@ def remove_j2_suffix(directory):
                     os.path.join(path, name),
                     os.path.join(path, name.rstrip(".j2")),
                 )
+
+
+@contextmanager
+def change_directory(new_path):
+    # Save the current working directory
+    current_path = os.getcwd()
+
+    try:
+        # Change the working directory
+        os.chdir(new_path)
+        yield
+    finally:
+        # Change back to the original working directory
+        os.chdir(current_path)

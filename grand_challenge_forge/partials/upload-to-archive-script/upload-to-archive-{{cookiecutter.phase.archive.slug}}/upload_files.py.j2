@@ -5,7 +5,7 @@ files to an archive.
 Remember, an archive is used to pull data per phase for a challenge. Each
 phase has a designated archive. The archive is approached using its slug.
 
-For your challenge, and this phase it is '{{cookiecutter.phase.archive.slug}}'.
+For your challenge, and this phase it is '{{ cookiecutter.phase.archive.slug }}'.
 
 Before you can run this script, you need to:
  * install gc-api (`pip install gcapi`)
@@ -22,7 +22,7 @@ Note that Grand-Challenge does its own post-processing on the files and the arch
 will be filled with the result of this post-processing.
 
 Check your uploaded results here:
- {{cookiecutter.phase.archive.url}}
+ {{ cookiecutter.phase.archive.url }}
 
 Happy uploading!
 """
@@ -33,10 +33,10 @@ import gcapi
 
 API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
-ARCHIVE_SLUG = "{{cookiecutter.phase.archive.slug}}"
+ARCHIVE_SLUG = "{{ cookiecutter.phase.archive.slug }}"
 
 EXPECTED_CASES = [
-    # for interfaces: {% for ci in cookiecutter.phase.inputs -%}{{ci.slug}}{%- if not loop.last -%}, {% endif -%}{% endfor %}
+    # for interfaces: {% for ci in cookiecutter.phase.inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
 {%- for expected_cases in cookiecutter.phase.expected_cases %}
     {{ expected_cases }},
 {%- endfor %}
@@ -70,7 +70,7 @@ def upload_files():
     for case in EXPECTED_CASES:
         print(f"Uploading {case} to {archive['title']}")
 
-        content = map_case_files_to_interface(*case)
+        content = map_case_files_to_interface(case)
         archive_item = client.archive_items.create(archive=archive_api_url, values=[])
         client.update_archive_item(
             archive_item_pk=archive_item["pk"],
@@ -81,7 +81,7 @@ def upload_files():
 def map_case_files_to_interface(case):
     return {
         {%- for ci in cookiecutter.phase.inputs %}
-        "{{ci.slug}}": [Path(case[{{loop.index}}])],
+        "{{ ci.slug }}": [Path(case[{{ loop.index - 1}}])],
         {%- endfor %}
     }
 
