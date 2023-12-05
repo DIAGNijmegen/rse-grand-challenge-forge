@@ -39,7 +39,7 @@ def _handle_existing(directory, force):
                 f"{directory} already exists! Use force to overwrite"
             )
 
-            
+
 def generate_readme(context, output_directory):
     generate_files(
         repo_dir=PARTIALS_PATH / "pack-readme",
@@ -48,4 +48,3 @@ def generate_readme(context, output_directory):
         skip_if_file_exists=False,
         output_dir=output_directory,
     )
-

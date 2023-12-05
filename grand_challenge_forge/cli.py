@@ -70,7 +70,6 @@ def cli(output, force, contexts, verbose=0):
         if resolved_context:
             try:
                 return generate_challenge_pack(
-
                     context=resolved_context,
                     output_directory=output_dir,
                     force=force,
