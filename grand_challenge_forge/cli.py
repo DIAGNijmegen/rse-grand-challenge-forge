@@ -12,7 +12,7 @@ from grand_challenge_forge.utils import truncate_with_epsilons
 
 
 @click.command()
-@click.version_option(metadata.version("challenge-forge"), "--version")
+@click.version_option(metadata.version("grand-challenge-forge"), "--version")
 @click.option(
     "-v",
     "--verbose",
@@ -69,7 +69,7 @@ def cli(output, force, contexts, verbose=0):
         resolved_context = _resolve_context(src=context)
         if resolved_context:
             try:
-                generate_challenge_pack(
+                return generate_challenge_pack(
                     context=resolved_context,
                     output_directory=output_dir,
                     force=force,
