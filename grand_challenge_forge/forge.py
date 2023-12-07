@@ -119,7 +119,7 @@ def _gen_expected_cases(inputs, output_directory, n=3):
         item_files = []
         for j in range(0, len(inputs)):
             item_files.append(
-                f"case{i}_file{j}.example"
+                f"case{i}/file{j}.example"
                 if len(inputs) > 1
                 else f"file{i}.example"
             )
@@ -128,7 +128,9 @@ def _gen_expected_cases(inputs, output_directory, n=3):
 
     def create_files():
         for filename in to_create_files:
-            with open(output_directory / filename, "w") as f:
+            filepath = output_directory / Path(filename)
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            with open(filepath, "w") as f:
                 f.write("<This is just placeholder data, move along!>")
 
     return [json.dumps(entry) for entry in result], create_files
