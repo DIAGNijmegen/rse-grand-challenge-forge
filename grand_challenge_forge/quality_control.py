@@ -1,4 +1,6 @@
 import logging
+import subprocess
+import sys
 from unittest.mock import MagicMock, patch
 
 from grand_challenge_forge.exceptions import QualityFailureError
@@ -41,3 +43,45 @@ def upload_to_archive_script(script_dir):
         raise QualityFailureError(
             f"Upload script does not seem to exist or is not valid: {e}"
         ) from e
+    logger.debug("Quality OK!")
+
+
+def example_algorithm(phase_context, algorithm_dir):
+    """Checks if the example algorithm works as intended"""
+    logger.debug(f"Quality check over algorithm in: {algorithm_dir}")
+
+    result = subprocess.run(
+        [algorithm_dir / "run_test.sh"],
+        capture_output=True,
+    )
+
+    output_dir = algorithm_dir / "test" / "output"
+
+    report_output = (
+        f"stdin:\n"
+        f"{result.stdout.decode(sys.getfilesystemencoding())}"
+        f"stderr:\n"
+        f"{result.stderr.decode(sys.getfilesystemencoding())}"
+    )
+
+    if result.returncode != 0:  # Not a clean exit
+        raise QualityFailureError(
+            f"Example algorithm in {algorithm_dir!r} does not exit with 0:\n"
+            f"{report_output}"
+        )
+    elif result.stderr:
+        raise QualityFailureError(
+            f"Example algorithm in {algorithm_dir!r} produces errors:\n"
+            f"{report_output}"
+        )
+
+    # Check if output is generated (ignore content)
+    for output in phase_context["phase"]["outputs"]:
+        expected_file = output_dir / output["relative_path"]
+        if not expected_file.exists():
+            raise QualityFailureError(
+                "Example algorithm does not generate output: "
+                f"{output['relative_path']}"
+            )
+
+    logger.debug("Quality OK!")

@@ -6,6 +6,7 @@ import grand_challenge_forge.quality_control as quality_control
 from grand_challenge_forge.exceptions import QualityFailureError
 from grand_challenge_forge.forge import (
     generate_challenge_pack,
+    generate_example_algorithm,
     generate_upload_to_archive_script,
     post_creation_hooks,
 )
@@ -21,11 +22,12 @@ BROKEN_UPLOAD_SCRIPT_CONTEXT = pack_context_factory(
 )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "json_content, condition, num_checks",
     [
-        [pack_context_factory(), nullcontext(), 2],
-        [BROKEN_UPLOAD_SCRIPT_CONTEXT, pytest.raises(QualityFailureError), 1],
+        [pack_context_factory(), nullcontext(), 4],
+        [BROKEN_UPLOAD_SCRIPT_CONTEXT, pytest.raises(QualityFailureError), 2],
     ],
 )
 def test_general_pack_quality_assurance(
@@ -43,6 +45,7 @@ def test_general_pack_quality_assurance(
             check()
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "json_content, conditions",
     [
@@ -74,3 +77,33 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
         post_creation_hooks(script_dir)
         with condition:
             quality_control.upload_to_archive_script(script_dir)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "json_content, conditions",
+    [
+        [
+            pack_context_factory(),
+            [  # Per phase
+                nullcontext(),
+                nullcontext(),
+            ],
+        ],
+    ],
+)
+def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
+    for index, (phase, condition) in enumerate(
+        zip(json_content["challenge"]["phases"], conditions, strict=True)
+    ):
+        checks = []
+        algorithm_dir = generate_example_algorithm(
+            context={"phase": phase},
+            output_directory=tmp_path / str(index),
+            quality_control_registry=checks,
+        )
+        post_creation_hooks(algorithm_dir)
+        with condition:
+            quality_control.example_algorithm(
+                phase_context={"phase": phase}, algorithm_dir=algorithm_dir
+            )

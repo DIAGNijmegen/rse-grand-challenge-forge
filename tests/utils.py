@@ -15,17 +15,29 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 "inputs": [
                     {
                         "slug": "input-ci-slug",
+                        "kind": "Segmentation",
+                        "super_kind": "Image",
                         "relative_path": "images/input-value"
                     },
                     {
                         "slug": "another-input-ci-slug",
-                        "relative_path": "images/another-input-value"
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "another-input-value.json"
                     }
                 ],
                 "outputs": [
                     {
                         "slug": "output-civ-slug",
+                        "kind": "Image",
+                        "super_kind": "Image",
                         "relative_path": "images/output-value"
+                    },
+                    {
+                        "slug": "another-output-civ-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "output-value.json"
                     }
                 ]
             },
@@ -37,17 +49,17 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 "inputs": [
                     {
                         "slug": "input-ci-slug",
+                        "kind": "Image",
+                        "super_kind": "Image",
                         "relative_path": "images/input-value"
-                    },
-                    {
-                        "slug": "another-input-ci-slug",
-                        "relative_path": "images/another-input-value"
                     }
                 ],
                 "outputs": [
                     {
-                        "slug": "output-ci-slug",
-                        "relative_path": "images/output-value"
+                        "slug": "another-output-civ-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "output-value.json"
                     }
                 ]
             }
