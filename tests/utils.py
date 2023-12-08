@@ -69,8 +69,21 @@ DEFAULT_PACK_CONTEXT_STUB = {
 # fmt: on
 
 
-def pack_context_factory(**kwargs):
+def pack_context_factory(should_fail=False, **kwargs):
     result = deepcopy(DEFAULT_PACK_CONTEXT_STUB)
     for k, v in kwargs.items():
         result["challenge"][k] = v
+
+    def recursive_set_fail(d):
+        if isinstance(d, dict):
+            d["__should_fail"] = True  # Any value will do
+            for item in d.values():
+                recursive_set_fail(item)
+        elif isinstance(d, list):
+            for item in d:
+                recursive_set_fail(item)
+
+    if should_fail:
+        recursive_set_fail(result)
+
     return result

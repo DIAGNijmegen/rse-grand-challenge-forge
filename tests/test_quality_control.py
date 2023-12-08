@@ -22,27 +22,14 @@ BROKEN_UPLOAD_SCRIPT_CONTEXT = pack_context_factory(
 )
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize(
-    "json_content, condition, num_checks",
-    [
-        [pack_context_factory(), nullcontext(), 4],
-        [BROKEN_UPLOAD_SCRIPT_CONTEXT, pytest.raises(QualityFailureError), 2],
-    ],
-)
-def test_general_pack_quality_assurance(
-    json_content, condition, num_checks, tmp_path
-):
+def test_general_pack_quality_assurance(tmp_path):
     checks = []
     generate_challenge_pack(
-        context=json_content,
+        context=pack_context_factory(),
         output_directory=tmp_path,
         quality_control_registry=checks,
     )
-    assert len(checks) == num_checks
-    with condition:
-        for check in checks:
-            check()
+    assert len(checks) == 4  # Sanity, ensure the checks are registered
 
 
 @pytest.mark.slow
@@ -57,8 +44,9 @@ def test_general_pack_quality_assurance(
             ],
         ],
         [
-            BROKEN_UPLOAD_SCRIPT_CONTEXT,
+            pack_context_factory(should_fail=True),
             [  # Per phase
+                pytest.raises(QualityFailureError),
                 pytest.raises(QualityFailureError),
             ],
         ],
@@ -88,6 +76,13 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
             [  # Per phase
                 nullcontext(),
                 nullcontext(),
+            ],
+        ],
+        [
+            pack_context_factory(should_fail=True),
+            [  # Per phase
+                pytest.raises(QualityFailureError),
+                pytest.raises(QualityFailureError),
             ],
         ],
     ],

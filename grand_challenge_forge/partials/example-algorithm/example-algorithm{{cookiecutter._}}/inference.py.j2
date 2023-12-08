@@ -1,3 +1,8 @@
+"""
+This is a simple example algorithm.
+
+
+"""
 from glob import glob
 from pathlib import Path
 {% if cookiecutter.phase.has_json -%}
@@ -12,6 +17,8 @@ INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
 RESOURCE_PATH = Path("resources")
 
+{% if "__should_fail" in cookiecutter.phase %} 1/0 {% endif -%}
+
 def run():
     # Read the input
     {% for ci in cookiecutter.phase.inputs -%}
@@ -20,8 +27,9 @@ def run():
     # Process the inputs, anyway you would like
     _show_torch_cuda_info()
 
-{#    with open(RESOURCE_PATH / "some_resource.text", "r") as f:#}
-{#        print(f.read())#}
+
+    with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
+        print(f.read())
 
     # For now, let's set some bogus values:
     {% for ci in cookiecutter.phase.outputs -%}
