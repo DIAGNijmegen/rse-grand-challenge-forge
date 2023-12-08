@@ -3,12 +3,12 @@ This is a simple example algorithm.
 
 
 """
-from glob import glob
 from pathlib import Path
 {% if cookiecutter.phase.has_json -%}
 import json
 {%- endif %}
 {% if cookiecutter.phase.has_image -%}
+from glob import glob
 import SimpleITK
 import numpy
 {%- endif %}
