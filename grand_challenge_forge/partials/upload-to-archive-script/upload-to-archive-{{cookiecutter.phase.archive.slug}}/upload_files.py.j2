@@ -42,7 +42,7 @@ EXPECTED_CASES = [
 {%- endfor %}
 ]
 
-{% if "__should_fail" in cookiecutter.phase %} 1/0 {% endif -%}
+{% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
 
 def main():
     check_files()
