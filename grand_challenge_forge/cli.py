@@ -87,10 +87,10 @@ def cli(output, force, contexts, no_quality_control, verbose=0):
                 )
                 logger.info(f"🎒 Created Pack {pack_dir.stem!r}")
                 if quality_control_registry:
-                    logger.info("🚨 Starting quality checks...")
+                    logger.info("👷 Starting quality checks...")
                     for check in quality_control_registry:
                         check()
-                    logger.info("👮 Quality checks complete!")
+                    logger.info("✅  Quality checks complete!")
                 logger.info(f"📢 Pack is here: {pack_dir}")
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
