@@ -99,6 +99,10 @@ grand-challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
 ```
 This will output a pack directory in the `/tmp` directory.
 
+> [!NOTE]
+> By default, the forge does quality checks on the pack that may require docker.
+> You can disable these via `-n`
+
 ## 🏗️ Development
 
 ### Install locally
