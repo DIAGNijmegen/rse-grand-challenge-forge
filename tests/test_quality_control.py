@@ -53,14 +53,13 @@ def test_general_pack_quality_assurance(tmp_path):
     ],
 )
 def test_upload_script_quality_check(json_content, conditions, tmp_path):
-    for phase, condition in zip(
-        json_content["challenge"]["phases"], conditions, strict=True
+    for index, (phase, condition) in enumerate(
+        zip(json_content["challenge"]["phases"], conditions, strict=True)
     ):
-        checks = []
         script_dir = generate_upload_to_archive_script(
             context={"phase": phase},
-            output_directory=tmp_path,
-            quality_control_registry=checks,
+            output_directory=tmp_path / str(index),
+            quality_control_registry=None,
         )
         post_creation_hooks(script_dir)
         with condition:
@@ -92,11 +91,10 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
     for index, (phase, condition) in enumerate(
         zip(json_content["challenge"]["phases"], conditions, strict=True)
     ):
-        checks = []
         algorithm_dir = generate_example_algorithm(
             context={"phase": phase},
             output_directory=tmp_path / str(index),
-            quality_control_registry=checks,
+            quality_control_registry=None,
         )
         post_creation_hooks(algorithm_dir)
         with condition:

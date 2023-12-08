@@ -68,8 +68,11 @@ DEFAULT_PACK_CONTEXT_STUB = {
 }
 # fmt: on
 
+counter = 0
+
 
 def pack_context_factory(should_fail=False, **kwargs):
+    global counter
     result = deepcopy(DEFAULT_PACK_CONTEXT_STUB)
     for k, v in kwargs.items():
         result["challenge"][k] = v
@@ -86,4 +89,11 @@ def pack_context_factory(should_fail=False, **kwargs):
     if should_fail:
         recursive_set_fail(result)
 
+    # Ensure unique slugs
+    result["challenge"]["slug"] = result["challenge"]["slug"] + f"-{counter}"
+
+    for phase in result["challenge"]["phases"]:
+        phase["slug"] = phase["slug"] + f"-{counter}"
+
+    counter = counter + 1
     return result

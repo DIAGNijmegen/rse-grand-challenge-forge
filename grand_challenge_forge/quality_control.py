@@ -20,15 +20,20 @@ def upload_to_archive_script(script_dir):
         with change_directory(script_dir):
             gcapi = MagicMock()
             with patch.dict("sys.modules", gcapi=gcapi):
-                # Load the script as a module
-                upload_files = directly_import_module(
-                    name="upload_files",
-                    path=script_dir / "upload_files.py",
-                )
+                try:
+                    # Load the script as a module
+                    upload_files = directly_import_module(
+                        name="upload_files",
+                        path=script_dir / "upload_files.py",
+                    )
 
-                # Run the script, but noop print
-                with patch("builtins.print"):
-                    upload_files.main()
+                    # Run the script, but noop print
+                    with patch("builtins.print"):
+                        upload_files.main()
+                except Exception as e:
+                    raise QualityFailureError(
+                        f"Upload script could not be loaded or run. {e}"
+                    ) from e
 
             # Assert that it reaches out via gcapi
             try:
