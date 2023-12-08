@@ -56,7 +56,7 @@ def example_algorithm(phase_context, algorithm_dir):
         logger.debug(
             f"Staring quality check run [{n+1}/{runs}] over example algorithm"
         )
-        _test_example_algorithm(phase_context, algorithm_dir, number_run=n)
+        _test_example_algorithm(phase_context, algorithm_dir, number_run=n + 1)
 
     logger.debug("💚 Quality OK!")
 

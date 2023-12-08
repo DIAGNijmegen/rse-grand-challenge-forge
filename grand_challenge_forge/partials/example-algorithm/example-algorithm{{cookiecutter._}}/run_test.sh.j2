@@ -14,21 +14,18 @@ echo "=+= Cleaning up any earlier output"
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
-  echo "IM AM DOING MY STUFF"
-
   rm -rf "${OUTPUT_DIR}"/*
   chmod -f o+rwx "$OUTPUT_DIR"
 else
-  echo "WHY AM I HERE"
-
   mkdir --mode=o+rwx "$OUTPUT_DIR"
 fi
 
 echo "=+= (Re)build the container"
-docker build "$SCRIPT_DIR" --quiet --tag $DOCKER_TAG
+docker build "$SCRIPT_DIR" --platform=linux/amd6 --quiet --tag $DOCKER_TAG
 
 echo "=+= Doing a forward pass"
 docker run --rm \
+    --platform=linux/amd6 \
     --gpus all \
     --volume "${INPUT_DIR}":/input \
     --volume "${OUTPUT_DIR}":/output \
