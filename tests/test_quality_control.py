@@ -67,6 +67,7 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
             quality_control.upload_to_archive_script(script_dir)
 
 
+@pytest.mark.gpu
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "json_content, conditions",
