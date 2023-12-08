@@ -16,6 +16,7 @@ def cookiecutter_context(context):
     return {
         "cookiecutter": {
             **context,
+            "_": "",
             "_extensions": [
                 "grand_challenge_forge.partials.filters.extract_slug",
             ],

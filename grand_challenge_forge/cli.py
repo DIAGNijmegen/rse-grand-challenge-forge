@@ -94,7 +94,7 @@ def cli(output, force, contexts, no_quality_control, verbose=0):
                 logger.info(f"📢 Pack is here: {pack_dir}")
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
-                    logger.error(e)
+                    logger.error(f"💔 {e}")
                 else:
                     raise e
 

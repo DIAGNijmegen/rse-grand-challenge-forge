@@ -27,6 +27,7 @@ jsonschema = "^4.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
+pytest-xdist = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -47,7 +48,11 @@ testpaths = [
     "tests",
 ]
 python_files = "tests.py test_*.py *_tests.py"
-addopts = "--strict-markers --showlocals"
+addopts = '--strict-markers --showlocals -n auto'
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gpu: marks tests as requiring some kind of gpu (deselect with '-m \"not gpu\"')",
+]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -64,5 +69,5 @@ python =
 allowlist_externals = poetry
 commands =
     poetry install -v
-    poetry run pytest {posargs}
+    poetry run pytest -m "not gpu" {posargs}
 """

@@ -7,7 +7,8 @@ from tests.utils import pack_context_factory
 
 def test_force_overwrites(tmp_path):
     context = pack_context_factory()
-    expected_pack = tmp_path / "challenge-slug-challenge-pack"
+    challenge_slug = context["challenge"]["slug"]
+    expected_pack = tmp_path / f"{challenge_slug}-challenge-pack"
 
     assert not expected_pack.exists()  # Sanity
 

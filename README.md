@@ -21,9 +21,9 @@ grand-challenge-forge --help
 
 A challenge pack consists of challenge-tailored examples for the following:
 * A script to _automate uploading_ data to an archive
-* A _submission algorithm_ that can be submitted to a challenge-phase
+* A _submission algorithm_ that can be submitted to a challenge phase
 * An _evaluation method_ that evaluates algorithm submissions and generates performance
-  metrics for ranking.
+  metrics for ranking
 
 
 ### Usage
@@ -31,7 +31,7 @@ A challenge pack consists of challenge-tailored examples for the following:
 grand-challenge-forge pack-context.json
 ```
 Will use the context found in `pack-context.json` and generate a pack at the current working directory in
-a directory`dist/` (default).
+a directory `dist/` (default).
 
 <details>
 
@@ -98,6 +98,10 @@ Alternatively, you generate a pack by providing a JSON string directly:
 grand-challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
 ```
 This will output a pack directory in the `/tmp` directory.
+
+> [!NOTE]
+> By default, the forge does quality checks on the pack that may require docker.
+> You can disable these via `-n`
 
 ## 🏗️ Development
 
