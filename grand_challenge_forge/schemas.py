@@ -33,8 +33,15 @@ PACK_CONTEXT_SCHEMA = {
                                     "properties": {
                                         "slug": {"type": "string"},
                                         "relative_path": {"type": "string"},
+                                        "kind": {"type": "string"},
+                                        "super_kind": {"type": "string"},
                                     },
-                                    "required": ["slug", "relative_path"],
+                                    "required": [
+                                        "slug",
+                                        "relative_path",
+                                        "kind",
+                                        "super_kind",
+                                    ],
                                 },
                             },
                             "outputs": {
@@ -44,8 +51,15 @@ PACK_CONTEXT_SCHEMA = {
                                     "properties": {
                                         "slug": {"type": "string"},
                                         "relative_path": {"type": "string"},
+                                        "kind": {"type": "string"},
+                                        "super_kind": {"type": "string"},
                                     },
-                                    "required": ["slug", "relative_path"],
+                                    "required": [
+                                        "slug",
+                                        "relative_path",
+                                        "kind",
+                                        "super_kind",
+                                    ],
                                 },
                             },
                         },

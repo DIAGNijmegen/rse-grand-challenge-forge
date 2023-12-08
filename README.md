@@ -35,60 +35,72 @@ a directory `dist/` (default).
 
 <details>
 
-<summary> Example of the content of `pack-context.json </summary>
+<summary> Example of the content of pack-context.json </summary>
 
 ```JSON
-  {
-      "challenge": {
-          "slug": "challenge-slug",
-          "phases": [
-              {
-                  "slug": "phase-slug",
-                  "archive": {
-                      "url": "https://grand-challenge.org/archives/archive-slug/"
-                  },
-                  "inputs": [
-                      {
-                          "slug": "input-ci-slug",
-                          "relative_path": "images/input-value"
-                      },
-                      {
-                          "slug": "another-input-ci-slug",
-                          "relative_path": "images/another-input-value"
-                      }
-                  ],
-                  "outputs": [
-                      {
-                          "slug": "output-civ-slug",
-                          "relative_path": "images/output-value"
-                      }
-                  ]
-              },
-              {
-                  "slug": "another-phase-slug",
-                  "archive": {
-                      "url": "https://grand-challenge.org/archives/another-archive-slug/"
-                  },
-                  "inputs": [
-                      {
-                          "slug": "input-ci-slug",
-                          "relative_path": "images/input-value"
-                      },
-                      {
-                          "slug": "another-input-ci-slug",
-                          "relative_path": "images/another-input-value"
-                      }
-                  ],
-                  "outputs": [
-                      {
-                          "slug": "output-ci-slug",
-                          "relative_path": "images/output-value"
-                      }
-                  ]
-              }
-          ]
-      }
-  }
+{
+    "challenge": {
+        "slug": "challenge-slug",
+        "phases": [
+            {
+                "slug": "phase-slug",
+                "archive": {
+                    "url": "https://grand-challenge.org/archives/archive-slug/"
+                },
+                "inputs": [
+                    {
+                        "slug": "input-ci-slug",
+                        "kind": "Segmentation",
+                        "super_kind": "Image",
+                        "relative_path": "images/input-value"
+                    },
+                    {
+                        "slug": "another-input-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "another-input-value.json"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "slug": "output-ci-slug",
+                        "kind": "Image",
+                        "super_kind": "Image",
+                        "relative_path": "images/output-value"
+                    },
+                    {
+                        "slug": "another-output-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "output-value.json"
+                    }
+                ]
+            },
+            {
+                "slug": "another-phase-slug",
+                "archive": {
+                    "url": "https://grand-challenge.org/archives/another-archive-slug/"
+                },
+                "inputs": [
+                    {
+                        "slug": "input-ci-slug",
+                        "kind": "Image",
+                        "super_kind": "Image",
+                        "relative_path": "images/input-value"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "slug": "another-output-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "output-value.json"
+                    }
+                ]
+            }
+        ]
+    }
+}
 ```
 </details>
 
