@@ -28,7 +28,10 @@ def upload_to_archive_script(script_dir):
                     )
 
                     # Run the script, but noop print
-                    with patch("builtins.print"):
+                    def debug_print(arg):
+                        logger.debug(arg)
+
+                    with patch("builtins.print", debug_print):
                         upload_files.main()
                 except Exception as e:
                     raise QualityFailureError(
@@ -80,6 +83,7 @@ def _test_example_algorithm(phase_context, algorithm_dir, number_run):
         f"StdErr Log:\n"
         f"{result.stderr.decode(sys.getfilesystemencoding())}"
     )
+    logger.debug(report_output)
 
     if result.returncode != 0:  # Not a clean exit
         raise QualityFailureError(
