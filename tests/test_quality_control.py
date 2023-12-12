@@ -32,7 +32,6 @@ def test_general_pack_quality_assurance(tmp_path):
     assert len(checks) == 4  # Sanity, ensure the checks are registered
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize(
     "json_content, conditions",
     [
@@ -66,7 +65,6 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
             quality_control.upload_to_archive_script(script_dir)
 
 
-@pytest.mark.gpu
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "json_content, conditions",
@@ -92,7 +90,10 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
         zip(json_content["challenge"]["phases"], conditions, strict=True)
     ):
         algorithm_dir = generate_example_algorithm(
-            context={"phase": phase},
+            context={
+                "phase": phase,
+                "_no_gpu": True,  # Debug purposes, so we don't need to run with a gpu
+            },
             output_directory=tmp_path / str(index),
             quality_control_registry=None,
         )
