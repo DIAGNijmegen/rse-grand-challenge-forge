@@ -7,6 +7,7 @@ from grand_challenge_forge.exceptions import QualityFailureError
 from grand_challenge_forge.forge import (
     generate_challenge_pack,
     generate_example_algorithm,
+    generate_example_evaluation,
     generate_upload_to_archive_script,
     post_creation_hooks,
 )
@@ -29,7 +30,7 @@ def test_general_pack_quality_assurance(tmp_path):
         output_directory=tmp_path,
         quality_control_registry=checks,
     )
-    assert len(checks) == 4  # Sanity, ensure the checks are registered
+    assert len(checks) == 6  # Sanity, ensure the checks are registered
 
 
 @pytest.mark.parametrize(
@@ -101,4 +102,43 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
         with condition:
             quality_control.example_algorithm(
                 phase_context={"phase": phase}, algorithm_dir=algorithm_dir
+            )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "json_content, conditions",
+    [
+        [
+            pack_context_factory(),
+            [  # Per phase
+                nullcontext(),
+                nullcontext(),
+            ],
+        ],
+        [
+            pack_context_factory(should_fail=True),
+            [  # Per phase
+                pytest.raises(QualityFailureError),
+                pytest.raises(QualityFailureError),
+            ],
+        ],
+    ],
+)
+def test_example_evaluation_quality_check(json_content, conditions, tmp_path):
+    for index, (phase, condition) in enumerate(
+        zip(json_content["challenge"]["phases"], conditions, strict=True)
+    ):
+        evaluation_dir = generate_example_evaluation(
+            context={
+                "phase": phase,
+                "_no_gpu": True,  # Debug purposes, so we don't need to run with a gpu
+            },
+            output_directory=tmp_path / str(index),
+            quality_control_registry=None,
+        )
+        post_creation_hooks(evaluation_dir)
+        with condition:
+            quality_control.example_evaluation(
+                phase_context={"phase": phase}, evaluation_dir=evaluation_dir
             )

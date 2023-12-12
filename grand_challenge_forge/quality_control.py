@@ -70,12 +70,56 @@ def example_algorithm(phase_context, algorithm_dir):
 
 
 def _test_example_algorithm(phase_context, algorithm_dir, number_run):
+    output_dir = algorithm_dir / "test" / "output"
+
+    _test_subprocess(script_dir=algorithm_dir, number_run=number_run)
+
+    # Check if output is generated (ignore content)
+    for output in phase_context["phase"]["outputs"]:
+        expected_file = output_dir / output["relative_path"]
+        if not expected_file.exists():
+            raise QualityFailureError(
+                f"Example algorithm does not generate output on run {number_run}: "
+                f"{output['relative_path']}"
+            )
+
+
+def example_evaluation(phase_context, evaluation_dir):
+    """Checks if the example evaluation works as intended"""
+    logger.debug(f"Quality check over evaluation in: {evaluation_dir}")
+
+    # Run it twice to ensure all permissions are correctly handled
+    runs = 2
+    for n in range(0, runs):
+        logger.debug(
+            f"Staring quality check run [{n+1}/{runs}] over example evaluation"
+        )
+        _test_example_evaluation(
+            phase_context, evaluation_dir, number_run=n + 1
+        )
+
+    logger.debug("💚 Quality OK!")
+
+
+def _test_example_evaluation(phase_context, evaluation_dir, number_run):
+    output_dir = evaluation_dir / "test" / "output"
+
+    _test_subprocess(script_dir=evaluation_dir, number_run=number_run)
+
+    # Check if output is generated (ignore content)
+    expected_file = output_dir / "metrics.json"
+    if not expected_file.exists():
+        raise QualityFailureError(
+            f"Example evaluation does not generate output on run {number_run}: "
+            f"{expected_file}"
+        )
+
+
+def _test_subprocess(script_dir, number_run, script_name="run_test.sh"):
     result = subprocess.run(
-        [algorithm_dir / "run_test.sh"],
+        [script_dir / script_name],
         capture_output=True,
     )
-
-    output_dir = algorithm_dir / "test" / "output"
 
     report_output = (
         f"StdOut Log:\n"
@@ -87,22 +131,15 @@ def _test_example_algorithm(phase_context, algorithm_dir, number_run):
 
     if result.returncode != 0:  # Not a clean exit
         raise QualityFailureError(
-            f"Example algorithm in {algorithm_dir!r} does not exit with 0 "
+            f"Script in {script_dir!r} does not exit with 0 "
             f"on run {number_run}:\n"
             f"{report_output}"
         )
     elif result.stderr:
         raise QualityFailureError(
-            f"Example algorithm in {algorithm_dir!r} produces errors "
+            f"Example algorithm in {script_dir!r} produces errors "
             f"on run {number_run}:\n"
             f"{report_output}"
         )
 
-    # Check if output is generated (ignore content)
-    for output in phase_context["phase"]["outputs"]:
-        expected_file = output_dir / output["relative_path"]
-        if not expected_file.exists():
-            raise QualityFailureError(
-                f"Example algorithm does not generate output on run {number_run}: "
-                f"{output['relative_path']}"
-            )
+    return result
