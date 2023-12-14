@@ -26,7 +26,7 @@ docker build "$SCRIPT_DIR" --platform=linux/amd64 --quiet --tag $DOCKER_TAG
 echo "=+= Doing an evaluation"
 docker run --rm \
     --platform=linux/amd64 \
-    {% if "_no_gpus" not in cookiecutter.phase or not cookiecutter.phase._no_gpus -%}
+    {% if "_no_gpus" not in cookiecutter or not cookiecutter._no_gpus -%}
     --gpus all \
     {% endif -%}
     --volume "${INPUT_DIR}":/input \
