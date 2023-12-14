@@ -1,2 +1,3 @@
-# sh should always be lf their line endings
+# sh (and their template counter parts) should always be lf their line endings
 *.sh text=lf eol=lf
+*.sh.j2 text=lf eol=lf

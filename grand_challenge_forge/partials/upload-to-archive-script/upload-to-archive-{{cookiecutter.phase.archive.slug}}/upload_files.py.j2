@@ -30,6 +30,9 @@ Happy uploading!
 from pathlib import Path
 
 import gcapi
+{% if cookiecutter.phase.has_input_json -%}
+import json
+{%- endif %}
 
 API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
@@ -43,7 +46,6 @@ EXPECTED_CASES = [
 ]
 
 {% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
-
 def main():
     check_files()
     upload_files()
@@ -71,7 +73,7 @@ def upload_files():
     for case in EXPECTED_CASES:
         print(f"Uploading {case} to {archive['title']}")
 
-        content = map_case_files_to_interfaces(case)
+        content = map_case_content_to_interfaces(case)
         archive_item = client.archive_items.create(archive=archive_api_url, values=[])
         client.update_archive_item(
             archive_item_pk=archive_item["pk"],
@@ -79,12 +81,17 @@ def upload_files():
         )
 
 
-def map_case_files_to_interfaces(case):
+def map_case_content_to_interfaces(case):
     return {
         {%- for ci in cookiecutter.phase.inputs %}
+        {%- if ci.super_kind == "Value" %}
+        "{{ ci.slug }}": json.loads(Path(case[{{ loop.index - 1}}]).read_text()),
+        {%- else %}
         "{{ ci.slug }}": [Path(case[{{ loop.index - 1}}])],
+        {%- endif %}
         {%- endfor %}
     }
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

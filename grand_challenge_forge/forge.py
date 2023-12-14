@@ -100,6 +100,8 @@ def generate_upload_to_archive_script(
 ):
     context = deepcopy(context)
 
+    enrich_phase_context(context)
+
     # Cannot use filters in directory names so generate it here
     archive_slug = extract_slug(context["phase"]["archive"]["url"])
     context["phase"]["archive"]["slug"] = archive_slug
@@ -151,7 +153,7 @@ def _gen_expected_archive_cases(inputs, output_directory, n=3):
             filepath = output_directory / Path(filename)
             filepath.parent.mkdir(parents=True, exist_ok=True)
             with open(filepath, "w") as f:
-                f.write("<This is just placeholder data, move along!>")
+                f.write('"This is just placeholder data, move along!>"')
 
     return [json.dumps(entry) for entry in result], create_files
 

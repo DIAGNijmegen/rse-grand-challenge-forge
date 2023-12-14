@@ -24,6 +24,12 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "kind": "Anything",
                         "super_kind": "File",
                         "relative_path": "another-input-value.json"
+                    },
+                    {
+                        "slug": "yet-another-input-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "Value",
+                        "relative_path": "another-input-value.json"
                     }
                 ],
                 "outputs": [
