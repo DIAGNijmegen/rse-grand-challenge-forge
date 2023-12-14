@@ -1,7 +1,13 @@
 import json
+{% if cookiecutter.phase.has_input_image -%}
+from glob import glob
+import SimpleITK
+{%- endif %}
+import random
+from multiprocessing import Pool
 from statistics import mean
 from pathlib import Path
-from pprint import pprint
+from pprint import pformat, pprint
 
 
 INPUT_DIRECTORY = Path("/input")
@@ -9,79 +15,76 @@ OUTPUT_DIRECTORY = Path("/output")
 GROUND_TRUTH_DIRECTORY = Path("/tmp/ground_truth")
 
 {% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
-
 def main():
     print_inputs()
 
-    metrics = {"case": {}}
+    metrics = {}
     predictions = read_predictions()
 
-    for job in predictions:
-        pass
-        # We now iterate over each algorithm job for this submission
-        # Note that the jobs are not in any order!
-        # We work that out from predictions.json
+    # We now process each algorithm job for this submission
+    # Note that the jobs are not in any order!
+    # We work that out from predictions.json
 
-        # This corresponds to one archive item in the archive
-{#        cfp_stack_filename = get_image_name(#}
-{#            values=job["inputs"], slug="stacked-color-fundus-images"#}
-{#        )#}
-{#        # Parse one of the filename to get the batch ID#}
-{#        batch_id = cfp_stack_filename.split(".")[0]#}
-{##}
-{#        pprint(f"Processing batch {batch_id}")#}
-{##}
-{#        # Now we can get the locations of users inference output for this archive item#}
-{#        is_referable_glaucoma_stacked_location = get_file_location(#}
-{#            job_pk=job["pk"],#}
-{#            values=job["outputs"],#}
-{#            slug="stacked-referable-glaucoma-binary-decision",#}
-{#        )#}
-{#        referable_glaucomatous_features_stacked_location = get_file_location(#}
-{#            job_pk=job["pk"],#}
-{#            values=job["outputs"],#}
-{#            slug="stacked-referable-glaucomatous-features",#}
-{#        )#}
-{##}
-{#        # Now we load those files to get their content#}
-{#        is_referable_glaucoma_stacked = load_json_file(#}
-{#            location=is_referable_glaucoma_stacked_location#}
-{#        )#}
-{#        referable_glaucomatous_features_stacked = load_json_file(#}
-{#            location=referable_glaucomatous_features_stacked_location#}
-{#        )#}
-{##}
-{#        # Now you would need to load your ground truth, include it in the evaluation container#}
-{##}
-{#        # Now we need to loop over the stack content and process it against#}
-{#        # any ground ruths#}
-{#        for item in current_stack_info:#}
-{#            index = item["stack_index"]#}
-{##}
-{#            # The follow three data points should be sufficient to map to your groundthruth#}
-{#            original_image_filename = item["image"]#}
-{#            predicted_referable_glaucoma = is_referable_glaucoma_stacked[index]#}
-{#            predicted_glaucomatous_features = referable_glaucomatous_features_stacked[#}
-{#                index#}
-{#            ]#}
+    # Start a number of process workers, using multiprocessing
+    # The optimal number of workers ultimately depends on how many
+    # resources each process() would call upon
+    with Pool(processes=4) as pool:
+        metrics["results"] = pool.map(process, predictions)
 
-        # And here you need to compare the predictions with the ground truth and generate a score for this case
-        # For now, perfect scores:
-{#        metrics["case"][batch_id] = {"my_metric": 1}#}
-{##}
-{#        print("")#}
+    # Now generate an overall score(s) for this submission
+    metrics["aggregates"] = {
+        "my_metric": mean(result["my_metric"] for result in metrics["results"])
+    }
 
-{#    # Now generate an overall score#}
-{#    metrics["aggregates"] = {#}
-{#        "my_metric": mean(batch["my_metric"] for batch in metrics["case"].values())#}
-{#    }#}
-
+    # Make sure to save the metrics
     write_metrics(metrics=metrics)
 
     return 0
 
-def process_prediction_jog(job):
-    pass
+
+def process(job):
+    # Processes a single algorithm job, looking at the outputs
+    report = "Processing:\n"
+    report += pformat(job)
+    report += "\n"
+
+    # First read the results
+    {% for ci in cookiecutter.phase.outputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {{ py_slug }}_location = get_file_location(
+            job_pk=job["pk"],
+            values=job["outputs"],
+            slug="{{ ci.slug }}",
+        )
+    {% if ci.is_image -%}
+    {{ py_slug }} = load_image_file(location={{ py_slug }}_location)
+    {% endif -%}
+    {% if ci.is_json -%}
+    {{ py_slug }} = load_json_file(location={{ py_slug }}_location)
+    {% endif -%}
+    {% endfor -%}
+    # Retrieve the input image name
+    {% for ci in cookiecutter.phase.inputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% if ci.is_image -%}
+    {{ py_slug }}_image_name = get_image_name(
+            values=job["inputs"],
+            slug="{{ ci.slug }}",
+        )
+
+    {% endif -%}
+    {% endfor -%}
+
+    # Now you would need to load your ground truth
+    # make sure to include it in your evaluation container
+    with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
+        report += f.read()
+
+    print(report)
+    return {
+        "my_metric": random.choice([1, 0]),
+    }
+
 
 def print_inputs():
     # Just for convenience, in the logs you can then see what files you have to work with
@@ -94,10 +97,10 @@ def print_inputs():
 
 def read_predictions():
     # The prediction file tells us the location of the users' predictions
-    with open(f"{INPUT_DIRECTORY}/predictions.json") as f:
+    with open(INPUT_DIRECTORY / "predictions.json") as f:
         return json.loads(f.read())
 
-
+{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image%}
 def get_image_name(*, values, slug):
     # This tells us the user-provided name of the input or output image
     for value in values:
@@ -105,7 +108,7 @@ def get_image_name(*, values, slug):
             return value["image"]["name"]
 
     raise RuntimeError(f"Image with interface {slug} not found!")
-
+{% endif %}
 
 def get_interface_relative_path(*, values, slug):
     # Gets the location of the interface relative to the input or output
@@ -119,19 +122,30 @@ def get_interface_relative_path(*, values, slug):
 def get_file_location(*, job_pk, values, slug):
     # Where a job's output file will be located in the evaluation container
     relative_path = get_interface_relative_path(values=values, slug=slug)
-    return f"{INPUT_DIRECTORY}/{job_pk}/output/{relative_path}"
+    return INPUT_DIRECTORY / job_pk / "output" / relative_path
 
-
+{% if cookiecutter.phase.has_output_json %}
 def load_json_file(*, location):
     # Reads a json file
     with open(location) as f:
         return json.loads(f.read())
+{% endif %}
+
+{% if cookiecutter.phase.has_output_image -%}
+def load_image_file(*, location):
+    # Use SimpleITK to read a file
+    input_files = glob(str(location / "*"))
+    result = SimpleITK.ReadImage(input_files[0])
+
+    # Convert it to a Numpy array
+    return SimpleITK.GetArrayFromImage(result)
+{%- endif %}
 
 
 def write_metrics(*, metrics):
     # Write a json document used for ranking results on the leaderboard
-    with open("/output/metrics.json", "w") as f:
-        f.write(json.dumps(metrics))
+    with open(OUTPUT_DIRECTORY / "metrics.json", "w") as f:
+        f.write(json.dumps(metrics, indent=4))
 
 
 if __name__ == "__main__":

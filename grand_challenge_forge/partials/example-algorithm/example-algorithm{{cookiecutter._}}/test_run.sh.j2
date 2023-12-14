@@ -21,11 +21,11 @@ else
 fi
 
 echo "=+= (Re)build the container"
-docker build "$SCRIPT_DIR" --platform=linux/amd6 --quiet --tag $DOCKER_TAG
+docker build "$SCRIPT_DIR" --platform=linux/amd64 --quiet --tag $DOCKER_TAG
 
 echo "=+= Doing a forward pass"
 docker run --rm \
-    --platform=linux/amd6 \
+    --platform=linux/amd64 \
     {% if "_no_gpus" not in cookiecutter.phase or not cookiecutter.phase._no_gpus -%}
     --gpus all \
     {% endif -%}

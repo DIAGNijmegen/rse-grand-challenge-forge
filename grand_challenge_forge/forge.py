@@ -227,6 +227,7 @@ def generate_example_evaluation(
 
 def generate_predictions(context, evaluation_dir, n=3):
     input_dir = evaluation_dir / "test" / "input"
+    input_dir.mkdir(parents=True, exist_ok=True)
 
     predictions = []
     for _ in range(0, n):

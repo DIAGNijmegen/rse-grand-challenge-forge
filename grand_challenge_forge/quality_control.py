@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def upload_to_archive_script(script_dir):
     """Checks if the upload to archive script works as intended"""
-    logger.debug(f"Quality check over script in: {script_dir.stem}")
+    logger.debug(f"Quality check over script in {script_dir}")
 
     try:
         with change_directory(script_dir):
@@ -115,7 +115,7 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
         )
 
 
-def _test_subprocess(script_dir, number_run, script_name="run_test.sh"):
+def _test_subprocess(script_dir, number_run, script_name="test_run.sh"):
     result = subprocess.run(
         [script_dir / script_name],
         capture_output=True,

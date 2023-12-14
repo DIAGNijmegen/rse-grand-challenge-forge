@@ -4,10 +4,10 @@ This is a simple example algorithm.
 
 """
 from pathlib import Path
-{% if cookiecutter.phase.has_json -%}
+{% if cookiecutter.phase.has_input_json or cookiecutter.phase.has_output_json -%}
 import json
 {%- endif %}
-{% if cookiecutter.phase.has_image -%}
+{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -67,13 +67,15 @@ def run():
     return 0
 
 
-{% if cookiecutter.phase.has_json -%}
+{% if cookiecutter.phase.has_input_json -%}
 def load_json_file(*, location):
     # Reads a json file
     with open(location, 'r') as f:
         return json.loads(f.read())
+{%- endif %}
 
 
+{% if cookiecutter.phase.has_output_json -%}
 def write_json_file(*, location, content):
     # Writes a json file
     with open(location, 'w') as f:
@@ -81,7 +83,7 @@ def write_json_file(*, location, content):
 {%- endif %}
 
 
-{% if cookiecutter.phase.has_image -%}
+{% if cookiecutter.phase.has_input_image -%}
 def load_image_file_as_array(*, location):
     # Use SimpleITK to read a file
     input_files = glob(str(location / "*"))
@@ -89,10 +91,12 @@ def load_image_file_as_array(*, location):
 
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
+{%- endif %}
 
 
+{% if cookiecutter.phase.has_output_image -%}
 def write_array_as_image_file(*, location, array):
-    location.parent.mkdir(parents=True, exist_ok=True)
+    location.mkdir(parents=True, exist_ok=True)
 
     image = SimpleITK.GetImageFromArray(array)
     SimpleITK.WriteImage(
@@ -101,6 +105,7 @@ def write_array_as_image_file(*, location, array):
         useCompression=True,
     )
 {%- endif %}
+
 
 def _show_torch_cuda_info():
     import torch
