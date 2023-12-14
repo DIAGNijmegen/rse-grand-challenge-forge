@@ -15,9 +15,7 @@ def enrich_phase_context(context):
         *phase_context["inputs"],
         *phase_context["outputs"],
     ]:
-        ci["is_json"] = ci["kind"] == "Anything" or ci[
-            "relative_path"
-        ].endswith(".json")
+        ci["is_json"] = ci["relative_path"].endswith(".json")
         ci["is_image"] = ci["super_kind"] == "Image"
         ci["is_file"] = ci["super_kind"] == "File" and not ci[
             "relative_path"

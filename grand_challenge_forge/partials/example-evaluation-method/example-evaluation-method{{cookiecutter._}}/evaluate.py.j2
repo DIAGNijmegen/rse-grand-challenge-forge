@@ -67,42 +67,57 @@ def process(job):
     report += pformat(job)
     report += "\n"
 
-    # First read the results
-    {% for ci in cookiecutter.phase.outputs -%}
-    {% set py_slug = ci.slug | replace("-", "_") -%}
+
+    # Firstly, find the location of the results
+    {% for ci in cookiecutter.phase.outputs %}
+    {%- set py_slug = ci.slug | replace("-", "_") -%}
     {{ py_slug }}_location = get_file_location(
             job_pk=job["pk"],
             values=job["outputs"],
             slug="{{ ci.slug }}",
         )
+    {% endfor %}
+
+    # Secondly, read the results
+    {% for ci in cookiecutter.phase.outputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
-    {{ py_slug }} = load_image_file(location={{ py_slug }}_location)
+    {{ py_slug }} = load_image_file(
+        location={{ py_slug }}_location,
+    )
     {% endif -%}
     {% if ci.is_json -%}
-    {{ py_slug }} = load_json_file(location={{ py_slug }}_location)
+    {{ py_slug }} = load_json_file(
+        location={{ py_slug }}_location,
+    )
     {% endif -%}
     {% if ci.is_file -%}
-    {{ py_slug }} = load_file(location={{ py_slug }}_location)
+    {{ py_slug }} = load_file(
+        location={{ py_slug }}_location,
+    )
     {% endif -%}
-    {% endfor -%}
-    # Retrieve the input image name
+    {%- endfor %}
+
+    # Thirdly, retrieve the input image name
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
     {{ py_slug }}_image_name = get_image_name(
             values=job["inputs"],
             slug="{{ ci.slug }}",
-        )
-
+    )
     {% endif -%}
-    {% endfor -%}
+    {%- endfor %}
 
-    # Now you would need to load your ground truth
-    # make sure to include it in your evaluation container
+    # Fourthly, your load your ground truth
+    # Include it in your evaluation container by placing it in ground_truth/
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
 
     print(report)
+
+
+    # Finally, calculate by comparing the ground truth to the actual results
     return {
         "my_metric": random.choice([1, 0]),
     }
