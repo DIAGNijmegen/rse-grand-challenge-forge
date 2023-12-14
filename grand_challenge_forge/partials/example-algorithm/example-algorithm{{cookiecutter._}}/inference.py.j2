@@ -77,27 +77,33 @@ def run():
         content={{ py_slug }}
     )
     {% endif -%}
+    {% if ci.is_json -%}
+    write_file(
+        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        content={{ py_slug }}
+    )
+    {% endif -%}
     {% endfor %}
     return 0
+{%- if cookiecutter.phase.has_input_json %}
 
 
-{% if cookiecutter.phase.has_input_json -%}
 def load_json_file(*, location):
     # Reads a json file
     with open(location, 'r') as f:
         return json.loads(f.read())
 {%- endif %}
+{%- if cookiecutter.phase.has_output_json %}
 
 
-{% if cookiecutter.phase.has_output_json -%}
 def write_json_file(*, location, content):
     # Writes a json file
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
 {%- endif %}
+{%- if cookiecutter.phase.has_input_image %}
 
 
-{% if cookiecutter.phase.has_input_image -%}
 def load_image_file_as_array(*, location):
     # Use SimpleITK to read a file
     input_files = glob(str(location / "*"))
@@ -106,9 +112,9 @@ def load_image_file_as_array(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
+{%- if cookiecutter.phase.has_output_image %}
 
 
-{% if cookiecutter.phase.has_output_image -%}
 def write_array_as_image_file(*, location, array):
     location.mkdir(parents=True, exist_ok=True)
 
@@ -118,6 +124,28 @@ def write_array_as_image_file(*, location, array):
         location / "output.mha",
         useCompression=True,
     )
+{%- endif %}
+{%- if cookiecutter.phase.has_input_file %}
+
+
+# Note to the challenge hosts:
+#   the following function is very generic and should likely
+#   be adopted to something more specific for your challenge
+def load_file(*, location):
+    # Reads the content of a file
+    with open(location) as f:
+        return f.read()
+{%- endif %}
+{%- if cookiecutter.phase.has_output_file %}
+
+
+# Note to the challenge hosts:
+#   the following function is very generic and should likely
+#   be adopted to something more specific for your challenge
+def write_file(*, location, content):
+    # Write the content to a file
+    with open(location, 'w') as f:
+        return f.write(content)
 {%- endif %}
 
 
