@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grand-challenge-forge"
-version = "0.1.0"
+version = "0.2.0"
 description = "Generation of challenge packs"
 license = "Apache-2.0"
 authors = ["Grand-Challenge support <support@grand-challenge.org>"]
