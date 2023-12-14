@@ -93,7 +93,8 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
         algorithm_dir = generate_example_algorithm(
             context={
                 "phase": phase,
-                "_no_gpu": True,  # Debug purposes, so we don't need to run with a gpu
+                # Debug purposes, so we don't need to run with a gpu:
+                "_no_gpus": True,
             },
             output_directory=tmp_path / str(index),
             quality_control_registry=None,
@@ -132,7 +133,8 @@ def test_example_evaluation_quality_check(json_content, conditions, tmp_path):
         evaluation_dir = generate_example_evaluation(
             context={
                 "phase": phase,
-                "_no_gpu": True,  # Debug purposes, so we don't need to run with a gpu
+                # Debug purposes, so we don't need to run with a gpu:
+                "_no_gpus": True,
             },
             output_directory=tmp_path / str(index),
             quality_control_registry=None,
