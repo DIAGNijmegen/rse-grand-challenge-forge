@@ -9,8 +9,8 @@ DOCKER_TAG="example-algorithm-{{ cookiecutter.phase.slug }}"
 INPUT_DIR="${SCRIPT_DIR}/test/input"
 OUTPUT_DIR="${SCRIPT_DIR}/test/output"
 
-echo "=+= Cleaning up any earlier output"
 
+echo "=+= Cleaning up any earlier output"
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
@@ -20,11 +20,13 @@ else
   mkdir --mode=o+rwx "$OUTPUT_DIR"
 fi
 
+
 echo "=+= (Re)build the container"
 docker build "$SCRIPT_DIR" \
   --platform=linux/amd64 \
   --quiet \
   --tag $DOCKER_TAG
+
 
 echo "=+= Doing a forward pass"
 docker run --rm \
