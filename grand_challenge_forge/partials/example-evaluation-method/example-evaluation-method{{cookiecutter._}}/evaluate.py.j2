@@ -1,0 +1,171 @@
+"""
+The following is a simple example evaluation method.
+
+It is meant to run within a container.
+
+To run it locally, you can call the following bash script:
+
+  ./test_ruh.sh
+
+This will start the evaluation, reads from ./test/input and outputs to ./test/output
+
+To export the container and prep it for upload to Grand-Challenge.org you can call:
+
+  docker save example-evaluation-{{ cookiecutter.phase.slug }} | gzip -c > example-evaluation-{{ cookiecutter.phase.slug }}.tar.gz
+
+Any container that shows the same behavior will do, this is purely an example of how one COULD do it.
+
+Happy programming!
+"""
+import json
+{% if cookiecutter.phase.has_input_image -%}
+from glob import glob
+import SimpleITK
+{%- endif %}
+import random
+from multiprocessing import Pool
+from statistics import mean
+from pathlib import Path
+from pprint import pformat, pprint
+
+
+INPUT_DIRECTORY = Path("/input")
+OUTPUT_DIRECTORY = Path("/output")
+GROUND_TRUTH_DIRECTORY = Path("/tmp/ground_truth")
+
+{% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
+def main():
+    print_inputs()
+
+    metrics = {}
+    predictions = read_predictions()
+
+    # We now process each algorithm job for this submission
+    # Note that the jobs are not in any order!
+    # We work that out from predictions.json
+
+    # Start a number of process workers, using multiprocessing
+    # The optimal number of workers ultimately depends on how many
+    # resources each process() would call upon
+    with Pool(processes=4) as pool:
+        metrics["results"] = pool.map(process, predictions)
+
+    # Now generate an overall score(s) for this submission
+    metrics["aggregates"] = {
+        "my_metric": mean(result["my_metric"] for result in metrics["results"])
+    }
+
+    # Make sure to save the metrics
+    write_metrics(metrics=metrics)
+
+    return 0
+
+
+def process(job):
+    # Processes a single algorithm job, looking at the outputs
+    report = "Processing:\n"
+    report += pformat(job)
+    report += "\n"
+
+    # First read the results
+    {% for ci in cookiecutter.phase.outputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {{ py_slug }}_location = get_file_location(
+            job_pk=job["pk"],
+            values=job["outputs"],
+            slug="{{ ci.slug }}",
+        )
+    {% if ci.is_image -%}
+    {{ py_slug }} = load_image_file(location={{ py_slug }}_location)
+    {% endif -%}
+    {% if ci.is_json -%}
+    {{ py_slug }} = load_json_file(location={{ py_slug }}_location)
+    {% endif -%}
+    {% endfor -%}
+    # Retrieve the input image name
+    {% for ci in cookiecutter.phase.inputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% if ci.is_image -%}
+    {{ py_slug }}_image_name = get_image_name(
+            values=job["inputs"],
+            slug="{{ ci.slug }}",
+        )
+
+    {% endif -%}
+    {% endfor -%}
+
+    # Now you would need to load your ground truth
+    # make sure to include it in your evaluation container
+    with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
+        report += f.read()
+
+    print(report)
+    return {
+        "my_metric": random.choice([1, 0]),
+    }
+
+
+def print_inputs():
+    # Just for convenience, in the logs you can then see what files you have to work with
+    input_files = [str(x) for x in Path(INPUT_DIRECTORY).rglob("*") if x.is_file()]
+
+    print("Input Files:")
+    pprint(input_files)
+    print("")
+
+
+def read_predictions():
+    # The prediction file tells us the location of the users' predictions
+    with open(INPUT_DIRECTORY / "predictions.json") as f:
+        return json.loads(f.read())
+
+{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image%}
+def get_image_name(*, values, slug):
+    # This tells us the user-provided name of the input or output image
+    for value in values:
+        if value["interface"]["slug"] == slug:
+            return value["image"]["name"]
+
+    raise RuntimeError(f"Image with interface {slug} not found!")
+{% endif %}
+
+def get_interface_relative_path(*, values, slug):
+    # Gets the location of the interface relative to the input or output
+    for value in values:
+        if value["interface"]["slug"] == slug:
+            return value["interface"]["relative_path"]
+
+    raise RuntimeError(f"Value with interface {slug} not found!")
+
+
+def get_file_location(*, job_pk, values, slug):
+    # Where a job's output file will be located in the evaluation container
+    relative_path = get_interface_relative_path(values=values, slug=slug)
+    return INPUT_DIRECTORY / job_pk / "output" / relative_path
+
+{% if cookiecutter.phase.has_output_json %}
+def load_json_file(*, location):
+    # Reads a json file
+    with open(location) as f:
+        return json.loads(f.read())
+{% endif %}
+
+{% if cookiecutter.phase.has_output_image -%}
+def load_image_file(*, location):
+    # Use SimpleITK to read a file
+    input_files = glob(str(location / "*"))
+    result = SimpleITK.ReadImage(input_files[0])
+
+    # Convert it to a Numpy array
+    return SimpleITK.GetArrayFromImage(result)
+{%- endif %}
+
+
+def write_metrics(*, metrics):
+    # Write a json document used for ranking results on the leaderboard
+    with open(OUTPUT_DIRECTORY / "metrics.json", "w") as f:
+        f.write(json.dumps(metrics, indent=4))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

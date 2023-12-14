@@ -10,6 +10,11 @@ from cookiecutter.generate import generate_files
 
 import grand_challenge_forge.quality_control as qc
 from grand_challenge_forge.exceptions import OutputOverwriteError
+from grand_challenge_forge.generation_utils import (
+    ci_to_civ,
+    create_civ_stub_file,
+    enrich_phase_context,
+)
 from grand_challenge_forge.schemas import validate_pack_context
 from grand_challenge_forge.utils import cookiecutter_context as cc
 from grand_challenge_forge.utils import extract_slug, remove_j2_suffix
@@ -50,6 +55,12 @@ def generate_challenge_pack(
         )
 
         generate_example_algorithm(
+            context=phase_context,
+            output_directory=phase_dir,
+            quality_control_registry=quality_control_registry,
+        )
+
+        generate_example_evaluation(
             context=phase_context,
             output_directory=phase_dir,
             quality_control_registry=quality_control_registry,
@@ -150,27 +161,11 @@ def generate_example_algorithm(
 ):
     context = deepcopy(context)
 
+    enrich_phase_context(context)
+
     # Cannot use filters in directory names so generate it here
     archive_slug = extract_slug(context["phase"]["archive"]["url"])
     context["phase"]["archive"]["slug"] = archive_slug
-
-    # Enrich the CI's to make the templating simpler
-    component_interfaces = [
-        *context["phase"]["inputs"],
-        *context["phase"]["outputs"],
-    ]
-    for ci in component_interfaces:
-        ci["is_json"] = ci["kind"] == "Anything" or ci[
-            "relative_path"
-        ].endswith(".json")
-        ci["is_image"] = ci["super_kind"] == "Image"
-
-    context["phase"]["has_json"] = any(
-        ci["is_json"] for ci in component_interfaces
-    )
-    context["phase"]["has_image"] = any(
-        ci["is_image"] for ci in component_interfaces
-    )
 
     algorithm_dir = generate_files(
         repo_dir=PARTIALS_PATH / "example-algorithm",
@@ -183,22 +178,12 @@ def generate_example_algorithm(
     algorithm_dir = Path(algorithm_dir)
 
     # Create input files
+    input_dir = algorithm_dir / "test" / "input"
     for input_ci in context["phase"]["inputs"]:
-        input_file = (
-            algorithm_dir / "test" / "input" / input_ci["relative_path"]
+        create_civ_stub_file(
+            target_dir=input_dir / input_ci["relative_path"],
+            component_interface=input_ci,
         )
-        input_file.parent.mkdir(parents=True, exist_ok=True)
-        if input_ci["is_json"]:
-            src = RESOURCES_PATH / "example.json"
-        elif input_ci["is_image"]:
-            input_file = input_file / f"{str(uuid.uuid4())}.mha"
-            input_file.parent.mkdir(parents=True, exist_ok=True)
-            src = RESOURCES_PATH / "example.mha"
-        else:
-            input_file.parent.mkdir(parents=True, exist_ok=True)
-            src = RESOURCES_PATH / "example.txt"
-
-        shutil.copy(src, input_file)
 
     def quality_check():
         qc.example_algorithm(
@@ -209,3 +194,68 @@ def generate_example_algorithm(
         quality_control_registry.append(quality_check)
 
     return algorithm_dir
+
+
+def generate_example_evaluation(
+    context, output_directory, quality_control_registry=None
+):
+    context = deepcopy(context)
+    enrich_phase_context(context)
+
+    evaluation_dir = generate_files(
+        repo_dir=PARTIALS_PATH / "example-evaluation-method",
+        context=cc(context),
+        overwrite_if_exists=False,
+        skip_if_file_exists=False,
+        output_dir=output_directory,
+    )
+
+    evaluation_dir = Path(evaluation_dir)
+
+    generate_predictions(context, evaluation_dir)
+
+    def quality_check():
+        qc.example_evaluation(
+            phase_context=context, evaluation_dir=evaluation_dir
+        )
+
+    if quality_control_registry is not None:
+        quality_control_registry.append(quality_check)
+
+    return evaluation_dir
+
+
+def generate_predictions(context, evaluation_dir, n=3):
+    input_dir = evaluation_dir / "test" / "input"
+    input_dir.mkdir(parents=True, exist_ok=True)
+
+    predictions = []
+    for _ in range(0, n):
+        predictions.append(
+            {
+                "pk": str(uuid.uuid4()),
+                "inputs": [ci_to_civ(ci) for ci in context["phase"]["inputs"]],
+                "outputs": [
+                    ci_to_civ(ci) for ci in context["phase"]["outputs"]
+                ],
+                "status": "Succeeded",
+                "started_at": "2023-11-29T10:31:25.691799Z",
+                "completed_at": "2023-11-29T10:31:50.691799Z",
+            }
+        )
+    with open(input_dir / "predictions.json", "w") as f:
+        f.write(json.dumps(predictions, indent=4))
+
+    for prediction in predictions:
+        for civ in prediction["outputs"]:
+            job_dir = (
+                input_dir
+                / prediction["pk"]
+                / "output"
+                / civ["interface"]["relative_path"]
+            )
+            job_dir.parent.mkdir(parents=True, exist_ok=True)
+            create_civ_stub_file(
+                target_dir=job_dir,
+                component_interface=civ["interface"],
+            )

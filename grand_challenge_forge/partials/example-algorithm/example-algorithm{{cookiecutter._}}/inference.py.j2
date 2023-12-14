@@ -1,13 +1,27 @@
 """
-This is a simple example algorithm.
+The following is a simple example algorithm.
 
+It is meant to run within a container.
 
+To run it locally, you can call the following bash script:
+
+  ./test_ruh.sh
+
+This will start the inference and reads from ./test/input and outputs to ./test/output
+
+To export the container and prep it for upload to Grand-Challenge.org you can call:
+
+  docker save example-algorithm-{{ cookiecutter.phase.slug }} | gzip -c > example-algorithm-{{ cookiecutter.phase.slug }}.tar.gz
+
+Any container that shows the same behavior will do, this is purely an example of how one COULD do it.
+
+Happy programming!
 """
 from pathlib import Path
-{% if cookiecutter.phase.has_json -%}
+{% if cookiecutter.phase.has_input_json or cookiecutter.phase.has_output_json -%}
 import json
 {%- endif %}
-{% if cookiecutter.phase.has_image -%}
+{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -22,16 +36,25 @@ RESOURCE_PATH = Path("resources")
 def run():
     # Read the input
     {% for ci in cookiecutter.phase.inputs -%}
-    {{ ci.slug | replace("-", "_")}} = read_{{ ci.slug | replace("-", "_") }}()
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% if ci.is_image -%}
+    {{ py_slug }} = load_image_file_as_array(
+        location=INPUT_PATH / "{{ ci.relative_path }}",
+    )
+    {% endif -%}
+    {% if ci.is_json -%}
+    {{ py_slug }} = load_json_file(
+         location=INPUT_PATH / "{{ ci.relative_path }}",
+    )
+    {% endif -%}
     {% endfor %}
-    # Process the inputs, anyway you would like
+    # Process the inputs: any way you'd like
     _show_torch_cuda_info()
-
 
     with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
         print(f.read())
 
-    # For now, let's set some bogus values:
+    # For now, let us set make bogus predictions
     {% for ci in cookiecutter.phase.outputs -%}
     {{ ci.slug | replace("-", "_")}} =
         {%- if ci.is_image %} numpy.eye(4, 2)
@@ -41,57 +64,62 @@ def run():
 
     # Save your output
     {% for ci in cookiecutter.phase.outputs -%}
-    save_{{ ci.slug | replace("-", "_")}}({{ ci.slug | replace("-", "_")}})
+    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% if ci.is_image -%}
+    write_array_as_image_file(
+        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        array={{ py_slug }},
+    )
+    {% endif -%}
+    {% if ci.is_json -%}
+    write_json_file(
+        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        content={{ py_slug }}
+    )
+    {% endif -%}
     {% endfor %}
     return 0
-{% for ci in cookiecutter.phase.inputs %}
 
-def read_{{ ci.slug | replace("-", "_")}}():
-    {% if ci.is_image -%}
+
+{% if cookiecutter.phase.has_input_json -%}
+def load_json_file(*, location):
+    # Reads a json file
+    with open(location, 'r') as f:
+        return json.loads(f.read())
+{%- endif %}
+
+
+{% if cookiecutter.phase.has_output_json -%}
+def write_json_file(*, location, content):
+    # Writes a json file
+    with open(location, 'w') as f:
+        f.write(json.dumps(content, indent=4))
+{%- endif %}
+
+
+{% if cookiecutter.phase.has_input_image -%}
+def load_image_file_as_array(*, location):
     # Use SimpleITK to read a file
-    input_files = glob(str(INPUT_PATH / "{{ ci.relative_path }}" / "*.mha"))
-    result = SimpleITK.ReadImage(
-        input_files[0],
-        imageIO="MetaImageIO",  # This MetaIO might need to change depending on the input kind
-    )
+    input_files = glob(str(location / "*"))
+    result = SimpleITK.ReadImage(input_files[0])
 
     # Convert it to a Numpy array
-    result = SimpleITK.GetArrayFromImage(result)
+    return SimpleITK.GetArrayFromImage(result)
+{%- endif %}
 
-    return result
-    {% else -%}
-    with open(INPUT_PATH / "{{ ci.relative_path }}", "r") as f:
-        {% if ci.is_json -%}
-        result = f.read()
-        {% else -%}
-        result = json.loads(result)
-        {% endif -%}
-    return result
-    {% endif %}
-{%- endfor %}
 
-{% for ci in cookiecutter.phase.outputs -%}
+{% if cookiecutter.phase.has_output_image -%}
+def write_array_as_image_file(*, location, array):
+    location.mkdir(parents=True, exist_ok=True)
 
-def save_{{ ci.slug | replace("-", "_")}}(result):
-    output_file = OUTPUT_PATH / "{{ ci.relative_path }}"
-    {% if ci.is_json -%}
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    result = json.dumps(result, indent=4)
-    {% endif -%}
-    {% if ci.is_image -%}
-    output_file.mkdir(parents=True, exist_ok=True)
-    # Assuming the result is a Numpy array, convert it to an image
-    image = SimpleITK.GetImageFromArray(result)
-    SimpleITK.WriteImage(image,
-        output_file / "output.mha",
+    image = SimpleITK.GetImageFromArray(array)
+    SimpleITK.WriteImage(
+        image,
+        location / "output.mha",
         useCompression=True,
     )
-    {% else -%}
-    with open(output_file, "w") as f:
-        f.write(result)
-    {% endif %}
+{%- endif %}
 
-{% endfor -%}
 
 def _show_torch_cuda_info():
     import torch

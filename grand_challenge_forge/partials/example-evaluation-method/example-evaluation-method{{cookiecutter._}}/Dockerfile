@@ -1,5 +1,4 @@
-FROM --platform=linux/amd64 pytorch/pytorch
-# Use a 'large' base container to show-case how to load pytorch and use the GPU (when enabled)
+FROM --platform=linux/amd64 docker.io/library/python:3.11-slim
 
 # Ensures that Python output to stdout/stderr is not buffered: prevents missing information when terminating
 ENV PYTHONUNBUFFERED 1
@@ -10,7 +9,7 @@ USER user
 WORKDIR /tmp
 
 COPY --chown=user:user requirements.txt /tmp
-COPY --chown=user:user resources /tmp/resources
+COPY --chown=user:user ground_truth /tmp/ground_truth
 
 # You can add any Python dependencies to requirements.txt
 RUN python -m pip install \
@@ -19,6 +18,6 @@ RUN python -m pip install \
     --no-color \
     --requirement /tmp/requirements.txt
 
-COPY --chown=user:user inference.py /tmp
+COPY --chown=user:user evaluate.py /tmp
 
-ENTRYPOINT ["python", "inference.py"]
+ENTRYPOINT ["python", "evaluate.py"]

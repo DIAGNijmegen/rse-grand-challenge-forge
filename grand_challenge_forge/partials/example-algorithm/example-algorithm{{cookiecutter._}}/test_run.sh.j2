@@ -21,12 +21,17 @@ else
 fi
 
 echo "=+= (Re)build the container"
-docker build "$SCRIPT_DIR" --platform=linux/amd6 --quiet --tag $DOCKER_TAG
+docker build "$SCRIPT_DIR" \
+  --platform=linux/amd64 \
+  --quiet \
+  --tag $DOCKER_TAG
 
 echo "=+= Doing a forward pass"
 docker run --rm \
-    --platform=linux/amd6 \
+    --platform=linux/amd64 \
+    {% if "_no_gpus" not in cookiecutter or not cookiecutter._no_gpus -%}
     --gpus all \
+    {% endif -%}
     --volume "${INPUT_DIR}":/input \
     --volume "${OUTPUT_DIR}":/output \
     $DOCKER_TAG
@@ -35,6 +40,7 @@ docker run --rm \
 # Ensure permissions are set correctly on the output
 # This allows the host user (e.g. you) to access and handle these files
 docker run --rm \
+    --quiet \
     --env HOST_UID=`id --user` \
     --env HOST_GID=`id --group` \
     --volume ${OUTPUT_DIR}:/output \

@@ -28,13 +28,13 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 ],
                 "outputs": [
                     {
-                        "slug": "output-civ-slug",
+                        "slug": "output-ci-slug",
                         "kind": "Image",
                         "super_kind": "Image",
                         "relative_path": "images/output-value"
                     },
                     {
-                        "slug": "another-output-civ-slug",
+                        "slug": "another-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
                         "relative_path": "output-value.json"
@@ -56,7 +56,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 ],
                 "outputs": [
                     {
-                        "slug": "another-output-civ-slug",
+                        "slug": "another-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
                         "relative_path": "output-value.json"
