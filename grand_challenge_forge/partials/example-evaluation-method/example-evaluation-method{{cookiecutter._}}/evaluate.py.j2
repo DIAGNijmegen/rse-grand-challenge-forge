@@ -97,8 +97,9 @@ def process(job):
     )
     {% endif -%}
     {%- endfor %}
+    
 
-    # Thirdly, retrieve the input image name
+    # Thirdly, retrieve the input image name to match it with an image in your ground truth
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
@@ -113,6 +114,7 @@ def process(job):
     # Include it in your evaluation container by placing it in ground_truth/
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
+        # compare the results to your ground truth and compute some metrics
 
     print(report)
 
