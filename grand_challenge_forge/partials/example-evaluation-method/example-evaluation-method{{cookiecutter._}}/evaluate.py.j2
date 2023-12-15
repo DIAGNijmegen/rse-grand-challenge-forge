@@ -82,7 +82,7 @@ def process(job):
     {{ py_slug }} = load_json_file(location={{ py_slug }}_location)
     {% endif -%}
     {% endfor -%}
-    # Retrieve the input image name
+    # Retrieve the input image name to match it with an image in your ground truth
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
@@ -98,6 +98,7 @@ def process(job):
     # make sure to include it in your evaluation container
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
+        # compare the results to your ground truth and compute some metrics
 
     print(report)
     return {
