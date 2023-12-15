@@ -15,26 +15,17 @@ def enrich_phase_context(context):
         *phase_context["inputs"],
         *phase_context["outputs"],
     ]:
-        ci["is_json"] = ci["kind"] == "Anything" or ci[
+        ci["is_json"] = ci["relative_path"].endswith(".json")
+        ci["is_image"] = ci["super_kind"] == "Image"
+        ci["is_file"] = ci["super_kind"] == "File" and not ci[
             "relative_path"
         ].endswith(".json")
-        ci["is_image"] = ci["super_kind"] == "Image"
 
-    phase_context["has_input_json"] = any(
-        ci["is_json"] for ci in phase_context["inputs"]
-    )
-
-    phase_context["has_output_json"] = any(
-        ci["is_json"] for ci in phase_context["outputs"]
-    )
-
-    phase_context["has_input_image"] = any(
-        ci["is_image"] for ci in phase_context["inputs"]
-    )
-
-    phase_context["has_output_image"] = any(
-        ci["is_image"] for ci in phase_context["outputs"]
-    )
+    for _type in ["json", "image", "file"]:
+        for in_out in ["input", "output"]:
+            phase_context[f"has_{in_out}_{_type}"] = any(
+                ci[f"is_{_type}"] for ci in phase_context[f"{in_out}s"]
+            )
 
 
 def create_civ_stub_file(*, target_dir, component_interface):

@@ -67,40 +67,59 @@ def process(job):
     report += pformat(job)
     report += "\n"
 
-    # First read the results
-    {% for ci in cookiecutter.phase.outputs -%}
-    {% set py_slug = ci.slug | replace("-", "_") -%}
+
+    # Firstly, find the location of the results
+    {% for ci in cookiecutter.phase.outputs %}
+    {%- set py_slug = ci.slug | replace("-", "_") -%}
     {{ py_slug }}_location = get_file_location(
             job_pk=job["pk"],
             values=job["outputs"],
             slug="{{ ci.slug }}",
         )
+    {% endfor %}
+
+    # Secondly, read the results
+    {% for ci in cookiecutter.phase.outputs -%}
+    {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
-    {{ py_slug }} = load_image_file(location={{ py_slug }}_location)
+    {{ py_slug }} = load_image_file(
+        location={{ py_slug }}_location,
+    )
     {% endif -%}
     {% if ci.is_json -%}
-    {{ py_slug }} = load_json_file(location={{ py_slug }}_location)
+    {{ py_slug }} = load_json_file(
+        location={{ py_slug }}_location,
+    )
     {% endif -%}
-    {% endfor -%}
-    # Retrieve the input image name to match it with an image in your ground truth
+    {% if ci.is_file -%}
+    {{ py_slug }} = load_file(
+        location={{ py_slug }}_location,
+    )
+    {% endif -%}
+    {%- endfor %}
+
+
+    # Thirdly, retrieve the input image name to match it with an image in your ground truth
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci.is_image -%}
     {{ py_slug }}_image_name = get_image_name(
             values=job["inputs"],
             slug="{{ ci.slug }}",
-        )
-
+    )
     {% endif -%}
-    {% endfor -%}
+    {%- endfor %}
 
-    # Now you would need to load your ground truth
-    # make sure to include it in your evaluation container
+    # Fourthly, your load your ground truth
+    # Include it in your evaluation container by placing it in ground_truth/
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
         # compare the results to your ground truth and compute some metrics
 
     print(report)
+
+
+    # Finally, calculate by comparing the ground truth to the actual results
     return {
         "my_metric": random.choice([1, 0]),
     }
@@ -119,8 +138,9 @@ def read_predictions():
     # The prediction file tells us the location of the users' predictions
     with open(INPUT_DIRECTORY / "predictions.json") as f:
         return json.loads(f.read())
+{%- if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image %}
 
-{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image%}
+
 def get_image_name(*, values, slug):
     # This tells us the user-provided name of the input or output image
     for value in values:
@@ -128,7 +148,8 @@ def get_image_name(*, values, slug):
             return value["image"]["name"]
 
     raise RuntimeError(f"Image with interface {slug} not found!")
-{% endif %}
+{%- endif %}
+
 
 def get_interface_relative_path(*, values, slug):
     # Gets the location of the interface relative to the input or output
@@ -143,15 +164,17 @@ def get_file_location(*, job_pk, values, slug):
     # Where a job's output file will be located in the evaluation container
     relative_path = get_interface_relative_path(values=values, slug=slug)
     return INPUT_DIRECTORY / job_pk / "output" / relative_path
+{%- if cookiecutter.phase.has_output_json %}
 
-{% if cookiecutter.phase.has_output_json %}
+
 def load_json_file(*, location):
     # Reads a json file
     with open(location) as f:
         return json.loads(f.read())
-{% endif %}
+{%- endif %}
+{%- if cookiecutter.phase.has_output_image %}
 
-{% if cookiecutter.phase.has_output_image -%}
+
 def load_image_file(*, location):
     # Use SimpleITK to read a file
     input_files = glob(str(location / "*"))
@@ -159,6 +182,14 @@ def load_image_file(*, location):
 
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
+{%- endif %}
+{%- if cookiecutter.phase.has_output_file %}
+
+
+def load_file(*, location):
+    # Reads the content of a file
+    with open(location) as f:
+        return f.read()
 {%- endif %}
 
 

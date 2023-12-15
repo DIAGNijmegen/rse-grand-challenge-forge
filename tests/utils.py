@@ -29,7 +29,13 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "slug": "yet-another-input-ci-slug",
                         "kind": "Anything",
                         "super_kind": "Value",
-                        "relative_path": "another-input-value.json"
+                        "relative_path": "yet-another-input-value.json"
+                    },
+                    {
+                        "slug": "yet-another-non-json-input-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "yet-another-non-json-input-value"
                     }
                 ],
                 "outputs": [
@@ -44,6 +50,18 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "kind": "Anything",
                         "super_kind": "File",
                         "relative_path": "output-value.json"
+                    },
+                    {
+                        "slug": "yet-another-output-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "Value",
+                        "relative_path": "yet-another-output-value.json"
+                    },
+                    {
+                        "slug": "yet-another-non-json-output-ci-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "yet-another-non-json-output-value"
                     }
                 ]
             },
