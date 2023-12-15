@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import uuid
 from pathlib import Path
@@ -7,33 +8,42 @@ SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"
 
 
-def enrich_phase_context(context):
-    """Enriches the "phase" value of the context to simplify templating"""
-    phase_context = context["phase"]
+def is_json(component_interface):
+    return component_interface["relative_path"].endswith(".json")
 
-    for ci in [
-        *phase_context["inputs"],
-        *phase_context["outputs"],
-    ]:
-        ci["is_json"] = ci["relative_path"].endswith(".json")
-        ci["is_image"] = ci["super_kind"] == "Image"
-        ci["is_file"] = ci["super_kind"] == "File" and not ci[
-            "relative_path"
-        ].endswith(".json")
 
-    for _type in ["json", "image", "file"]:
-        for in_out in ["input", "output"]:
-            phase_context[f"has_{in_out}_{_type}"] = any(
-                ci[f"is_{_type}"] for ci in phase_context[f"{in_out}s"]
-            )
+def is_image(component_interface):
+    return component_interface["super_kind"] == "Image"
+
+
+def is_file(component_interface):
+    return component_interface[
+        "super_kind"
+    ] == "File" and not component_interface["relative_path"].endswith(".json")
+
+
+def extract_slug(url):
+    # Define a regex pattern to match the slug in the URL
+    pattern = r"/([^/]+)/*$"
+
+    # Use re.search to find the match
+    match = re.search(pattern, url)
+
+    # If a match is found, extract and return the slug
+    if match:
+        slug = match.group(1)
+        return slug
+    else:
+        # Return None or handle the case where no match is found
+        return None
 
 
 def create_civ_stub_file(*, target_dir, component_interface):
     """Creates a stub based on a component interface"""
     target_dir.parent.mkdir(parents=True, exist_ok=True)
-    if component_interface["is_json"]:
+    if is_json(component_interface):
         src = RESOURCES_PATH / "example.json"
-    elif component_interface["is_image"]:
+    elif is_image(component_interface):
         target_dir = target_dir / f"{str(uuid.uuid4())}.mha"
         target_dir.parent.mkdir(parents=True, exist_ok=True)
         src = RESOURCES_PATH / "example.mha"

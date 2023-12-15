@@ -1,5 +1,5 @@
 from grand_challenge_forge.forge import generate_challenge_pack
-from grand_challenge_forge.utils import extract_slug
+from grand_challenge_forge.generation_utils import extract_slug
 from tests.utils import pack_context_factory
 
 

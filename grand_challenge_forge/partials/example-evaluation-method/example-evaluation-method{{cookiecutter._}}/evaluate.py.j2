@@ -18,7 +18,7 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 import json
-{% if cookiecutter.phase.has_input_image -%}
+{% if cookiecutter.phase.inputs | has_image -%}
 from glob import glob
 import SimpleITK
 {%- endif %}
@@ -81,17 +81,17 @@ def process(job):
     # Secondly, read the results
     {% for ci in cookiecutter.phase.outputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
-    {% if ci.is_image -%}
+    {% if ci | is_image -%}
     {{ py_slug }} = load_image_file(
         location={{ py_slug }}_location,
     )
     {% endif -%}
-    {% if ci.is_json -%}
+    {% if ci | is_json -%}
     {{ py_slug }} = load_json_file(
         location={{ py_slug }}_location,
     )
     {% endif -%}
-    {% if ci.is_file -%}
+    {% if ci | is_file -%}
     {{ py_slug }} = load_file(
         location={{ py_slug }}_location,
     )
@@ -102,7 +102,7 @@ def process(job):
     # Thirdly, retrieve the input image name to match it with an image in your ground truth
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
-    {% if ci.is_image -%}
+    {% if ci | is_image -%}
     {{ py_slug }}_image_name = get_image_name(
             values=job["inputs"],
             slug="{{ ci.slug }}",
@@ -138,7 +138,7 @@ def read_predictions():
     # The prediction file tells us the location of the users' predictions
     with open(INPUT_DIRECTORY / "predictions.json") as f:
         return json.loads(f.read())
-{%- if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image %}
+{%- if cookiecutter.phase.inputs | has_image or cookiecutter.phase.outputs | has_image %}
 
 
 def get_image_name(*, values, slug):
@@ -164,7 +164,7 @@ def get_file_location(*, job_pk, values, slug):
     # Where a job's output file will be located in the evaluation container
     relative_path = get_interface_relative_path(values=values, slug=slug)
     return INPUT_DIRECTORY / job_pk / "output" / relative_path
-{%- if cookiecutter.phase.has_output_json %}
+{%- if cookiecutter.phase.outputs | has_json %}
 
 
 def load_json_file(*, location):
@@ -172,7 +172,7 @@ def load_json_file(*, location):
     with open(location) as f:
         return json.loads(f.read())
 {%- endif %}
-{%- if cookiecutter.phase.has_output_image %}
+{%- if cookiecutter.phase.outputs | has_image %}
 
 
 def load_image_file(*, location):
@@ -183,7 +183,7 @@ def load_image_file(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if cookiecutter.phase.has_output_file %}
+{%- if cookiecutter.phase.outputs | has_file %}
 
 
 def load_file(*, location):

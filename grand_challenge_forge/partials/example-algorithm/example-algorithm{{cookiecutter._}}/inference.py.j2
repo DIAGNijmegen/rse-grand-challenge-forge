@@ -18,10 +18,10 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 from pathlib import Path
-{% if cookiecutter.phase.has_input_json or cookiecutter.phase.has_output_json -%}
+{% if cookiecutter.phase.inputs | has_json or cookiecutter.phase.outputs | has_json -%}
 import json
 {%- endif %}
-{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image -%}
+{% if cookiecutter.phase.inputs | has_image or cookiecutter.phase.outputs | has_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -37,12 +37,12 @@ def run():
     # Read the input
     {% for ci in cookiecutter.phase.inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
-    {% if ci.is_image -%}
+    {% if ci | is_image -%}
     {{ py_slug }} = load_image_file_as_array(
         location=INPUT_PATH / "{{ ci.relative_path }}",
     )
     {% endif -%}
-    {% if ci.is_json -%}
+    {% if ci | is_json -%}
     {{ py_slug }} = load_json_file(
          location=INPUT_PATH / "{{ ci.relative_path }}",
     )
@@ -57,28 +57,28 @@ def run():
     # For now, let us set make bogus predictions
     {%- for ci in cookiecutter.phase.outputs %}
     {{ ci.slug | replace("-", "_")}} =
-        {%- if ci.is_image %} numpy.eye(4, 2)
-        {%- elif ci.is_json %} {"content": "should match the required format"}
-        {%- elif ci.is_file %} "content: should match the required format"
+        {%- if ci | is_image %} numpy.eye(4, 2)
+        {%- elif ci | is_json %} {"content": "should match the required format"}
+        {%- elif ci | is_file %} "content: should match the required format"
         {% endif %}
     {%- endfor %}
 
     # Save your output
     {% for ci in cookiecutter.phase.outputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
-    {% if ci.is_image -%}
+    {% if ci | is_image -%}
     write_array_as_image_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
         array={{ py_slug }},
     )
     {% endif -%}
-    {% if ci.is_json -%}
+    {% if ci | is_json -%}
     write_json_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
         content={{ py_slug }}
     )
     {% endif -%}
-    {% if ci.is_file -%}
+    {% if ci | is_file -%}
     write_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
         content={{ py_slug }}
@@ -86,7 +86,7 @@ def run():
     {% endif -%}
     {% endfor %}
     return 0
-{%- if cookiecutter.phase.has_input_json %}
+{%- if cookiecutter.phase.inputs | has_json %}
 
 
 def load_json_file(*, location):
@@ -94,7 +94,7 @@ def load_json_file(*, location):
     with open(location, 'r') as f:
         return json.loads(f.read())
 {%- endif %}
-{%- if cookiecutter.phase.has_output_json %}
+{%- if cookiecutter.phase.outputs | has_json %}
 
 
 def write_json_file(*, location, content):
@@ -102,7 +102,7 @@ def write_json_file(*, location, content):
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
 {%- endif %}
-{%- if cookiecutter.phase.has_input_image %}
+{%- if cookiecutter.phase.inputs | has_image %}
 
 
 def load_image_file_as_array(*, location):
@@ -113,7 +113,7 @@ def load_image_file_as_array(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if cookiecutter.phase.has_output_image %}
+{%- if cookiecutter.phase.outputs | has_image %}
 
 
 def write_array_as_image_file(*, location, array):
@@ -126,7 +126,7 @@ def write_array_as_image_file(*, location, array):
         useCompression=True,
     )
 {%- endif %}
-{%- if cookiecutter.phase.has_input_file %}
+{%- if cookiecutter.phase.inputs | has_file %}
 
 
 # Note to the challenge hosts:
@@ -137,7 +137,7 @@ def load_file(*, location):
     with open(location) as f:
         return f.read()
 {%- endif %}
-{%- if cookiecutter.phase.has_output_file %}
+{%- if cookiecutter.phase.outputs | has_file %}
 
 
 # Note to the challenge hosts:

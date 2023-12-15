@@ -1,7 +1,8 @@
 import importlib
 import os
-import re
 from contextlib import contextmanager
+
+from grand_challenge_forge.partials.filters import custom_filters
 
 
 def truncate_with_epsilons(value, max_length=32, epsilon="..."):
@@ -13,31 +14,14 @@ def truncate_with_epsilons(value, max_length=32, epsilon="..."):
 
 
 def cookiecutter_context(context):
+    pass
     return {
         "cookiecutter": {
             **context,
             "_": "",
-            "_extensions": [
-                "grand_challenge_forge.partials.filters.extract_slug",
-            ],
+            "_extensions": [*custom_filters],
         }
     }
-
-
-def extract_slug(url):
-    # Define a regex pattern to match the slug in the URL
-    pattern = r"/([^/]+)/*$"
-
-    # Use re.search to find the match
-    match = re.search(pattern, url)
-
-    # If a match is found, extract and return the slug
-    if match:
-        slug = match.group(1)
-        return slug
-    else:
-        # Return None or handle the case where no match is found
-        return None
 
 
 def remove_j2_suffix(directory):
