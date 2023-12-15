@@ -13,11 +13,11 @@ from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
     create_civ_stub_file,
-    enrich_phase_context,
+    extract_slug,
 )
 from grand_challenge_forge.schemas import validate_pack_context
 from grand_challenge_forge.utils import cookiecutter_context as cc
-from grand_challenge_forge.utils import extract_slug, remove_j2_suffix
+from grand_challenge_forge.utils import remove_j2_suffix
 
 logger = logging.getLogger(__name__)
 
@@ -100,13 +100,15 @@ def generate_upload_to_archive_script(
 ):
     context = deepcopy(context)
 
-    enrich_phase_context(context)
+    # Cannot always use filters in directory names so generate it here
+    context["phase"]["archive"]["slug"] = extract_slug(
+        context["phase"]["archive"]["url"]
+    )
 
-    # Cannot use filters in directory names so generate it here
-    archive_slug = extract_slug(context["phase"]["archive"]["url"])
-    context["phase"]["archive"]["slug"] = archive_slug
-
-    script_dir = output_directory / f"upload-to-archive-{archive_slug}"
+    script_dir = (
+        output_directory
+        / f"upload-to-archive-{context['phase']['archive']['slug']}"
+    )
 
     # Map the expected case, but only create after the script
     expected_cases, create_files_func = _gen_expected_archive_cases(
@@ -161,14 +163,6 @@ def _gen_expected_archive_cases(inputs, output_directory, n=3):
 def generate_example_algorithm(
     context, output_directory, quality_control_registry=None
 ):
-    context = deepcopy(context)
-
-    enrich_phase_context(context)
-
-    # Cannot use filters in directory names so generate it here
-    archive_slug = extract_slug(context["phase"]["archive"]["url"])
-    context["phase"]["archive"]["slug"] = archive_slug
-
     algorithm_dir = generate_files(
         repo_dir=PARTIALS_PATH / "example-algorithm",
         context=cc(context),
@@ -201,9 +195,6 @@ def generate_example_algorithm(
 def generate_example_evaluation(
     context, output_directory, quality_control_registry=None
 ):
-    context = deepcopy(context)
-    enrich_phase_context(context)
-
     evaluation_dir = generate_files(
         repo_dir=PARTIALS_PATH / "example-evaluation-method",
         context=cc(context),

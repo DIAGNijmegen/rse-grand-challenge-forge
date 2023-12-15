@@ -1,4 +1,4 @@
-{% if cookiecutter.phase.has_input_image or cookiecutter.phase.has_output_image -%}
+{% if cookiecutter.phase.inputs | has_image or cookiecutter.phase.outputs | has_image -%}
 SimpleITK
 numpy
 {%- endif %}
