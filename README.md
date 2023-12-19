@@ -1,13 +1,14 @@
-[![CI](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
-[![PyPI](https://img.shields.io/pypi/v/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 
 #  🛠️ grand-challenge-forge
 
 A utility that generates distributable items that help challenge organizers set up their challenge more easily on
 [Grand-Challenge.org](https://grand-challenge.org/).
-
+---
+[![CI](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
+[![PyPI](https://img.shields.io/pypi/v/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ## Install
 
 Install via PyPi:
@@ -17,7 +18,7 @@ pip install grand-challenge-forge
 grand-challenge-forge --help
 ```
 
-## 🎒 Challenge packs
+## 📦 Challenge packs
 
 A challenge pack consists of challenge-tailored examples for the following:
 * A script to _automate uploading_ data to an archive
@@ -118,7 +119,7 @@ This will output a pack directory in the `/tmp` directory.
 ## 🏗️ Development
 
 ### Install locally
-Install locally grand-challenge-forge locally (requires `poetry`):
+Install grand-challenge-forge locally (requires `poetry`):
 
 ```shell
 git clone https://github.com/DIAGNijmegen/rse-grand-challenge-forge.git
@@ -128,15 +129,15 @@ poetry run grand-challenge-forge --help
 ```
 
 ### Pre-commit hooks
-Several linters and stylers run to check the formating during continuous integration. Ensure they are run before
+Several linters and stylers run to check the formatting during continuous integration. Ensure they are run before
 committing by installing [pre-commit](https://pre-commit.com/).
 
 
 ### Running Tests
 use `tox` to run all tests across all supported python versions:
 ```
-$ pip install tox
-$ tox
+pip install tox
+tox
 ```
 
 ### Dependencies
