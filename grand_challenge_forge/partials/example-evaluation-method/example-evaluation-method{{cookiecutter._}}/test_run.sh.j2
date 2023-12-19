@@ -31,6 +31,7 @@ docker build "$SCRIPT_DIR" \
 echo "=+= Doing an evaluation"
 docker run --rm \
     --platform=linux/amd64 \
+    --network none \
     {% if "_no_gpus" not in cookiecutter or not cookiecutter._no_gpus -%}
     --gpus all \
     {% endif -%}
