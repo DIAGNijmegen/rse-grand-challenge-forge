@@ -7,6 +7,31 @@ from grand_challenge_forge.utils import truncate_with_epsilons
 
 logger = logging.getLogger(__name__)
 
+ARCHIVE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "slug": {"type": "string"},
+        "url": {"type": "string"},
+    },
+    "required": ["slug", "url"],
+}
+
+COMPONENT_INTERFACE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "slug": {"type": "string"},
+        "relative_path": {"type": "string"},
+        "kind": {"type": "string"},
+        "super_kind": {"type": "string"},
+    },
+    "required": [
+        "slug",
+        "relative_path",
+        "kind",
+        "super_kind",
+    ],
+}
+
 
 PACK_CONTEXT_SCHEMA = {
     "type": "object",
@@ -15,52 +40,21 @@ PACK_CONTEXT_SCHEMA = {
             "type": "object",
             "properties": {
                 "slug": {"type": "string"},
+                "archives": {"type": "array", "items": ARCHIVE_SCHEMA},
                 "phases": {
                     "type": "array",
                     "items": {
                         "type": "object",
                         "properties": {
                             "slug": {"type": "string"},
-                            "archive": {
-                                "type": "object",
-                                "properties": {"url": {"type": "string"}},
-                                "required": ["url"],
-                            },
+                            "archive": ARCHIVE_SCHEMA,
                             "inputs": {
                                 "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "slug": {"type": "string"},
-                                        "relative_path": {"type": "string"},
-                                        "kind": {"type": "string"},
-                                        "super_kind": {"type": "string"},
-                                    },
-                                    "required": [
-                                        "slug",
-                                        "relative_path",
-                                        "kind",
-                                        "super_kind",
-                                    ],
-                                },
+                                "items": COMPONENT_INTERFACE_SCHEMA,
                             },
                             "outputs": {
                                 "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "slug": {"type": "string"},
-                                        "relative_path": {"type": "string"},
-                                        "kind": {"type": "string"},
-                                        "super_kind": {"type": "string"},
-                                    },
-                                    "required": [
-                                        "slug",
-                                        "relative_path",
-                                        "kind",
-                                        "super_kind",
-                                    ],
-                                },
+                                "items": COMPONENT_INTERFACE_SCHEMA,
                             },
                         },
                         "required": ["slug", "archive", "inputs", "outputs"],
@@ -68,7 +62,7 @@ PACK_CONTEXT_SCHEMA = {
                     },
                 },
             },
-            "required": ["slug", "phases"],
+            "required": ["slug", "phases", "archives"],
         },
     },
     "required": ["challenge"],
