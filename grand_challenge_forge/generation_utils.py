@@ -1,5 +1,4 @@
 import os
-import re
 import shutil
 import uuid
 from pathlib import Path
@@ -20,22 +19,6 @@ def is_file(component_interface):
     return component_interface[
         "super_kind"
     ] == "File" and not component_interface["relative_path"].endswith(".json")
-
-
-def extract_slug(url):
-    # Define a regex pattern to match the slug in the URL
-    pattern = r"/([^/]+)/*$"
-
-    # Use re.search to find the match
-    match = re.search(pattern, url)
-
-    # If a match is found, extract and return the slug
-    if match:
-        slug = match.group(1)
-        return slug
-    else:
-        # Return None or handle the case where no match is found
-        return None
 
 
 def create_civ_stub_file(*, target_dir, component_interface):

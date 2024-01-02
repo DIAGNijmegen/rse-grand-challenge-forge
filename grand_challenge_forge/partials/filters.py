@@ -14,11 +14,6 @@ def register_simple_filter(func):
 
 
 @register_simple_filter
-def extract_slug(url):
-    return generation_utils.extract_slug(url)
-
-
-@register_simple_filter
 def is_json(arg):
     return generation_utils.is_json(arg)
 

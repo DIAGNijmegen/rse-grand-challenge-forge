@@ -14,7 +14,6 @@ from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
     create_civ_stub_file,
-    extract_slug,
 )
 from grand_challenge_forge.schemas import validate_pack_context
 from grand_challenge_forge.utils import cookiecutter_context as cc
@@ -104,11 +103,6 @@ def generate_upload_to_archive_script(
     context, output_directory, quality_control_registry=None
 ):
     context = deepcopy(context)
-
-    # Cannot always use filters in directory names so generate it here
-    context["phase"]["archive"]["slug"] = extract_slug(
-        context["phase"]["archive"]["url"]
-    )
 
     script_dir = (
         output_directory

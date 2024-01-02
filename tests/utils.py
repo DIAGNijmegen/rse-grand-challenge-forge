@@ -6,10 +6,25 @@ from copy import deepcopy
 DEFAULT_PACK_CONTEXT_STUB = {
     "challenge": {
         "slug": "challenge-slug",
+        "archives": [
+            {
+                "slug": "archive-slug",
+                "url": "https://grand-challenge.org/archives/archive-slug/"
+            },
+            {
+                "slug": "another-archive-slug",
+                "url": "https://grand-challenge.org/archives/another-archive-slug/"
+            },
+            {
+                "slug": "yet-another-archive-slug",
+                "url": "https://grand-challenge.org/archives/yet-another-archive-slug/"
+            }
+        ],
         "phases": [
             {
                 "slug": "phase-slug",
                 "archive": {
+                    "slug": "archive-slug",
                     "url": "https://grand-challenge.org/archives/archive-slug/"
                 },
                 "inputs": [
@@ -68,6 +83,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
             {
                 "slug": "another-phase-slug",
                 "archive": {
+                    "slug": "another-archive-slug",
                     "url": "https://grand-challenge.org/archives/another-archive-slug/"
                 },
                 "inputs": [
