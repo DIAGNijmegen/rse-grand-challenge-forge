@@ -4,6 +4,7 @@ import os
 import shutil
 import uuid
 from copy import deepcopy
+from importlib import metadata
 from pathlib import Path
 
 from cookiecutter.generate import generate_files
@@ -36,7 +37,11 @@ def generate_challenge_pack(
     validate_pack_context(context)
 
     pack_dir_name = f"{context['challenge']['slug']}-challenge-pack"
+
     context["pack_dir_name"] = pack_dir_name
+    context["grand_challenge_forge_version"] = metadata.version(
+        "grand-challenge-forge"
+    )
 
     pack_dir = output_directory / pack_dir_name
 
