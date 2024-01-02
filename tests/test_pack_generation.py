@@ -1,5 +1,4 @@
 from grand_challenge_forge.forge import generate_challenge_pack
-from grand_challenge_forge.generation_utils import extract_slug
 from tests.utils import pack_context_factory
 
 
@@ -24,5 +23,5 @@ def test_for_pack_content(tmp_path):
         assert (
             pack_dir
             / phase["slug"]
-            / f"upload-to-archive-{extract_slug(phase['archive']['url'])}"
+            / f"upload-to-archive-{phase['archive']['slug']}"
         ).exists

@@ -10,6 +10,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
             {
                 "slug": "phase-slug",
                 "archive": {
+                    "slug": "archive-slug",
                     "url": "https://grand-challenge.org/archives/archive-slug/"
                 },
                 "inputs": [
@@ -68,6 +69,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
             {
                 "slug": "another-phase-slug",
                 "archive": {
+                    "slug": "another-archive-slug",
                     "url": "https://grand-challenge.org/archives/another-archive-slug/"
                 },
                 "inputs": [
