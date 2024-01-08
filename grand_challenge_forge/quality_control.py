@@ -75,7 +75,7 @@ def _test_example_algorithm(phase_context, algorithm_dir, number_run):
     _test_subprocess(script_dir=algorithm_dir, number_run=number_run)
 
     # Check if output is generated (ignore content)
-    for output in phase_context["phase"]["outputs"]:
+    for output in phase_context["phase"]["algorithm_outputs"]:
         expected_file = output_dir / output["relative_path"]
         if not expected_file.exists():
             raise QualityFailureError(

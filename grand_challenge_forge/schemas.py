@@ -48,16 +48,21 @@ PACK_CONTEXT_SCHEMA = {
                         "properties": {
                             "slug": {"type": "string"},
                             "archive": ARCHIVE_SCHEMA,
-                            "inputs": {
+                            "algorithm_inputs": {
                                 "type": "array",
                                 "items": COMPONENT_INTERFACE_SCHEMA,
                             },
-                            "outputs": {
+                            "algorithm_outputs": {
                                 "type": "array",
                                 "items": COMPONENT_INTERFACE_SCHEMA,
                             },
                         },
-                        "required": ["slug", "archive", "inputs", "outputs"],
+                        "required": [
+                            "slug",
+                            "archive",
+                            "algorithm_inputs",
+                            "algorithm_outputs",
+                        ],
                         "additionalProperties": True,  # Allow additional properties
                     },
                 },

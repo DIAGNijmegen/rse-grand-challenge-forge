@@ -111,7 +111,7 @@ def generate_upload_to_archive_script(
 
     # Map the expected case, but only create after the script
     expected_cases, create_files_func = _gen_expected_archive_cases(
-        inputs=context["phase"]["inputs"],
+        inputs=context["phase"]["algorithm_inputs"],
         output_directory=script_dir,
     )
     context["phase"]["expected_cases"] = expected_cases
@@ -174,7 +174,7 @@ def generate_example_algorithm(
 
     # Create input files
     input_dir = algorithm_dir / "test" / "input"
-    for input_ci in context["phase"]["inputs"]:
+    for input_ci in context["phase"]["algorithm_inputs"]:
         create_civ_stub_file(
             target_dir=input_dir / input_ci["relative_path"],
             component_interface=input_ci,
@@ -226,9 +226,13 @@ def generate_predictions(context, evaluation_dir, n=3):
         predictions.append(
             {
                 "pk": str(uuid.uuid4()),
-                "inputs": [ci_to_civ(ci) for ci in context["phase"]["inputs"]],
+                "inputs": [
+                    ci_to_civ(ci)
+                    for ci in context["phase"]["algorithm_inputs"]
+                ],
                 "outputs": [
-                    ci_to_civ(ci) for ci in context["phase"]["outputs"]
+                    ci_to_civ(ci)
+                    for ci in context["phase"]["algorithm_outputs"]
                 ],
                 "status": "Succeeded",
                 "started_at": "2023-11-29T10:31:25.691799Z",

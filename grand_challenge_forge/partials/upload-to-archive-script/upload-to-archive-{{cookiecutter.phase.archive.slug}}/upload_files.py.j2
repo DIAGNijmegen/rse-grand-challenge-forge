@@ -33,7 +33,7 @@ Happy uploading!
 from pathlib import Path
 
 import gcapi
-{% if cookiecutter.phase.inputs | has_json -%}
+{% if cookiecutter.phase.algorithm_inputs | has_json -%}
 import json
 {%- endif %}
 
@@ -42,7 +42,7 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 ARCHIVE_SLUG = "{{ cookiecutter.phase.archive.slug }}"
 
 EXPECTED_CASES = [
-    # for: {% for ci in cookiecutter.phase.inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
+    # for: {% for ci in cookiecutter.phase.algorithm_inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
 {%- for expected_cases in cookiecutter.phase.expected_cases %}
     {{ expected_cases }},
 {%- endfor %}
@@ -86,7 +86,7 @@ def upload_files():
 
 def map_case_content_to_interfaces(case):
     return {
-        {%- for ci in cookiecutter.phase.inputs %}
+        {%- for ci in cookiecutter.phase.algorithm_inputs %}
         {%- if ci | is_json %}
         "{{ ci.slug }}": json.loads(Path(case[{{ loop.index - 1}}]).read_text()),
         {%- else %}

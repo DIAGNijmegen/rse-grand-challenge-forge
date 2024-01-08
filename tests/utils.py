@@ -27,7 +27,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
                     "slug": "archive-slug",
                     "url": "https://grand-challenge.org/archives/archive-slug/"
                 },
-                "inputs": [
+                "algorithm_inputs": [
                     {
                         "slug": "input-ci-slug",
                         "kind": "Segmentation",
@@ -53,7 +53,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "relative_path": "yet-another-non-json-input-value"
                     }
                 ],
-                "outputs": [
+                "algorithm_outputs": [
                     {
                         "slug": "output-ci-slug",
                         "kind": "Image",
@@ -86,7 +86,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
                     "slug": "another-archive-slug",
                     "url": "https://grand-challenge.org/archives/another-archive-slug/"
                 },
-                "inputs": [
+                "algorithm_inputs": [
                     {
                         "slug": "input-ci-slug",
                         "kind": "Image",
@@ -94,7 +94,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "relative_path": "images/input-value"
                     }
                 ],
-                "outputs": [
+                "algorithm_outputs": [
                     {
                         "slug": "another-output-ci-slug",
                         "kind": "Anything",
