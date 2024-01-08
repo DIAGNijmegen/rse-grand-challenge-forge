@@ -1,5 +1,8 @@
 # History
 
+## 0.3.0 (2023-01-08)
+* Replace "input"/"output" in the context JSON input with "algorithm_input"/"algorithm_output".
+
 ## 0.2.2 (2023-01-02)
 * Various improvements to spelling and wording in the challenge packs
 * Report grand-challenge-forge version in generated pack README
