@@ -18,10 +18,10 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 from pathlib import Path
-{% if cookiecutter.phase.inputs | has_json or cookiecutter.phase.outputs | has_json -%}
+{% if cookiecutter.phase.algorithm_inputs | has_json or cookiecutter.phase.algorithm_outputs | has_json -%}
 import json
 {%- endif %}
-{% if cookiecutter.phase.inputs | has_image or cookiecutter.phase.outputs | has_image -%}
+{% if cookiecutter.phase.algorithm_inputs | has_image or cookiecutter.phase.algorithm_outputs | has_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -35,7 +35,7 @@ RESOURCE_PATH = Path("resources")
 
 def run():
     # Read the input
-    {% for ci in cookiecutter.phase.inputs -%}
+    {% for ci in cookiecutter.phase.algorithm_inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
     {{ py_slug }} = load_image_file_as_array(
@@ -55,7 +55,7 @@ def run():
         print(f.read())
 
     # For now, let us set make bogus predictions
-    {%- for ci in cookiecutter.phase.outputs %}
+    {%- for ci in cookiecutter.phase.algorithm_outputs %}
     {{ ci.slug | replace("-", "_")}} =
         {%- if ci | is_image %} numpy.eye(4, 2)
         {%- elif ci | is_json %} {"content": "should match the required format"}
@@ -64,7 +64,7 @@ def run():
     {%- endfor %}
 
     # Save your output
-    {% for ci in cookiecutter.phase.outputs -%}
+    {% for ci in cookiecutter.phase.algorithm_outputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
     write_array_as_image_file(
@@ -86,7 +86,7 @@ def run():
     {% endif -%}
     {% endfor %}
     return 0
-{%- if cookiecutter.phase.inputs | has_json %}
+{%- if cookiecutter.phase.algorithm_inputs | has_json %}
 
 
 def load_json_file(*, location):
@@ -94,7 +94,7 @@ def load_json_file(*, location):
     with open(location, 'r') as f:
         return json.loads(f.read())
 {%- endif %}
-{%- if cookiecutter.phase.outputs | has_json %}
+{%- if cookiecutter.phase.algorithm_outputs | has_json %}
 
 
 def write_json_file(*, location, content):
@@ -102,7 +102,7 @@ def write_json_file(*, location, content):
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
 {%- endif %}
-{%- if cookiecutter.phase.inputs | has_image %}
+{%- if cookiecutter.phase.algorithm_inputs | has_image %}
 
 
 def load_image_file_as_array(*, location):
@@ -113,7 +113,7 @@ def load_image_file_as_array(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if cookiecutter.phase.outputs | has_image %}
+{%- if cookiecutter.phase.algorithm_outputs | has_image %}
 
 
 def write_array_as_image_file(*, location, array):
@@ -129,7 +129,7 @@ def write_array_as_image_file(*, location, array):
         useCompression=True,
     )
 {%- endif %}
-{%- if cookiecutter.phase.inputs | has_file %}
+{%- if cookiecutter.phase.algorithm_inputs | has_file %}
 
 
 # Note to the challenge hosts:
@@ -140,7 +140,7 @@ def load_file(*, location):
     with open(location) as f:
         return f.read()
 {%- endif %}
-{%- if cookiecutter.phase.outputs | has_file %}
+{%- if cookiecutter.phase.algorithm_outputs | has_file %}
 
 
 # Note to the challenge hosts:

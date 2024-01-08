@@ -48,7 +48,7 @@ a directory `dist/` (default).
                 "archive": {
                     "url": "https://grand-challenge.org/archives/archive-slug/"
                 },
-                "inputs": [
+                "algorithm_inputs": [
                     {
                         "slug": "input-ci-slug",
                         "kind": "Segmentation",
@@ -62,7 +62,7 @@ a directory `dist/` (default).
                         "relative_path": "another-input-value.json"
                     }
                 ],
-                "outputs": [
+                "algorithm_outputs": [
                     {
                         "slug": "output-ci-slug",
                         "kind": "Image",
@@ -82,7 +82,7 @@ a directory `dist/` (default).
                 "archive": {
                     "url": "https://grand-challenge.org/archives/another-archive-slug/"
                 },
-                "inputs": [
+                "algorithm_inputs": [
                     {
                         "slug": "input-ci-slug",
                         "kind": "Image",
@@ -90,7 +90,7 @@ a directory `dist/` (default).
                         "relative_path": "images/input-value"
                     }
                 ],
-                "outputs": [
+                "algorithm_outputs": [
                     {
                         "slug": "another-output-ci-slug",
                         "kind": "Anything",
