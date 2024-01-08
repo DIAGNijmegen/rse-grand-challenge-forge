@@ -4,6 +4,7 @@
 
 A utility that generates distributable items that help challenge organizers set up their challenge more easily on
 [Grand-Challenge.org](https://grand-challenge.org/).
+
 ---
 [![CI](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/DIAGNijmegen/rse-grand-challenge-forge/actions/workflows/ci.yml/badge.svg?branch=main)
 [![PyPI](https://img.shields.io/pypi/v/grand-challenge-forge)](https://pypi.org/project/grand-challenge-forge/)
