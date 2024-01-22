@@ -1,5 +1,8 @@
 # History
 
+## 0.4.0 (2023-01-22)
+* Stop using '/tmp' in example Dockerfiles to contain non-transient files.
+
 ## 0.3.0 (2023-01-08)
 * Replace "input"/"output" in the context JSON input with "algorithm_input"/"algorithm_output".
 
