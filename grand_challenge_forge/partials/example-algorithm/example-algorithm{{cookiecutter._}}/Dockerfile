@@ -7,18 +7,18 @@ ENV PYTHONUNBUFFERED 1
 RUN groupadd -r user && useradd -m --no-log-init -r -g user user
 USER user
 
-WORKDIR /tmp
+WORKDIR /opt/app
 
-COPY --chown=user:user requirements.txt /tmp
-COPY --chown=user:user resources /tmp/resources
+COPY --chown=user:user requirements.txt /opt/app/
+COPY --chown=user:user resources /opt/app/resources
 
 # You can add any Python dependencies to requirements.txt
 RUN python -m pip install \
     --user \
     --no-cache-dir \
     --no-color \
-    --requirement /tmp/requirements.txt
+    --requirement /opt/app/requirements.txt
 
-COPY --chown=user:user inference.py /tmp
+COPY --chown=user:user inference.py /opt/app/
 
 ENTRYPOINT ["python", "inference.py"]
