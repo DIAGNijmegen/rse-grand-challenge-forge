@@ -31,7 +31,7 @@ from pprint import pformat, pprint
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
-GROUND_TRUTH_DIRECTORY = Path("/tmp/ground_truth")
+GROUND_TRUTH_DIRECTORY = Path("ground_truth")
 
 {% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
 def main():
