@@ -24,8 +24,7 @@ fi
 echo "=+= (Re)build the container"
 docker build "$SCRIPT_DIR" \
   --platform=linux/amd64 \
-  --quiet \
-  --tag $DOCKER_TAG
+  --tag $DOCKER_TAG 2>&1
 
 
 echo "=+= Doing a forward pass"
