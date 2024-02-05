@@ -116,30 +116,43 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
 
 
 def _test_subprocess(script_dir, number_run, script_name="test_run.sh"):
+    if logger.getEffectiveLevel() is logging.DEBUG:
+        kwargs = {
+            "stdout": sys.stdout.buffer,
+            "stderr": sys.stderr.buffer,
+        }
+    else:
+        kwargs = {
+            "capture_output": True,
+        }
+
     result = subprocess.run(
         [script_dir / script_name],
-        capture_output=True,
+        **kwargs,
     )
 
-    report_output = (
-        f"StdOut Log:\n"
-        f"{result.stdout.decode(sys.getfilesystemencoding())}"
-        f"StdErr Log:\n"
-        f"{result.stderr.decode(sys.getfilesystemencoding())}"
-    )
-    logger.debug(report_output)
+    if result.stdout or result.stderr:
+        report_output = (
+            f"StdOut Log:\n"
+            f"{result.stdout.decode(sys.getfilesystemencoding())}"
+            f"StdErr Log:\n"
+            f"{result.stderr.decode(sys.getfilesystemencoding())}"
+        )
+        logger.debug(report_output)
+    else:
+        report_output = None
 
     if result.returncode != 0:  # Not a clean exit
         raise QualityFailureError(
             f"Script in {script_dir!r} does not exit with 0 "
-            f"on run {number_run}:\n"
-            f"{report_output}"
+            f"on run {number_run}" + report_output
+            and f":\n {report_output}"
         )
     elif result.stderr:
         raise QualityFailureError(
             f"Example algorithm in {script_dir!r} produces errors "
-            f"on run {number_run}:\n"
-            f"{report_output}"
+            f"on run {number_run}" + report_output
+            and f":\n {report_output}"
         )
 
     return result
