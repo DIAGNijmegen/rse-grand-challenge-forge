@@ -55,7 +55,7 @@ docker run --rm \
     --quiet \
     --env HOST_UID=`id --user` \
     --env HOST_GID=`id --group` \
-    --volume ${OUTPUT_DIR}:/output \
+    --volume "$OUTPUT_DIR":/output \
     alpine:latest \
     /bin/sh -c 'chown -R ${HOST_UID}:${HOST_GID} /output'
 
