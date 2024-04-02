@@ -9,9 +9,9 @@ To run it locally, you can call the following bash script:
 
 This will start the inference and reads from ./test/input and outputs to ./test/output
 
-To export the container and prep it for upload to Grand-Challenge.org you can call:
+To save the container and prep it for upload to Grand-Challenge.org you can call:
 
-  docker save example-algorithm-{{ cookiecutter.phase.slug }} | gzip -c > example-algorithm-{{ cookiecutter.phase.slug }}.tar.gz
+  ./save.sh
 
 Any container that shows the same behavior will do, this is purely an example of how one COULD do it.
 
