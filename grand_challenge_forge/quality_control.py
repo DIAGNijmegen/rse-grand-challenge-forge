@@ -1,4 +1,6 @@
+import glob
 import logging
+import os
 import subprocess
 import sys
 from unittest.mock import MagicMock, patch
@@ -66,13 +68,19 @@ def example_algorithm(phase_context, algorithm_dir):
         )
         _test_example_algorithm(phase_context, algorithm_dir, number_run=n + 1)
 
+    _test_example_algorithm_save(phase_context, algorithm_dir)
+
     logger.debug("💚 Quality OK!")
 
 
 def _test_example_algorithm(phase_context, algorithm_dir, number_run):
     output_dir = algorithm_dir / "test" / "output"
 
-    _test_subprocess(script_dir=algorithm_dir, number_run=number_run)
+    _test_subprocess(
+        script_dir=algorithm_dir,
+        number_run=number_run,
+        script_name="test_run.sh",
+    )
 
     # Check if output is generated (ignore content)
     for output in phase_context["phase"]["algorithm_outputs"]:
@@ -82,6 +90,35 @@ def _test_example_algorithm(phase_context, algorithm_dir, number_run):
                 f"Example algorithm does not generate output on run {number_run}: "
                 f"{output['relative_path']}"
             )
+
+
+def _test_save(pattern, script_dir):
+    matching_files = glob.glob(pattern)
+
+    assert len(matching_files) == 0
+
+    _test_subprocess(
+        script_dir=script_dir, number_run=1, script_name="save.sh"
+    )
+
+    # Check if saved image exists
+    matching_files = glob.glob(pattern)
+    if not len(matching_files) == 1:
+        raise QualityFailureError(
+            f"Example save.sh does not generate the exported image matching: "
+            f"{pattern}"
+        )
+
+    for filename in matching_files:
+        os.remove(filename)
+
+
+def _test_example_algorithm_save(phase_context, algorithm_dir):
+    pattern = str(
+        algorithm_dir
+        / f"example-algorithm-{phase_context['phase']['slug']}_*.tar.gz"
+    )
+    _test_save(pattern, script_dir=algorithm_dir)
 
 
 def example_evaluation(phase_context, evaluation_dir):
@@ -98,13 +135,19 @@ def example_evaluation(phase_context, evaluation_dir):
             phase_context, evaluation_dir, number_run=n + 1
         )
 
+    _test_example_evaluation_save(phase_context, evaluation_dir)
+
     logger.debug("💚 Quality OK!")
 
 
 def _test_example_evaluation(phase_context, evaluation_dir, number_run):
     output_dir = evaluation_dir / "test" / "output"
 
-    _test_subprocess(script_dir=evaluation_dir, number_run=number_run)
+    _test_subprocess(
+        script_dir=evaluation_dir,
+        number_run=number_run,
+        script_name="test_run.sh",
+    )
 
     # Check if output is generated (ignore content)
     expected_file = output_dir / "metrics.json"
@@ -115,7 +158,15 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
         )
 
 
-def _test_subprocess(script_dir, number_run, script_name="test_run.sh"):
+def _test_example_evaluation_save(phase_context, evaluation_dir):
+    pattern = str(
+        evaluation_dir
+        / f"example-evaluation-{phase_context['phase']['slug']}_*.tar.gz"
+    )
+    _test_save(pattern, script_dir=evaluation_dir)
+
+
+def _test_subprocess(script_dir, number_run, script_name):
     if logger.getEffectiveLevel() is logging.DEBUG:
         kwargs = {
             "stdout": sys.stdout.buffer,
