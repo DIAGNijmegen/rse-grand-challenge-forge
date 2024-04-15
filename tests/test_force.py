@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from grand_challenge_forge.exceptions import OutputOverwriteError
@@ -13,10 +15,10 @@ def test_force_overwrites(tmp_path):
     assert not expected_pack.exists()  # Sanity
 
     # First generate the example
-    generate_challenge_pack(context=context, output_directory=tmp_path)
+    os.mkdir(expected_pack)
     assert expected_pack.exists()
 
-    # Generate again should output an error
+    # Generate should output an error
     with pytest.raises(OutputOverwriteError):
         generate_challenge_pack(context=context, output_directory=tmp_path)
 
