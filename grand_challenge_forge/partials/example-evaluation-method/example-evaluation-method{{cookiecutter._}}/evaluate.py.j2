@@ -71,7 +71,7 @@ def process(job):
     # Firstly, find the location of the results
     {% for ci in cookiecutter.phase.algorithm_outputs %}
     {%- set py_slug = ci.slug | replace("-", "_") -%}
-    {{ py_slug }}_location = get_file_location(
+    location_{{ py_slug }} = get_file_location(
             job_pk=job["pk"],
             values=job["outputs"],
             slug="{{ ci.slug }}",
@@ -82,18 +82,18 @@ def process(job):
     {% for ci in cookiecutter.phase.algorithm_outputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
-    {{ py_slug }} = load_image_file(
-        location={{ py_slug }}_location,
+    result_{{ py_slug }} = load_image_file(
+        location=location_{{ py_slug }},
     )
     {% endif -%}
     {% if ci | is_json -%}
-    {{ py_slug }} = load_json_file(
-        location={{ py_slug }}_location,
+    result_{{ py_slug }} = load_json_file(
+        location=location_{{ py_slug }},
     )
     {% endif -%}
     {% if ci | is_file -%}
-    {{ py_slug }} = load_file(
-        location={{ py_slug }}_location,
+    result_{{ py_slug }} = load_file(
+        location=location_{{ py_slug }},
     )
     {% endif -%}
     {%- endfor %}
@@ -103,7 +103,7 @@ def process(job):
     {% for ci in cookiecutter.phase.algorithm_inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
-    {{ py_slug }}_image_name = get_image_name(
+    image_name_{{ py_slug }} = get_image_name(
             values=job["inputs"],
             slug="{{ ci.slug }}",
     )

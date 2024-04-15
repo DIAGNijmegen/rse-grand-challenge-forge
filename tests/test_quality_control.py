@@ -11,7 +11,7 @@ from grand_challenge_forge.forge import (
     generate_upload_to_archive_script,
     post_creation_hooks,
 )
-from tests.utils import pack_context_factory
+from tests.utils import numerical_pack_context_factory, pack_context_factory
 
 BROKEN_UPLOAD_SCRIPT_CONTEXT = pack_context_factory(
     phases=[
@@ -38,6 +38,13 @@ def test_general_pack_quality_assurance(tmp_path):
     [
         [
             pack_context_factory(),
+            [  # Per phase
+                nullcontext(),
+                nullcontext(),
+            ],
+        ],
+        [
+            numerical_pack_context_factory(),
             [  # Per phase
                 nullcontext(),
                 nullcontext(),
@@ -78,6 +85,13 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
             ],
         ],
         [
+            numerical_pack_context_factory(),
+            [  # Per phase
+                nullcontext(),
+                nullcontext(),
+            ],
+        ],
+        [
             pack_context_factory(should_fail=True),
             [  # Per phase
                 pytest.raises(QualityFailureError),
@@ -112,6 +126,13 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
     [
         [
             pack_context_factory(),
+            [  # Per phase
+                nullcontext(),
+                nullcontext(),
+            ],
+        ],
+        [
+            numerical_pack_context_factory(),
             [  # Per phase
                 nullcontext(),
                 nullcontext(),
