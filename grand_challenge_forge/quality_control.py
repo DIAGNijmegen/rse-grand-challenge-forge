@@ -5,6 +5,7 @@ import subprocess
 import sys
 from unittest.mock import MagicMock, patch
 
+from grand_challenge_forge import RESOURCES_PATH
 from grand_challenge_forge.exceptions import QualityFailureError
 from grand_challenge_forge.utils import (
     change_directory,
@@ -93,13 +94,24 @@ def _test_example_algorithm(phase_context, algorithm_dir, number_run):
 
 
 def _test_save(pattern, script_dir):
+    logger.debug(
+        "Testing container save, using a mock save function for efficiency"
+    )
+
     matching_files = glob.glob(pattern)
 
     assert len(matching_files) == 0
 
-    _test_subprocess(
-        script_dir=script_dir, number_run=1, script_name="save.sh"
-    )
+    mocks_bin = RESOURCES_PATH / "mocks" / "bin"
+    current_path = os.environ.get("PATH", "")
+    extended_path = f"{mocks_bin}:{current_path}"
+
+    with patch.dict("os.environ", PATH=extended_path):
+        _test_subprocess(
+            script_dir=script_dir,
+            number_run=1,
+            script_name="save.sh",
+        )
 
     # Check if saved image exists
     matching_files = glob.glob(pattern)

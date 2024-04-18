@@ -38,12 +38,12 @@ def run():
     {% for ci in cookiecutter.phase.algorithm_inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
-    {{ py_slug }} = load_image_file_as_array(
+    input_{{ py_slug }} = load_image_file_as_array(
         location=INPUT_PATH / "{{ ci.relative_path }}",
     )
     {% endif -%}
     {% if ci | is_json -%}
-    {{ py_slug }} = load_json_file(
+    input_{{ py_slug }} = load_json_file(
          location=INPUT_PATH / "{{ ci.relative_path }}",
     )
     {% endif -%}
@@ -56,7 +56,7 @@ def run():
 
     # For now, let us set make bogus predictions
     {%- for ci in cookiecutter.phase.algorithm_outputs %}
-    {{ ci.slug | replace("-", "_")}} =
+    output_{{ ci.slug | replace("-", "_")}} =
         {%- if ci | is_image %} numpy.eye(4, 2)
         {%- elif ci | is_json %} {"content": "should match the required format"}
         {%- elif ci | is_file %} "content: should match the required format"
@@ -69,19 +69,19 @@ def run():
     {% if ci | is_image -%}
     write_array_as_image_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
-        array={{ py_slug }},
+        array=output_{{ py_slug }},
     )
     {% endif -%}
     {% if ci | is_json -%}
     write_json_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
-        content={{ py_slug }}
+        content=output_{{ py_slug }}
     )
     {% endif -%}
     {% if ci | is_file -%}
     write_file(
         location=OUTPUT_PATH / "{{ ci.relative_path }}",
-        content={{ py_slug }}
+        content=output_{{ py_slug }}
     )
     {% endif -%}
     {% endfor %}

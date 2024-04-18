@@ -137,3 +137,18 @@ def pack_context_factory(should_fail=False, **kwargs):
 
     counter = counter + 1
     return result
+
+
+def numerical_pack_context_factory(**kwargs):
+    pack_context = pack_context_factory(**kwargs)
+
+    for archive in pack_context["challenge"]["archives"]:
+        archive["slug"] = f"00-{archive['slug']}"
+
+    for phase in pack_context["challenge"]["phases"]:
+        phase["slug"] = f"00-{phase['slug']}"
+
+        for cv in [*phase["algorithm_inputs"], *phase["algorithm_outputs"]]:
+            cv["slug"] = f"00-{cv['slug']}"
+
+    return pack_context

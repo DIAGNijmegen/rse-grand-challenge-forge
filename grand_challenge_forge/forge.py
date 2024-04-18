@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import shutil
 import uuid
 from copy import deepcopy
@@ -10,6 +9,7 @@ from pathlib import Path
 from cookiecutter.generate import generate_files
 
 import grand_challenge_forge.quality_control as qc
+from grand_challenge_forge import PARTIALS_PATH
 from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
@@ -20,10 +20,6 @@ from grand_challenge_forge.utils import cookiecutter_context as cc
 from grand_challenge_forge.utils import remove_j2_suffix
 
 logger = logging.getLogger(__name__)
-
-SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
-PARTIALS_PATH = SCRIPT_PATH / "partials"
-RESOURCES_PATH = SCRIPT_PATH / "resources"
 
 
 def generate_challenge_pack(
