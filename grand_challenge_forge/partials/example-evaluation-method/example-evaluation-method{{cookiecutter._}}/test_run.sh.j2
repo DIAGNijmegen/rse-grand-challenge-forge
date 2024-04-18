@@ -43,7 +43,7 @@ docker run --rm \
     {% if "_no_gpus" not in cookiecutter or not cookiecutter._no_gpus -%}
     --gpus all \
     {% endif -%}
-    --volume "$INPUT_DIR":/input \
+    --volume "$INPUT_DIR":/input:ro \
     --volume "$OUTPUT_DIR":/output \
     --volume "$DOCKER_NOOP_VOLUME":/tmp \
     $DOCKER_TAG
