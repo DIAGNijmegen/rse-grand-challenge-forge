@@ -18,6 +18,8 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 import json
+import multiprocessing
+import os
 {% if cookiecutter.phase.algorithm_inputs | has_image -%}
 from glob import glob
 import SimpleITK
@@ -33,6 +35,18 @@ INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
 GROUND_TRUTH_DIRECTORY = Path("ground_truth")
 
+# The optimal number of workers ultimately depends on how many
+# resources each process would call upon.
+# To limit this, update the Dockerfile GRAND_CHALLENGE_MAX_WORKERS
+environ_cpu_limit = os.getenv("GRAND_CHALLENGE_MAX_WORKERS")
+cpu_count = multiprocessing.cpu_count()
+NUM_PROCESSES = min(
+    [
+        int(environ_cpu_limit or cpu_count),
+        cpu_count,
+    ]
+)
+
 {% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
 def main():
     print_inputs()
@@ -45,9 +59,8 @@ def main():
     # We work that out from predictions.json
 
     # Start a number of process workers, using multiprocessing
-    # The optimal number of workers ultimately depends on how many
-    # resources each process() would call upon
-    with Pool(processes=4) as pool:
+
+    with Pool(processes=NUM_PROCESSES) as pool:
         metrics["results"] = pool.map(process, predictions)
 
     # Now generate an overall score(s) for this submission
