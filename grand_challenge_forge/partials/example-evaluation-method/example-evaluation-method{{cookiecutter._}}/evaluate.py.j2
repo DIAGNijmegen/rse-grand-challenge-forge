@@ -25,10 +25,10 @@ from glob import glob
 import SimpleITK
 {%- endif %}
 import random
-from multiprocessing import Pool
 from statistics import mean
 from pathlib import Path
 from pprint import pformat, pprint
+from concurrent.futures import ThreadPoolExecutor
 
 
 INPUT_DIRECTORY = Path("/input")
@@ -40,7 +40,7 @@ GROUND_TRUTH_DIRECTORY = Path("ground_truth")
 # To limit this, update the Dockerfile GRAND_CHALLENGE_MAX_WORKERS
 environ_cpu_limit = os.getenv("GRAND_CHALLENGE_MAX_WORKERS")
 cpu_count = multiprocessing.cpu_count()
-NUM_PROCESSES = min(
+MAX_WORKERS = min(
     [
         int(environ_cpu_limit or cpu_count),
         cpu_count,
@@ -58,12 +58,12 @@ def main():
     # Note that the jobs are not in any order!
     # We work that out from predictions.json
 
-    # Start a number of process workers, using multiprocessing
+    # Use threaded workers to process the predictions more efficiently
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        metrics["results"] = list(executor.map(process, predictions))
 
-    with Pool(processes=NUM_PROCESSES) as pool:
-        metrics["results"] = pool.map(process, predictions)
-
-    # Now generate an overall score(s) for this submission
+    # We have the results per prediction, we can aggregate over the results and
+    # generate an overall score(s) for this submission
     metrics["aggregates"] = {
         "my_metric": mean(result["my_metric"] for result in metrics["results"])
     }
@@ -79,6 +79,7 @@ def process(job):
     report = "Processing:\n"
     report += pformat(job)
     report += "\n"
+
 
 
     # Firstly, find the location of the results
