@@ -101,11 +101,11 @@ def _start_pool_worker(fn, predictions, max_workers, results, errors):
 def _pool_worker(*, fn, predictions, max_workers, results, errors):
     terminating_child_processes = False
 
-    with ProcessPoolExecutor(max_workers=max_workers) as pool:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
 
             def handle_error(error, prediction="Unknown"):
-                pool.shutdown(wait=False, cancel_futures=True)
+                executor.shutdown(wait=False, cancel_futures=True)
                 errors.append((prediction, error))
 
                 nonlocal terminating_child_processes
@@ -125,7 +125,7 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
 
             # Submit the processing tasks of the predictions
             futures = [
-                pool.submit(fn, prediction) for prediction in predictions
+                executor.submit(fn, prediction) for prediction in predictions
             ]
             future_to_predictions = {
                 future: item
