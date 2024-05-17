@@ -1,19 +1,19 @@
 import multiprocessing
 import os
 import signal
-from concurrent.futures import as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager, Process
 
 import psutil
-from pebble import ProcessPool
 
 
-class PredictionProcessingError(RuntimeError):
-    def __init__(self, prediction):
+class PredictionProcessingError(Exception):
+    def __init__(self, prediction, error):
         self.prediction = prediction
+        self.error = error
 
     def __str__(self):
-        return f"Error for prediction: {self.prediction}"
+        return f"Error for prediction {self.prediction}: {self.error}"
 
 
 def get_max_workers():
@@ -38,7 +38,7 @@ def get_max_workers():
 
 def run_prediction_processing(*, fn, predictions):
     """
-    Processes predictions in separate processes.
+    Processes predictions in a separate process.
 
     This takes child processes into account:
     - if any child process is terminated, all prediction processing will abort
@@ -47,49 +47,77 @@ def run_prediction_processing(*, fn, predictions):
     Parameters
     ----------
     fn : function
-        Function to execute.
+        Function to execute that will process each prediction
 
     predictions : list
         List of predictions.
 
+    Returns
+    -------
+    A list of results
     """
     with Manager() as manager:
         results = manager.list()
         errors = manager.list()
 
-        process = Process(
-            target=__pool_worker,
-            name="PredictionProcessing",
-            kwargs=dict(
-                fn=fn,
-                predictions=predictions,
-                max_workers=get_max_workers(),
-                results=results,
-                errors=errors,
-            ),
+        pool_worker = _start_pool_worker(
+            fn=fn,
+            predictions=predictions,
+            max_workers=get_max_workers(),
+            results=results,
+            errors=errors,
         )
         try:
-            process.start()
-            process.join()
+            pool_worker.join()
         finally:
-            process.close()
+            pool_worker.terminate()
 
         for prediction, e in errors:
-            raise PredictionProcessingError(prediction=prediction) from e
+            raise PredictionProcessingError(
+                prediction=prediction,
+                error=e,
+            ) from e
 
         return list(results)
 
 
-def __pool_worker(*, fn, predictions, max_workers, results, errors):
+def _start_pool_worker(fn, predictions, max_workers, results, errors):
+    process = Process(
+        target=_pool_worker,
+        name="PredictionProcessing",
+        kwargs=dict(
+            fn=fn,
+            predictions=predictions,
+            max_workers=max_workers,
+            results=results,
+            errors=errors,
+        ),
+    )
+    process.start()
+
+    return process
+
+
+def _pool_worker(*, fn, predictions, max_workers, results, errors):
     terminating_child_processes = False
-    with ProcessPool(max_workers=max_workers) as pool:
+
+    with ProcessPoolExecutor(max_workers=max_workers) as pool:
         try:
+
+            def handle_error(error, prediction="Unknown"):
+                pool.shutdown(wait=False, cancel_futures=True)
+                errors.append((prediction, error))
+
+                nonlocal terminating_child_processes
+                terminating_child_processes = True
+                _terminate_child_processes()
 
             def sigchld_handler(*_, **__):
                 if not terminating_child_processes:
-                    pool.stop()
-                    raise RuntimeError(
-                        "Child process was terminated unexpectedly"
+                    handle_error(
+                        RuntimeError(
+                            "Child process was terminated unexpectedly"
+                        )
                     )
 
             # Register the SIGCHLD handler
@@ -97,7 +125,7 @@ def __pool_worker(*, fn, predictions, max_workers, results, errors):
 
             # Submit the processing tasks of the predictions
             futures = [
-                pool.schedule(fn, [prediction]) for prediction in predictions
+                pool.submit(fn, prediction) for prediction in predictions
             ]
             future_to_predictions = {
                 future: item
@@ -107,22 +135,22 @@ def __pool_worker(*, fn, predictions, max_workers, results, errors):
             for future in as_completed(future_to_predictions):
                 try:
                     result = future.result()
+                    results.append(result)
                 except Exception as e:
-                    for f in futures:
-                        f.cancel()
-                    pool.stop()
-                    errors.append((future_to_predictions[future], e))
-                results.append(result)
+                    handle_error(e, prediction=future_to_predictions[future])
         finally:
             terminating_child_processes = True
-            terminate_child_processes()
+            _terminate_child_processes()
 
 
-def terminate_child_processes():
+def _terminate_child_processes():
     current_process = psutil.Process(os.getpid())
     children = current_process.children(recursive=True)
     for child in children:
-        child.terminate()
+        try:
+            child.terminate()
+        except psutil.NoSuchProcess:
+            pass  # Not a problem
 
     # Wait for processes to terminate
     gone, still_alive = psutil.wait_procs(children, timeout=5)
@@ -130,4 +158,7 @@ def terminate_child_processes():
     # Forcefully kill any remaining processes
     for p in still_alive:
         print(f"Forcefully killing child process {p.pid}")
-        p.kill()
+        try:
+            p.kill()
+        except psutil.NoSuchProcess:
+            pass  # That is fine
