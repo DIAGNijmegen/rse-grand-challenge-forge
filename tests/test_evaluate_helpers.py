@@ -84,15 +84,13 @@ def test_prediction_processing_error():
 
 @pytest.mark.timeout(5)
 def test_prediction_processing_killing_of_child_processes():
-    # Firstly, we need to start somethings that spawns child processes
-
     predictions = ["prediction1", "prediction2"]
     result = run_prediction_processing(
         fn=child_spawning_process, predictions=predictions
     )
 
-    # The above call returning already shows that it correctly kill
-    # child processes, for sanity:
+    # The above call returning already shows that it correctly terminates
+    # child processes, just for sanity:
     assert len(result) == len(predictions)
 
 
