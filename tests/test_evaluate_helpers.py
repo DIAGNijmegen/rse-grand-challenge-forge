@@ -25,6 +25,10 @@ from helpers import (  # noqa: E402
     run_prediction_processing,
 )
 
+# Some of the test below, if things go wrong, can potentially deadlock.
+# So we set a maximum runtime
+pytestmark = pytest.mark.timeout(5)
+
 
 def working_process(p):
     return f"{p} result"
@@ -82,8 +86,10 @@ def test_prediction_processing_error():
     assert excinfo.value.prediction in predictions
 
 
-@pytest.mark.timeout(5)
 def test_prediction_processing_killing_of_child_processes():
+    # If something goes wrong, this test could deadlock
+    # 5 seconds should be more than enough
+
     predictions = ["prediction1", "prediction2"]
     result = run_prediction_processing(
         fn=child_spawning_process, predictions=predictions
@@ -94,7 +100,6 @@ def test_prediction_processing_killing_of_child_processes():
     assert len(result) == len(predictions)
 
 
-@pytest.mark.timeout(5)
 def test_prediction_processing_catching_killing_of_child_processes():
     predictions = ["prediction1", "prediction2"]
 
