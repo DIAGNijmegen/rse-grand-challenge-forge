@@ -18,7 +18,7 @@ if [ -d "$OUTPUT_DIR" ]; then
   rm -rf "${OUTPUT_DIR}"/*
   chmod -f o+rwx "$OUTPUT_DIR"
 else
-  mkdir --mode=o+rwx "$OUTPUT_DIR"
+  mkdir -m=o+rwx "$OUTPUT_DIR"
 fi
 
 
