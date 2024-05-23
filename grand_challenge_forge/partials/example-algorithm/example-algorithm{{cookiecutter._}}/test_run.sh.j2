@@ -36,7 +36,7 @@ echo "=+= Doing a forward pass"
 #    enables access to any GPUs present
 # '--volume <NAME>:/tmp'
 #   is added because on Grand Challenge this directory cannot be used to store permanent files
-docker volume create "$DOCKER_NOOP_VOLUME"
+docker volume create "$DOCKER_NOOP_VOLUME" > /dev/null
 docker run --rm \
     --platform=linux/amd64 \
     --network none \
@@ -47,7 +47,7 @@ docker run --rm \
     --volume "$OUTPUT_DIR":/output \
     --volume "$DOCKER_NOOP_VOLUME":/tmp \
     $DOCKER_TAG
-docker volume rm "$DOCKER_NOOP_VOLUME"
+docker volume rm "$DOCKER_NOOP_VOLUME" > /dev/null
 
 # Ensure permissions are set correctly on the output
 # This allows the host user (e.g. you) to access and handle these files
