@@ -23,52 +23,26 @@ from glob import glob
 import SimpleITK
 {%- endif %}
 import random
-from multiprocessing import Pool
 from statistics import mean
 from pathlib import Path
 from pprint import pformat, pprint
-
+from helpers import run_prediction_processing
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
 GROUND_TRUTH_DIRECTORY = Path("ground_truth")
 
+
+
 {% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
-def main():
-    print_inputs()
-
-    metrics = {}
-    predictions = read_predictions()
-
-    # We now process each algorithm job for this submission
-    # Note that the jobs are not in any order!
-    # We work that out from predictions.json
-
-    # Start a number of process workers, using multiprocessing
-    # The optimal number of workers ultimately depends on how many
-    # resources each process() would call upon
-    with Pool(processes=4) as pool:
-        metrics["results"] = pool.map(process, predictions)
-
-    # Now generate an overall score(s) for this submission
-    metrics["aggregates"] = {
-        "my_metric": mean(result["my_metric"] for result in metrics["results"])
-    }
-
-    # Make sure to save the metrics
-    write_metrics(metrics=metrics)
-
-    return 0
-
 
 def process(job):
-    # Processes a single algorithm job, looking at the outputs
+    """Processes a single algorithm job, looking at the outputs"""
     report = "Processing:\n"
     report += pformat(job)
     report += "\n"
 
-
-    # Firstly, find the location of the results
+      # Firstly, find the location of the results
     {% for ci in cookiecutter.phase.algorithm_outputs %}
     {%- set py_slug = ci.slug | replace("-", "_") -%}
     location_{{ py_slug }} = get_file_location(
@@ -110,7 +84,7 @@ def process(job):
     {% endif -%}
     {%- endfor %}
 
-    # Fourthly, your load your ground truth
+    # Fourthly, load your ground truth
     # Include it in your evaluation container by placing it in ground_truth/
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
@@ -123,6 +97,30 @@ def process(job):
     return {
         "my_metric": random.choice([1, 0]),
     }
+
+def main():
+    print_inputs()
+
+    metrics = {}
+    predictions = read_predictions()
+
+    # We now process each algorithm job for this submission
+    # Note that the jobs are not in any order!
+    # We work that out from predictions.json
+
+    # Use concurrent workers to process the predictions more efficiently
+    metrics["results"] = run_prediction_processing(fn=process, predictions=predictions)
+
+    # We have the results per prediction, we can aggregate over the results and
+    # generate an overall score(s) for this submission
+    metrics["aggregates"] = {
+        "my_metric": mean(result["my_metric"] for result in metrics["results"])
+    }
+
+    # Make sure to save the metrics
+    write_metrics(metrics=metrics)
+
+    return 0
 
 
 def print_inputs():
