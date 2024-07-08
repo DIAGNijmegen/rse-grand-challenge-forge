@@ -47,6 +47,11 @@ def run():
          location=INPUT_PATH / "{{ ci.relative_path }}",
     )
     {% endif -%}
+    {% if ci | is_file -%}
+    input_{{ py_slug }} = load_file(
+         location=INPUT_PATH / "{{ ci.relative_path }}",
+    )
+    {% endif -%}
     {% endfor %}
     # Process the inputs: any way you'd like
     _show_torch_cuda_info()
@@ -54,7 +59,7 @@ def run():
     with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
         print(f.read())
 
-    # For now, let us set make bogus predictions
+    # For now, let us make bogus predictions
     {%- for ci in cookiecutter.phase.algorithm_outputs %}
     output_{{ ci.slug | replace("-", "_")}} =
         {%- if ci | is_image %} numpy.eye(4, 2)

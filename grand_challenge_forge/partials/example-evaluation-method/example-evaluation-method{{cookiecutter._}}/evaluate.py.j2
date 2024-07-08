@@ -73,11 +73,17 @@ def process(job):
     {%- endfor %}
 
 
-    # Thirdly, retrieve the input image name to match it with an image in your ground truth
+    # Thirdly, retrieve the input file name to match it with your ground truth
     {% for ci in cookiecutter.phase.algorithm_inputs -%}
     {% set py_slug = ci.slug | replace("-", "_") -%}
     {% if ci | is_image -%}
     image_name_{{ py_slug }} = get_image_name(
+            values=job["inputs"],
+            slug="{{ ci.slug }}",
+    )
+    {% endif -%}
+    {% if ci | is_file -%}
+    file_name_{{ py_slug }} = get_file_name(
             values=job["inputs"],
             slug="{{ ci.slug }}",
     )
@@ -148,6 +154,20 @@ def get_image_name(*, values, slug):
     raise RuntimeError(f"Image with interface {slug} not found!")
 {%- endif %}
 
+{%- if cookiecutter.phase.algorithm_inputs | has_file %}
+def get_file_name(*, values, slug):
+    # This tells us the user-provided name of the input file
+    for value in values:
+        if value["interface"]["slug"] == slug:
+            file_url = value["file"]
+            pattern = r'[^/]+$'
+            match = re.search(pattern, file_url)
+            if match:
+                return match.group()
+            else:
+                raise RuntimeError("Could not parse filename.")
+    raise RuntimeError(f"Image with interface {slug} not found!")
+{%- endif %}
 
 def get_interface_relative_path(*, values, slug):
     # Gets the location of the interface relative to the input or output
