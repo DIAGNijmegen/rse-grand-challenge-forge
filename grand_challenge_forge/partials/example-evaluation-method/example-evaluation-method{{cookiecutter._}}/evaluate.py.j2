@@ -22,6 +22,9 @@ import json
 from glob import glob
 import SimpleITK
 {%- endif %}
+{% if cookiecutter.phase.algorithm_inputs | has_image -%}
+import re
+{%- endif %}
 import random
 from statistics import mean
 from pathlib import Path
