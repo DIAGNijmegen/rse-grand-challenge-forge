@@ -179,6 +179,7 @@ def _reap_all_children():
 
 def listen_to_children_errors():
     def handler(*_, **__):
-        _reap_all_children()
+        print("A child failed, terminating all other children")
+        _terminate_child_processes()
 
     signal.signal(signal.SIGCHLD, handler)
