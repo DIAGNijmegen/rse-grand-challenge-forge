@@ -26,7 +26,7 @@ import random
 from statistics import mean
 from pathlib import Path
 from pprint import pformat, pprint
-from helpers import run_prediction_processing
+from helpers import run_prediction_processing, listen_to_children_errors
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
@@ -42,7 +42,10 @@ def process(job):
     report += pformat(job)
     report += "\n"
 
-      # Firstly, find the location of the results
+    # Before we start, ensure we catch any child-process crashes
+    listen_to_children_errors()
+
+    # Firstly, find the location of the results
     {% for ci in cookiecutter.phase.algorithm_outputs %}
     {%- set py_slug = ci.slug | replace("-", "_") -%}
     location_{{ py_slug }} = get_file_location(

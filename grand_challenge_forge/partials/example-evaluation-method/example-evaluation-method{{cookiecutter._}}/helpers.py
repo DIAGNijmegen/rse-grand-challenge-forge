@@ -153,7 +153,7 @@ def _terminate_child_processes():
             pass  # Not a problem
 
     # Wait for processes to terminate
-    gone, still_alive = psutil.wait_procs(children, timeout=5)
+    _, still_alive = psutil.wait_procs(children, timeout=5)
 
     # Forcefully kill any remaining processes
     for p in still_alive:
@@ -162,3 +162,23 @@ def _terminate_child_processes():
             p.kill()
         except psutil.NoSuchProcess:
             pass  # That is fine
+
+    _reap_all_children()
+
+
+def _reap_all_children():
+    """Reaps all child processes that have terminated"""
+    try:
+        while True:
+            pid, _ = os.waitpid(-1, os.WNOHANG)
+            if pid == 0:  # No more terminated child processes
+                break
+    except ChildProcessError:
+        pass  # No more child processes
+
+
+def listen_to_children_errors():
+    def handler(*_, **__):
+        _reap_all_children()
+
+    signal.signal(signal.SIGCHLD, handler)
