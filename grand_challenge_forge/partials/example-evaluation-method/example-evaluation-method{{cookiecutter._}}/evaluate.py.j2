@@ -169,7 +169,7 @@ def get_file_name(*, values, slug):
                 return match.group()
             else:
                 raise RuntimeError("Could not parse filename.")
-    raise RuntimeError(f"Image with interface {slug} not found!")
+    raise RuntimeError(f"File with interface {slug} not found!")
 {%- endif %}
 
 def get_interface_relative_path(*, values, slug):
