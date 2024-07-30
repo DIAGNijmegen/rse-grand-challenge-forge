@@ -22,7 +22,7 @@ import json
 from glob import glob
 import SimpleITK
 {%- endif %}
-{% if cookiecutter.phase.algorithm_inputs | has_image -%}
+{% if cookiecutter.phase.algorithm_inputs | has_image or cookiecutter.phase.algorithm_inputs | has_file -%}
 import re
 {%- endif %}
 import random
@@ -157,6 +157,7 @@ def get_image_name(*, values, slug):
     raise RuntimeError(f"Image with interface {slug} not found!")
 {%- endif %}
 
+
 {%- if cookiecutter.phase.algorithm_inputs | has_file %}
 def get_file_name(*, values, slug):
     # This tells us the user-provided name of the input file
@@ -171,6 +172,7 @@ def get_file_name(*, values, slug):
                 raise RuntimeError("Could not parse filename.")
     raise RuntimeError(f"File with interface {slug} not found!")
 {%- endif %}
+
 
 def get_interface_relative_path(*, values, slug):
     # Gets the location of the interface relative to the input or output
