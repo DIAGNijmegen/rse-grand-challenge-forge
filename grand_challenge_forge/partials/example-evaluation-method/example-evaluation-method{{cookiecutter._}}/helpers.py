@@ -100,15 +100,21 @@ def _start_pool_worker(fn, predictions, max_workers, results, errors):
 
 def _pool_worker(*, fn, predictions, max_workers, results, errors):
     terminating_child_processes = False
-
+    executor_shutting_down = False
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
 
             def handle_error(error, prediction="Unknown"):
-                executor.shutdown(wait=False, cancel_futures=True)
+                nonlocal terminating_child_processes
+                if terminating_child_processes:
+                    return
+
+                nonlocal executor_shutting_down
+                if not executor_shutting_down:
+                    executor_shutting_down = True
+                    executor.shutdown(wait=False, cancel_futures=True)
                 errors.append((prediction, error))
 
-                nonlocal terminating_child_processes
                 terminating_child_processes = True
                 _terminate_child_processes()
 
@@ -139,13 +145,14 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
                 except Exception as e:
                     handle_error(e, prediction=future_to_predictions[future])
         finally:
-            terminating_child_processes = True
-            _terminate_child_processes()
+            if not terminating_child_processes:
+                terminating_child_processes = True
+                _terminate_child_processes()
 
 
-def _terminate_child_processes():
-    current_process = psutil.Process(os.getpid())
-    children = current_process.children(recursive=True)
+def _terminate_child_processes(pid=None):
+    process = psutil.Process(pid or os.getpid())
+    children = process.children(recursive=True)
     for child in children:
         try:
             child.terminate()
@@ -157,7 +164,6 @@ def _terminate_child_processes():
 
     # Forcefully kill any remaining processes
     for p in still_alive:
-        print(f"Forcefully killing child process {p.pid}")
         try:
             p.kill()
         except psutil.NoSuchProcess:

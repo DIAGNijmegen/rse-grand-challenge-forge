@@ -1,11 +1,11 @@
 import os
-import signal
 import sys
 import time
 from functools import partial
 from multiprocessing import Process
 from unittest import mock
 
+import psutil
 import pytest
 
 # Do some creating path hacking to be able to import the helpers
@@ -66,6 +66,18 @@ def send_signals_to_process(process, signal_to_send, interval):
         time.sleep(interval)
 
 
+def terminate_children(process, interval):
+    while True:
+        process = psutil.Process(process.pid)
+        children = process.children(recursive=True)
+        for child in children:
+            try:
+                child.kill()
+            except psutil.NoSuchProcess:
+                pass  # Not a problem
+        time.sleep(interval)
+
+
 def test_prediction_processing():
     predictions = ["prediction1", "prediction2"]
     result = run_prediction_processing(
@@ -110,9 +122,7 @@ def test_prediction_processing_catching_killing_of_child_processes():
         process = _start_pool_worker(*args, **kwargs)
         nonlocal child_terminator
         child_terminator = Process(
-            target=partial(
-                send_signals_to_process, process, signal.SIGCHLD, 0.5
-            )
+            target=partial(terminate_children, process, 0.5)
         )
         child_terminator.start()  # Hasta la vista, baby
         return process
