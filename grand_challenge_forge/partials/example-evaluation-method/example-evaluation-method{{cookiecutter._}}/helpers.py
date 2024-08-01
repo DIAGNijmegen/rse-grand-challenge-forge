@@ -169,18 +169,11 @@ def _terminate_child_processes():
         except psutil.NoSuchProcess:
             pass  # That is fine
 
-    _reap_all_children()
-
-
-def _reap_all_children():
-    """Reaps all child processes that have terminated"""
+    # Finally, prevent zombies by waiting for all child processes
     try:
-        while True:
-            pid, _ = os.waitpid(-1, os.WNOHANG)
-            if pid == 0:  # No more terminated child processes
-                break
+        os.waitpid(-1, 0)
     except ChildProcessError:
-        pass  # No more child processes
+        pass  # No child processes, that if fine
 
 
 def listen_to_children_errors():
