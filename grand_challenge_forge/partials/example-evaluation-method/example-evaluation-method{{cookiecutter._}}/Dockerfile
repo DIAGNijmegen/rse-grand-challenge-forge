@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 docker.io/library/python:3.11-slim
 
 # Ensures that Python output to stdout/stderr is not buffered: prevents missing information when terminating
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 RUN groupadd -r user && useradd -m --no-log-init -r -g user user
 USER user
