@@ -27,7 +27,7 @@ from helpers import (  # noqa: E402
 
 # Some of the test below, if things go wrong, can potentially deadlock.
 # So we set a maximum runtime
-pytestmark = pytest.mark.timeout(5)
+pytestmark = pytest.mark.timeout(4)
 
 
 def working_process(p):
@@ -55,26 +55,18 @@ def forever_process(*_):
         time.sleep(1)
 
 
-def send_signals_to_process(process, signal_to_send, interval):
-    while True:
-        try:
-            os.kill(process.pid, signal_to_send)
-        except ProcessLookupError:
-            # Race conditions sometimes have this try and send a signal even though
-            # the process is already terminated
-            pass
-        time.sleep(interval)
-
-
 def stop_children(process, interval):
-    while True:
+    stopped = False
+    while not stopped:
         process = psutil.Process(process.pid)
         children = process.children(recursive=True)
-        for child in children:
-            try:
-                child.kill()
-            except psutil.NoSuchProcess:
-                pass  # Not a problem
+        if children:
+            for child in children:
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    pass  # Not a problem
+            stopped = True
         time.sleep(interval)
 
 
@@ -135,6 +127,6 @@ def test_prediction_processing_catching_killing_of_child_processes():
         if child_stopper:
             child_stopper.terminate()
 
-    assert "Child process was terminated unexpectedly" in str(
+    assert "A process in the process pool was terminated abruptly" in str(
         excinfo.value.error
     )

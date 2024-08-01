@@ -100,34 +100,20 @@ def _start_pool_worker(fn, predictions, max_workers, results, errors):
 
 def _pool_worker(*, fn, predictions, max_workers, results, errors):
     terminating_child_processes = False
-    executor_shutting_down = False
+
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
 
-            def handle_error(error, prediction="Unknown"):
+            def handle_error(error, prediction):
                 nonlocal terminating_child_processes
                 if terminating_child_processes:
                     return
 
-                nonlocal executor_shutting_down
-                if not executor_shutting_down:
-                    executor_shutting_down = True
-                    executor.shutdown(wait=False, cancel_futures=True)
+                executor.shutdown(wait=False, cancel_futures=True)
                 errors.append((prediction, error))
 
                 terminating_child_processes = True
                 _terminate_child_processes()
-
-            def sigchld_handler(*_, **__):
-                if not terminating_child_processes:
-                    handle_error(
-                        RuntimeError(
-                            "Child process was terminated unexpectedly"
-                        )
-                    )
-
-            # Register the SIGCHLD handler
-            signal.signal(signal.SIGCHLD, sigchld_handler)
 
             # Submit the processing tasks of the predictions
             futures = [
