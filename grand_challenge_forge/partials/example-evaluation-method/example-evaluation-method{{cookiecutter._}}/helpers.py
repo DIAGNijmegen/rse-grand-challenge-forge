@@ -44,6 +44,8 @@ def run_prediction_processing(*, fn, predictions):
     - if any child process is terminated, all prediction processing will abort
     - after prediction processing is done, all child processes are terminated
 
+    Note that the results are returned in completing order.
+
     Parameters
     ----------
     fn : function

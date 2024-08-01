@@ -31,6 +31,8 @@ pytestmark = pytest.mark.timeout(4)
 
 
 def working_process(p):
+    if p == "prediction1":
+        time.sleep(2)
     return f"{p} result"
 
 
@@ -75,7 +77,7 @@ def test_prediction_processing():
     result = run_prediction_processing(
         fn=working_process, predictions=predictions
     )
-    assert ["prediction1 result", "prediction2 result"] == result
+    assert {"prediction1 result", "prediction2 result"} == set(result)
 
 
 def test_prediction_processing_error():
