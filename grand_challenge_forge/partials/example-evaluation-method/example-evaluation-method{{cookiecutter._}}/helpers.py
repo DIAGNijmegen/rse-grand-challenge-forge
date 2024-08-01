@@ -112,7 +112,9 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
                 nonlocal executor_shutting_down
                 if not executor_shutting_down:
                     executor_shutting_down = True
+                    print("### TEST Pre-shutdown")
                     executor.shutdown(wait=False, cancel_futures=True)
+                    print("### TEST Post-shutdown")
                 errors.append((prediction, error))
 
                 terminating_child_processes = True

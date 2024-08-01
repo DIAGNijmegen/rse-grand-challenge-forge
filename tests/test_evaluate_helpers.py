@@ -119,6 +119,7 @@ def test_prediction_processing_catching_killing_of_child_processes():
 
     # Set up the fake child murder scene
     def add_child_terminator(*args, **kwargs):
+        print("max workers: ", kwargs.get("max_workers"))
         process = _start_pool_worker(*args, **kwargs)
         nonlocal child_terminator
         child_terminator = Process(
