@@ -66,7 +66,7 @@ def send_signals_to_process(process, signal_to_send, interval):
         time.sleep(interval)
 
 
-def terminate_children(process, interval):
+def stop_children(process, interval):
     while True:
         process = psutil.Process(process.pid)
         children = process.children(recursive=True)
@@ -115,16 +115,14 @@ def test_prediction_processing_killing_of_child_processes():
 def test_prediction_processing_catching_killing_of_child_processes():
     predictions = ["prediction1", "prediction2"]
 
-    child_terminator = None
+    child_stopper = None
 
     # Set up the fake child murder scene
     def add_child_terminator(*args, **kwargs):
         process = _start_pool_worker(*args, **kwargs)
-        nonlocal child_terminator
-        child_terminator = Process(
-            target=partial(terminate_children, process, 0.5)
-        )
-        child_terminator.start()  # Hasta la vista, baby
+        nonlocal child_stopper
+        child_stopper = Process(target=partial(stop_children, process, 0.5))
+        child_stopper.start()  # Hasta la vista, baby
         return process
 
     try:
@@ -134,8 +132,8 @@ def test_prediction_processing_catching_killing_of_child_processes():
                     fn=forever_process, predictions=predictions
                 )
     finally:
-        if child_terminator:
-            child_terminator.terminate()
+        if child_stopper:
+            child_stopper.terminate()
 
     assert "Child process was terminated unexpectedly" in str(
         excinfo.value.error
