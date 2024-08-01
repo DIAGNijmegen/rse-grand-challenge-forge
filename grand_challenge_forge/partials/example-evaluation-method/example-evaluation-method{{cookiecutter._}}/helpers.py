@@ -150,8 +150,8 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
                 _terminate_child_processes()
 
 
-def _terminate_child_processes(pid=None):
-    process = psutil.Process(pid or os.getpid())
+def _terminate_child_processes():
+    process = psutil.Process(os.getpid())
     children = process.children(recursive=True)
     for child in children:
         try:
