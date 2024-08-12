@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import signal
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager, Process
 
@@ -43,6 +42,8 @@ def run_prediction_processing(*, fn, predictions):
     This takes child processes into account:
     - if any child process is terminated, all prediction processing will abort
     - after prediction processing is done, all child processes are terminated
+
+    Note that the results are returned in completing order.
 
     Parameters
     ----------
@@ -99,30 +100,9 @@ def _start_pool_worker(fn, predictions, max_workers, results, errors):
 
 
 def _pool_worker(*, fn, predictions, max_workers, results, errors):
-    terminating_child_processes = False
-
+    caught_exception = False
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         try:
-
-            def handle_error(error, prediction="Unknown"):
-                executor.shutdown(wait=False, cancel_futures=True)
-                errors.append((prediction, error))
-
-                nonlocal terminating_child_processes
-                terminating_child_processes = True
-                _terminate_child_processes()
-
-            def sigchld_handler(*_, **__):
-                if not terminating_child_processes:
-                    handle_error(
-                        RuntimeError(
-                            "Child process was terminated unexpectedly"
-                        )
-                    )
-
-            # Register the SIGCHLD handler
-            signal.signal(signal.SIGCHLD, sigchld_handler)
-
             # Submit the processing tasks of the predictions
             futures = [
                 executor.submit(fn, prediction) for prediction in predictions
@@ -137,15 +117,21 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
                     result = future.result()
                     results.append(result)
                 except Exception as e:
-                    handle_error(e, prediction=future_to_predictions[future])
+                    errors.append((future_to_predictions[future], e))
+
+                    if not caught_exception:  # Hard stop
+                        caught_exception = True
+
+                        executor.shutdown(wait=False, cancel_futures=True)
+                        _terminate_child_processes()
         finally:
-            terminating_child_processes = True
+            # Be aggresive in cleaning up any left-over processes
             _terminate_child_processes()
 
 
 def _terminate_child_processes():
-    current_process = psutil.Process(os.getpid())
-    children = current_process.children(recursive=True)
+    process = psutil.Process(os.getpid())
+    children = process.children(recursive=True)
     for child in children:
         try:
             child.terminate()
@@ -153,12 +139,17 @@ def _terminate_child_processes():
             pass  # Not a problem
 
     # Wait for processes to terminate
-    gone, still_alive = psutil.wait_procs(children, timeout=5)
+    _, still_alive = psutil.wait_procs(children, timeout=5)
 
     # Forcefully kill any remaining processes
     for p in still_alive:
-        print(f"Forcefully killing child process {p.pid}")
         try:
             p.kill()
         except psutil.NoSuchProcess:
             pass  # That is fine
+
+    # Finally, prevent zombies by waiting for all child processes
+    try:
+        os.waitpid(-1, 0)
+    except ChildProcessError:
+        pass  # No child processes, that if fine

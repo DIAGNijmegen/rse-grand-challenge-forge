@@ -1,11 +1,11 @@
 import os
-import signal
 import sys
 import time
 from functools import partial
 from multiprocessing import Process
 from unittest import mock
 
+import psutil
 import pytest
 
 # Do some creating path hacking to be able to import the helpers
@@ -27,10 +27,12 @@ from helpers import (  # noqa: E402
 
 # Some of the test below, if things go wrong, can potentially deadlock.
 # So we set a maximum runtime
-pytestmark = pytest.mark.timeout(5)
+pytestmark = pytest.mark.timeout(4)
 
 
 def working_process(p):
+    if p == "prediction1":
+        time.sleep(2)
     return f"{p} result"
 
 
@@ -55,14 +57,18 @@ def forever_process(*_):
         time.sleep(1)
 
 
-def send_signals_to_process(process, signal_to_send, interval):
-    while True:
-        try:
-            os.kill(process.pid, signal_to_send)
-        except ProcessLookupError:
-            # Race conditions sometimes have this try and send a signal even though
-            # the process is already terminated
-            pass
+def stop_children(process, interval):
+    stopped = False
+    while not stopped:
+        process = psutil.Process(process.pid)
+        children = process.children(recursive=True)
+        if children:
+            for child in children:
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    pass  # Not a problem
+            stopped = True
         time.sleep(interval)
 
 
@@ -71,7 +77,7 @@ def test_prediction_processing():
     result = run_prediction_processing(
         fn=working_process, predictions=predictions
     )
-    assert ["prediction1 result", "prediction2 result"] == result
+    assert {"prediction1 result", "prediction2 result"} == set(result)
 
 
 def test_prediction_processing_error():
@@ -103,18 +109,14 @@ def test_prediction_processing_killing_of_child_processes():
 def test_prediction_processing_catching_killing_of_child_processes():
     predictions = ["prediction1", "prediction2"]
 
-    child_terminator = None
+    child_stopper = None
 
     # Set up the fake child murder scene
     def add_child_terminator(*args, **kwargs):
         process = _start_pool_worker(*args, **kwargs)
-        nonlocal child_terminator
-        child_terminator = Process(
-            target=partial(
-                send_signals_to_process, process, signal.SIGCHLD, 0.5
-            )
-        )
-        child_terminator.start()  # Hasta la vista, baby
+        nonlocal child_stopper
+        child_stopper = Process(target=partial(stop_children, process, 0.5))
+        child_stopper.start()  # Hasta la vista, baby
         return process
 
     try:
@@ -124,9 +126,9 @@ def test_prediction_processing_catching_killing_of_child_processes():
                     fn=forever_process, predictions=predictions
                 )
     finally:
-        if child_terminator:
-            child_terminator.terminate()
+        if child_stopper:
+            child_stopper.terminate()
 
-    assert "Child process was terminated unexpectedly" in str(
+    assert "A process in the process pool was terminated abruptly" in str(
         excinfo.value.error
     )

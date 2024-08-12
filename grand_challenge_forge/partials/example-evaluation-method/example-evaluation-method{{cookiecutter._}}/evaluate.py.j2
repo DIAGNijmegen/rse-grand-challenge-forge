@@ -45,7 +45,7 @@ def process(job):
     report += pformat(job)
     report += "\n"
 
-      # Firstly, find the location of the results
+    # Firstly, find the location of the results
     {% for ci in cookiecutter.phase.algorithm_outputs %}
     {%- set py_slug = ci.slug | replace("-", "_") -%}
     location_{{ py_slug }} = get_file_location(
