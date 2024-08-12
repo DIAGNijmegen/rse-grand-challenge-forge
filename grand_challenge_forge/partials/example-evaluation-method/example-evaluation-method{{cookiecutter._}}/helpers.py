@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import signal
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager, Process
 
@@ -154,11 +153,3 @@ def _terminate_child_processes():
         os.waitpid(-1, 0)
     except ChildProcessError:
         pass  # No child processes, that if fine
-
-
-def listen_to_children_errors():
-    def handler(*_, **__):
-        print("A child failed, terminating all other children")
-        _terminate_child_processes()
-
-    signal.signal(signal.SIGCHLD, handler)
