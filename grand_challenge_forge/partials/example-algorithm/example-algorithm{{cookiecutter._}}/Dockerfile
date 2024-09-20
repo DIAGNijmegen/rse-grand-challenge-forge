@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 pytorch/pytorch
+FROM pytorch/pytorch
 # Use a 'large' base container to show-case how to load pytorch and use the GPU (when enabled)
 
 # Ensures that Python output to stdout/stderr is not buffered: prevents missing information when terminating

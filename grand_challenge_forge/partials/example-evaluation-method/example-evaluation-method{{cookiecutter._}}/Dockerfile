@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 docker.io/library/python:3.11-slim
+FROM docker.io/library/python:3.11-slim
 
 # Ensures that Python output to stdout/stderr is not buffered: prevents missing information when terminating
 ENV PYTHONUNBUFFERED=1
