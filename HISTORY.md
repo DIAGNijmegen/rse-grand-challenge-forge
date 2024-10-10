@@ -1,5 +1,20 @@
 # History
 
+## 0.5.0 (2024-10-10)
+- Fixed interoperability issues when running challenge pack scripts on macOS.
+- Fixed several Docker deprecation warnings.
+- Added examples for file inputs.
+- Reworked multithreading in example evaluation methods:
+  - Used concurrent.futures.ProcessPoolExecutor.
+  - Dynamically limited the number of workers in evaluation methods (via multiprocessing.cpu_count()).
+  - Introduced a controller thread.
+- Silenced Docker volume shell calls.
+- Mounted a dummy /tmp to test scripts, preventing final containers that users might build.
+- Challenge packs now include a proper .gitignore.
+- Added a save.sh script to Docker-based examples to demonstrate how to export a Docker image.
+- Ensured Docker file-mounted inputs are read-only.
+- Dist challenge packs under the Apache License 2.0.
+
 ## 0.4.0 (2023-01-22)
 * Stop using '/tmp' in example Dockerfiles to contain non-transient files.
 
