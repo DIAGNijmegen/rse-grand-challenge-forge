@@ -144,6 +144,8 @@ def generate_example_algorithm(
 ):
     algorithm_path = output_path / "example-algorithm"
 
+    context["_no_gpus"] = context.get("_no_gpus", False)
+
     copy_and_render(
         source_path=PARTIALS_PATH / "example-algorithm",
         output_path=algorithm_path,
@@ -173,6 +175,8 @@ def generate_example_evaluation(
     context, output_path, quality_control_registry=None
 ):
     evaluation_path = output_path / "example-evaluation-method"
+
+    context["_no_gpus"] = context.get("_no_gpus", False)
 
     copy_and_render(
         source_path=PARTIALS_PATH / "example-evaluation-method",

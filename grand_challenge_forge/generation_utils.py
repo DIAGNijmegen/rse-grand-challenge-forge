@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader, StrictUndefined
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
@@ -70,6 +70,7 @@ def get_jinja2_environment(searchpath=None):
 
     env = ImmutableSandboxedEnvironment(
         loader=FileSystemLoader(searchpath=searchpath or []),
+        undefined=StrictUndefined,
     )
     env.filters = custom_filters
     env.globals["now"] = datetime.now(timezone.utc)
