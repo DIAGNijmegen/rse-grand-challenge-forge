@@ -9,7 +9,6 @@ from grand_challenge_forge.forge import (
     generate_example_algorithm,
     generate_example_evaluation,
     generate_upload_to_archive_script,
-    post_creation_hooks,
 )
 from tests.utils import numerical_pack_context_factory, pack_context_factory
 
@@ -27,7 +26,7 @@ def test_general_pack_quality_assurance(tmp_path):
     checks = []
     generate_challenge_pack(
         context=pack_context_factory(),
-        output_directory=tmp_path,
+        output_path=tmp_path,
         quality_control_registry=checks,
     )
     assert len(checks) == 6  # Sanity, ensure the checks are registered
@@ -65,10 +64,9 @@ def test_upload_script_quality_check(json_content, conditions, tmp_path):
     ):
         script_dir = generate_upload_to_archive_script(
             context={"phase": phase},
-            output_directory=tmp_path / str(index),
+            output_path=tmp_path / str(index),
             quality_control_registry=None,
         )
-        post_creation_hooks(script_dir)
         with condition:
             quality_control.upload_to_archive_script(script_dir)
 
@@ -110,10 +108,9 @@ def test_example_algorithm_quality_check(json_content, conditions, tmp_path):
                 # Debug purposes, so we don't need to run with a gpu:
                 "_no_gpus": True,
             },
-            output_directory=tmp_path / str(index),
+            output_path=tmp_path / str(index),
             quality_control_registry=None,
         )
-        post_creation_hooks(algorithm_dir)
         with condition:
             quality_control.example_algorithm(
                 phase_context={"phase": phase}, algorithm_dir=algorithm_dir
@@ -157,10 +154,9 @@ def test_example_evaluation_quality_check(json_content, conditions, tmp_path):
                 # Debug purposes, so we don't need to run with a gpu:
                 "_no_gpus": True,
             },
-            output_directory=tmp_path / str(index),
+            output_path=tmp_path / str(index),
             quality_control_registry=None,
         )
-        post_creation_hooks(evaluation_dir)
         with condition:
             quality_control.example_evaluation(
                 phase_context={"phase": phase}, evaluation_dir=evaluation_dir

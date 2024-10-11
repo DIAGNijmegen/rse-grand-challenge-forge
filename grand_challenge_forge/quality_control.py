@@ -15,19 +15,19 @@ from grand_challenge_forge.utils import (
 logger = logging.getLogger(__name__)
 
 
-def upload_to_archive_script(script_dir):
+def upload_to_archive_script(script_path):
     """Checks if the upload to archive script works as intended"""
-    logger.debug(f"Quality check over script in {script_dir}")
+    logger.debug(f"Quality check over script in {script_path}")
 
     try:
-        with change_directory(script_dir):
+        with change_directory(script_path):
             gcapi = MagicMock()
             with patch.dict("sys.modules", gcapi=gcapi):
                 try:
                     # Load the script as a module
                     upload_files = directly_import_module(
                         name="upload_files",
-                        path=script_dir / "upload_files.py",
+                        path=script_path / "upload_files.py",
                     )
 
                     # Run the script, but noop print

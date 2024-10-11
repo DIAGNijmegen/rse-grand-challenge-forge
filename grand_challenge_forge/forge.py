@@ -6,18 +6,15 @@ from copy import deepcopy
 from importlib import metadata
 from pathlib import Path
 
-from cookiecutter.generate import generate_files
-
 import grand_challenge_forge.quality_control as qc
 from grand_challenge_forge import PARTIALS_PATH
 from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
+    copy_and_render,
     create_civ_stub_file,
 )
 from grand_challenge_forge.schemas import validate_pack_context
-from grand_challenge_forge.utils import cookiecutter_context as cc
-from grand_challenge_forge.utils import remove_j2_suffix
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ logger = logging.getLogger(__name__)
 def generate_challenge_pack(
     *,
     context,
-    output_directory,
+    output_path,
     quality_control_registry=None,
     force=False,
 ):
@@ -38,100 +35,90 @@ def generate_challenge_pack(
         "grand-challenge-forge"
     )
 
-    pack_dir = output_directory / pack_dir_name
+    pack_path = output_path / pack_dir_name
 
-    _handle_existing(pack_dir, force=force)
+    if pack_path.exists():
+        _handle_existing(pack_path, force=force)
 
-    generate_readme(context, output_directory)
+    generate_readme(context=context, output_path=pack_path)
 
     for phase in context["challenge"]["phases"]:
-        phase_dir = pack_dir / phase["slug"]
+        phase_path = pack_path / phase["slug"]
         phase_context = {"phase": phase}
 
         generate_upload_to_archive_script(
             context=phase_context,
-            output_directory=phase_dir,
+            output_path=phase_path,
             quality_control_registry=quality_control_registry,
         )
 
         generate_example_algorithm(
             context=phase_context,
-            output_directory=phase_dir,
+            output_path=phase_path,
             quality_control_registry=quality_control_registry,
         )
 
         generate_example_evaluation(
             context=phase_context,
-            output_directory=phase_dir,
+            output_path=phase_path,
             quality_control_registry=quality_control_registry,
         )
 
-    post_creation_hooks(pack_dir)
-
-    return pack_dir
-
-
-def post_creation_hooks(pack_dir):
-    remove_j2_suffix(pack_dir)
+    return pack_path
 
 
 def _handle_existing(directory, force):
-    if directory.exists():
-        if force:
-            shutil.rmtree(directory)
-        else:
-            raise OutputOverwriteError(
-                f"{directory} already exists! Use force to overwrite"
-            )
+    if force:
+        shutil.rmtree(directory)
+    else:
+        raise OutputOverwriteError(
+            f"{directory} already exists! Use force to overwrite"
+        )
 
 
-def generate_readme(context, output_directory):
-    generate_files(
-        repo_dir=PARTIALS_PATH / "pack-readme",
-        context=cc(context),
-        overwrite_if_exists=False,
-        skip_if_file_exists=False,
-        output_dir=output_directory,
+def generate_readme(*, context, output_path):
+    copy_and_render(
+        source_path=PARTIALS_PATH / "pack-readme",
+        output_path=output_path,
+        context=context,
     )
 
 
 def generate_upload_to_archive_script(
-    context, output_directory, quality_control_registry=None
+    *, context, output_path, quality_control_registry=None
 ):
     context = deepcopy(context)
 
-    script_dir = (
-        output_directory
+    script_path = (
+        output_path
         / f"upload-to-archive-{context['phase']['archive']['slug']}"
     )
 
     # Map the expected case, but only create after the script
     expected_cases, create_files_func = _gen_expected_archive_cases(
         inputs=context["phase"]["algorithm_inputs"],
-        output_directory=script_dir,
+        output_path=script_path,
     )
     context["phase"]["expected_cases"] = expected_cases
 
-    generate_files(
-        repo_dir=PARTIALS_PATH / "upload-to-archive-script",
-        context=cc(context),
-        overwrite_if_exists=False,
-        skip_if_file_exists=False,
-        output_dir=output_directory,
+    copy_and_render(
+        source_path=PARTIALS_PATH / "upload-to-archive-script",
+        output_path=script_path,
+        context=context,
     )
 
     create_files_func()
 
     def quality_check():
-        qc.upload_to_archive_script(script_dir=script_dir)
+        qc.upload_to_archive_script(script_path=script_path)
 
     if quality_control_registry is not None:
         quality_control_registry.append(quality_check)
 
-    return script_dir
+    return script_path
 
 
-def _gen_expected_archive_cases(inputs, output_directory, n=3):
+def _gen_expected_archive_cases(inputs, output_path, n=3):
     to_create_files = []
     result = []
     for i in range(0, n):
@@ -147,7 +134,7 @@ def _gen_expected_archive_cases(inputs, output_directory, n=3):
 
     def create_files():
         for filename in to_create_files:
-            filepath = output_directory / Path(filename)
+            filepath = output_path / Path(filename)
             filepath.parent.mkdir(parents=True, exist_ok=True)
             with open(filepath, "w") as f:
                 f.write('"This is just placeholder data, move along!>"')
@@ -156,65 +143,61 @@ def _gen_expected_archive_cases(inputs, output_directory, n=3):
 
 
 def generate_example_algorithm(
-    context, output_directory, quality_control_registry=None
+    *, context, output_path, quality_control_registry=None
 ):
-    algorithm_dir = generate_files(
-        repo_dir=PARTIALS_PATH / "example-algorithm",
-        context=cc(context),
-        overwrite_if_exists=False,
-        skip_if_file_exists=False,
-        output_dir=output_directory,
+    algorithm_path = output_path / "example-algorithm"
+
+    copy_and_render(
+        source_path=PARTIALS_PATH / "example-algorithm",
+        output_path=algorithm_path,
+        context=context,
     )
 
-    algorithm_dir = Path(algorithm_dir)
-
     # Create input files
-    input_dir = algorithm_dir / "test" / "input"
+    input_dir = algorithm_path / "test" / "input"
     for input_ci in context["phase"]["algorithm_inputs"]:
         create_civ_stub_file(
-            target_dir=input_dir / input_ci["relative_path"],
+            target_path=input_dir / input_ci["relative_path"],
             component_interface=input_ci,
         )
 
     def quality_check():
         qc.example_algorithm(
-            phase_context=context, algorithm_dir=algorithm_dir
+            phase_context=context, algorithm_dir=algorithm_path
         )
 
     if quality_control_registry is not None:
         quality_control_registry.append(quality_check)
 
-    return algorithm_dir
+    return algorithm_path
 
 
 def generate_example_evaluation(
-    context, output_directory, quality_control_registry=None
+    context, output_path, quality_control_registry=None
 ):
-    evaluation_dir = generate_files(
-        repo_dir=PARTIALS_PATH / "example-evaluation-method",
-        context=cc(context),
-        overwrite_if_exists=False,
-        skip_if_file_exists=False,
-        output_dir=output_directory,
+    evaluation_path = output_path / "example-evaluation-method"
+
+    copy_and_render(
+        source_path=PARTIALS_PATH / "example-evaluation-method",
+        output_path=evaluation_path,
+        context=context,
     )
 
-    evaluation_dir = Path(evaluation_dir)
-
-    generate_predictions(context, evaluation_dir)
+    generate_predictions(context, evaluation_path)
 
     def quality_check():
         qc.example_evaluation(
-            phase_context=context, evaluation_dir=evaluation_dir
+            phase_context=context, evaluation_dir=evaluation_path
         )
 
     if quality_control_registry is not None:
         quality_control_registry.append(quality_check)
 
-    return evaluation_dir
+    return evaluation_path
 
 
-def generate_predictions(context, evaluation_dir, n=3):
-    input_dir = evaluation_dir / "test" / "input"
+def generate_predictions(context, evaluation_path, n=3):
+    input_dir = evaluation_path / "test" / "input"
     input_dir.mkdir(parents=True, exist_ok=True)
 
     predictions = []
@@ -231,8 +214,8 @@ def generate_predictions(context, evaluation_dir, n=3):
                     for ci in context["phase"]["algorithm_outputs"]
                 ],
                 "status": "Succeeded",
-                "started_at": "2023-11-29T10:31:25.691799Z",
-                "completed_at": "2023-11-29T10:31:50.691799Z",
+                "started_at": "2024-11-29T10:31:25.691799Z",
+                "completed_at": "2024-11-29T10:31:50.691799Z",
             }
         )
     with open(input_dir / "predictions.json", "w") as f:
@@ -240,14 +223,14 @@ def generate_predictions(context, evaluation_dir, n=3):
 
     for prediction in predictions:
         for civ in prediction["outputs"]:
-            job_dir = (
+            job_path = (
                 input_dir
                 / prediction["pk"]
                 / "output"
                 / civ["interface"]["relative_path"]
             )
-            job_dir.parent.mkdir(parents=True, exist_ok=True)
+            job_path.parent.mkdir(parents=True, exist_ok=True)
             create_civ_stub_file(
-                target_dir=job_dir,
+                target_path=job_path,
                 component_interface=civ["interface"],
             )

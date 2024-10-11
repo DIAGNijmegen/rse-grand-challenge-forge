@@ -4,7 +4,7 @@
 set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DOCKER_TAG="example-algorithm-{{ cookiecutter.phase.slug }}"
+DOCKER_TAG="example-algorithm-{{phase.slug }}"
 DOCKER_NOOP_VOLUME="${DOCKER_TAG}-volume"
 
 INPUT_DIR="${SCRIPT_DIR}/test/input"
@@ -40,7 +40,7 @@ docker volume create "$DOCKER_NOOP_VOLUME" > /dev/null
 docker run --rm \
     --platform=linux/amd64 \
     --network none \
-    {% if "_no_gpus" not in cookiecutter or not cookiecutter._no_gpus -%}
+    {% if not _no_gpus -%}
     --gpus all \
     {% endif -%}
     --volume "$INPUT_DIR":/input:ro \
