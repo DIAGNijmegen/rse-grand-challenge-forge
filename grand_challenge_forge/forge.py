@@ -28,14 +28,11 @@ def generate_challenge_pack(
 ):
     validate_pack_context(context)
 
-    pack_dir_name = f"{context['challenge']['slug']}-challenge-pack"
-
-    context["pack_dir_name"] = pack_dir_name
     context["grand_challenge_forge_version"] = metadata.version(
         "grand-challenge-forge"
     )
 
-    pack_path = output_path / pack_dir_name
+    pack_path = output_path / f"{context['challenge']['slug']}-challenge-pack"
 
     if pack_path.exists():
         _handle_existing(pack_path, force=force)
