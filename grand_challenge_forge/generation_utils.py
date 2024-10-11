@@ -65,6 +65,18 @@ def ci_to_civ(component_interface):
     }
 
 
+def get_jinja2_environment(searchpath=None):
+    from grand_challenge_forge.partials.filters import custom_filters
+
+    env = ImmutableSandboxedEnvironment(
+        loader=FileSystemLoader(searchpath=searchpath or []),
+    )
+    env.filters = custom_filters
+    env.globals["now"] = datetime.now(timezone.utc)
+
+    return env
+
+
 def copy_and_render(
     *,
     source_path,
@@ -74,14 +86,7 @@ def copy_and_render(
     # Create the output directory if it doesn't exist
     output_path.mkdir(parents=True, exist_ok=True)
 
-    from grand_challenge_forge.partials.filters import custom_filters
-
-    # Setup Jinja2 environment
-    env = ImmutableSandboxedEnvironment(
-        loader=FileSystemLoader(searchpath=source_path),
-    )
-    env.filters = custom_filters
-    env.globals["now"] = datetime.now(timezone.utc)
+    env = get_jinja2_environment(searchpath=source_path)
 
     for root, _, files in os.walk(source_path):
         root = Path(root)
