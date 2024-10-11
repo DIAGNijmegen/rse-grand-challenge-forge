@@ -1,15 +1,10 @@
-from cookiecutter.utils import simple_filter
-
 from grand_challenge_forge import generation_utils
 
-custom_filters = []
+custom_filters = {}
 
 
 def register_simple_filter(func):
-    func = simple_filter(func)
-    custom_filters.append(
-        f"grand_challenge_forge.partials.filters.{func.__name__}"
-    )
+    custom_filters[func.__name__] = func
     return func
 
 

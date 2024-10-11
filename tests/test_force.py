@@ -20,14 +20,14 @@ def test_force_overwrites(tmp_path):
 
     # Generate should output an error
     with pytest.raises(OutputOverwriteError):
-        generate_challenge_pack(context=context, output_directory=tmp_path)
+        generate_challenge_pack(context=context, output_path=tmp_path)
 
     assert expected_pack.exists()
 
     # But we can force the issue
     generate_challenge_pack(
         context=context,
-        output_directory=tmp_path,
+        output_path=tmp_path,
         force=True,
     )
     assert expected_pack.exists()

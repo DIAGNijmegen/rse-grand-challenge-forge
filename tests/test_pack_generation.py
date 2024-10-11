@@ -4,24 +4,24 @@ from tests.utils import pack_context_factory
 
 def test_for_pack_content(tmp_path):
     context = pack_context_factory()
-    pack_dir = generate_challenge_pack(
+    pack_path = generate_challenge_pack(
         context=context,
-        output_directory=tmp_path,
+        output_path=tmp_path,
     )
 
-    assert (pack_dir / "README.md").exists
+    assert (pack_path / "README.md").exists()
 
     for phase in context["challenge"]["phases"]:
-        assert (pack_dir / phase["slug"]).exists
-
-        assert (pack_dir / phase["slug"] / "example-algorithm").exists
-
-        eval_dir = pack_dir / phase["slug"] / "example-evaluation-method"
-        assert eval_dir.exists
-        assert (eval_dir / "test" / "input" / "prediction.json").exists
+        assert (pack_path / phase["slug"]).exists()
 
         assert (
-            pack_dir
+            pack_path
             / phase["slug"]
             / f"upload-to-archive-{phase['archive']['slug']}"
-        ).exists
+        ).exists()
+
+        assert (pack_path / phase["slug"] / "example-algorithm").exists()
+
+        eval_path = pack_path / phase["slug"] / "example-evaluation-method"
+        assert eval_path.exists()
+        assert (eval_path / "test" / "input" / "predictions.json").exists()

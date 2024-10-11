@@ -5,7 +5,7 @@ files to an archive.
 Remember, an archive is used to pull data per phase for a challenge. Each
 phase has a designated archive. The archive is approached using its slug.
 
-For your challenge, and this phase it is '{{ cookiecutter.phase.archive.slug }}'.
+For your challenge, and this phase it is '{{phase.archive.slug }}'.
 
 Before you can run this script, you need to:
  * install gc-api (`pip install gcapi`)
@@ -22,7 +22,7 @@ Note that Grand-Challenge does its own post-processing on the files and the arch
 will be filled with the result of this post-processing.
 
 Check your uploaded results here:
- {{ cookiecutter.phase.archive.url }}
+ {{ phase.archive.url }}
 
 And the intermediate processing state here:
   https://grand-challenge.org/cases/uploads/
@@ -33,22 +33,22 @@ Happy uploading!
 from pathlib import Path
 
 import gcapi
-{% if cookiecutter.phase.algorithm_inputs | has_json -%}
+{% if phase.algorithm_inputs | has_json -%}
 import json
 {%- endif %}
 
 API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
-ARCHIVE_SLUG = "{{ cookiecutter.phase.archive.slug }}"
+ARCHIVE_SLUG = "{{ phase.archive.slug }}"
 
 EXPECTED_CASES = [
-    # for: {% for ci in cookiecutter.phase.algorithm_inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
-{%- for expected_cases in cookiecutter.phase.expected_cases %}
+    # for: {% for ci in phase.algorithm_inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
+{%- for expected_cases in phase.expected_cases %}
     {{ expected_cases }},
 {%- endfor %}
 ]
 
-{% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
+{% if "__should_fail" in phase -%} 1/0 {%- endif %}
 def main():
     check_files()
     upload_files()
@@ -86,7 +86,7 @@ def upload_files():
 
 def map_case_content_to_interfaces(case):
     return {
-        {%- for ci in cookiecutter.phase.algorithm_inputs %}
+        {%- for ci in phase.algorithm_inputs %}
         {%- if ci | is_json %}
         "{{ ci.slug }}": json.loads(Path(case[{{ loop.index - 1}}]).read_text()),
         {%- else %}

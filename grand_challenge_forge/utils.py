@@ -2,8 +2,6 @@ import importlib
 import os
 from contextlib import contextmanager
 
-from grand_challenge_forge.partials.filters import custom_filters
-
 
 def truncate_with_epsilons(value, max_length=32, epsilon="..."):
     if len(str(value)) > max_length:
@@ -11,27 +9,6 @@ def truncate_with_epsilons(value, max_length=32, epsilon="..."):
     else:
         truncated_value = str(value)
     return truncated_value
-
-
-def cookiecutter_context(context):
-    pass
-    return {
-        "cookiecutter": {
-            **context,
-            "_": "",
-            "_extensions": [*custom_filters],
-        }
-    }
-
-
-def remove_j2_suffix(directory):
-    for path, _, files in os.walk(directory):
-        for name in files:
-            if name.endswith(".j2"):
-                os.rename(
-                    os.path.join(path, name),
-                    os.path.join(path, name.rstrip(".j2")),
-                )
 
 
 @contextmanager

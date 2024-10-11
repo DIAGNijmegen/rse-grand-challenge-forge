@@ -81,7 +81,7 @@ def cli(output, force, contexts, no_quality_control, verbose=0):
                 )
                 pack_dir = generate_challenge_pack(
                     context=resolved_context,
-                    output_directory=output_dir,
+                    output_path=output_dir,
                     force=force,
                     quality_control_registry=quality_control_registry,
                 )

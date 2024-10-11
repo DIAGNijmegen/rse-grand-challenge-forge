@@ -18,11 +18,11 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 import json
-{% if cookiecutter.phase.algorithm_inputs | has_image -%}
+{% if phase.algorithm_inputs | has_image -%}
 from glob import glob
 import SimpleITK
 {%- endif %}
-{% if cookiecutter.phase.algorithm_inputs | has_image or cookiecutter.phase.algorithm_inputs | has_file -%}
+{% if phase.algorithm_inputs | has_image or phase.algorithm_inputs | has_file -%}
 import re
 {%- endif %}
 import random
@@ -37,7 +37,7 @@ GROUND_TRUTH_DIRECTORY = Path("ground_truth")
 
 
 
-{% if "__should_fail" in cookiecutter.phase -%} 1/0 {%- endif %}
+{% if "__should_fail" in phase -%} 1/0 {%- endif %}
 
 def process(job):
     """Processes a single algorithm job, looking at the outputs"""
@@ -46,8 +46,8 @@ def process(job):
     report += "\n"
 
     # Firstly, find the location of the results
-    {% for ci in cookiecutter.phase.algorithm_outputs %}
-    {%- set py_slug = ci.slug | replace("-", "_") -%}
+    {% for ci in phase.algorithm_outputs %}
+    {%- set py_slug = ci.slug.replace("-", "_") -%}
     location_{{ py_slug }} = get_file_location(
             job_pk=job["pk"],
             values=job["outputs"],
@@ -56,8 +56,8 @@ def process(job):
     {% endfor %}
 
     # Secondly, read the results
-    {% for ci in cookiecutter.phase.algorithm_outputs -%}
-    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% for ci in phase.algorithm_outputs -%}
+    {% set py_slug = ci.slug.replace("-", "_") -%}
     {% if ci | is_image -%}
     result_{{ py_slug }} = load_image_file(
         location=location_{{ py_slug }},
@@ -77,8 +77,8 @@ def process(job):
 
 
     # Thirdly, retrieve the input file name to match it with your ground truth
-    {% for ci in cookiecutter.phase.algorithm_inputs -%}
-    {% set py_slug = ci.slug | replace("-", "_") -%}
+    {% for ci in phase.algorithm_inputs -%}
+    {% set py_slug = ci.slug.replace("-", "_") -%}
     {% if ci | is_image -%}
     image_name_{{ py_slug }} = get_image_name(
             values=job["inputs"],
@@ -145,7 +145,7 @@ def read_predictions():
     # The prediction file tells us the location of the users' predictions
     with open(INPUT_DIRECTORY / "predictions.json") as f:
         return json.loads(f.read())
-{%- if cookiecutter.phase.algorithm_inputs | has_image or cookiecutter.phase.algorithm_outputs | has_image %}
+{%- if phase.algorithm_inputs | has_image or phase.algorithm_outputs | has_image %}
 
 
 def get_image_name(*, values, slug):
@@ -158,7 +158,7 @@ def get_image_name(*, values, slug):
 {%- endif %}
 
 
-{%- if cookiecutter.phase.algorithm_inputs | has_file %}
+{%- if phase.algorithm_inputs | has_file %}
 def get_file_name(*, values, slug):
     # This tells us the user-provided name of the input file
     for value in values:
@@ -187,7 +187,7 @@ def get_file_location(*, job_pk, values, slug):
     # Where a job's output file will be located in the evaluation container
     relative_path = get_interface_relative_path(values=values, slug=slug)
     return INPUT_DIRECTORY / job_pk / "output" / relative_path
-{%- if cookiecutter.phase.algorithm_outputs | has_json %}
+{%- if phase.algorithm_outputs | has_json %}
 
 
 def load_json_file(*, location):
@@ -195,7 +195,7 @@ def load_json_file(*, location):
     with open(location) as f:
         return json.loads(f.read())
 {%- endif %}
-{%- if cookiecutter.phase.algorithm_outputs | has_image %}
+{%- if phase.algorithm_outputs | has_image %}
 
 
 def load_image_file(*, location):
@@ -206,7 +206,7 @@ def load_image_file(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if cookiecutter.phase.algorithm_outputs | has_file %}
+{%- if phase.algorithm_outputs | has_file %}
 
 
 def load_file(*, location):
