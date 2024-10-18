@@ -7,7 +7,6 @@ from importlib import metadata
 from pathlib import Path
 
 import grand_challenge_forge.quality_control as qc
-from grand_challenge_forge import PARTIALS_PATH
 from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
@@ -75,7 +74,7 @@ def _handle_existing(directory, force):
 
 def generate_readme(*, context, output_path):
     copy_and_render(
-        source_path=PARTIALS_PATH / "pack-readme",
+        templates_dir_name="pack-readme",
         output_path=output_path,
         context=context,
     )
@@ -99,7 +98,7 @@ def generate_upload_to_archive_script(
     context["phase"]["expected_cases"] = expected_cases
 
     copy_and_render(
-        source_path=PARTIALS_PATH / "upload-to-archive-script",
+        templates_dir_name="upload-to-archive-script",
         output_path=script_path,
         context=context,
     )
@@ -147,7 +146,7 @@ def generate_example_algorithm(
     context["_no_gpus"] = context.get("_no_gpus", False)
 
     copy_and_render(
-        source_path=PARTIALS_PATH / "example-algorithm",
+        templates_dir_name="example-algorithm",
         output_path=algorithm_path,
         context=context,
     )
@@ -179,7 +178,7 @@ def generate_example_evaluation(
     context["_no_gpus"] = context.get("_no_gpus", False)
 
     copy_and_render(
-        source_path=PARTIALS_PATH / "example-evaluation-method",
+        templates_dir_name="example-evaluation-method",
         output_path=evaluation_path,
         context=context,
     )
