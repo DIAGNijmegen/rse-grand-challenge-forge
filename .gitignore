@@ -133,3 +133,6 @@ dmypy.json
 
 # Ignore lock file as this is a library
 poetry.lock
+
+# Visual Code
+.vscode/

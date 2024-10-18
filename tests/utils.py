@@ -1,4 +1,10 @@
+import os
 from copy import deepcopy
+from pathlib import Path
+
+TEST_RESOURCES = (
+    Path(os.path.dirname(os.path.realpath(__file__))) / "resources"
+)
 
 # Do not format, that way it can be used as copy and paste example in CLI
 

@@ -14,7 +14,6 @@ parent_dir = os.path.abspath(
         "grand_challenge_forge",
         "partials",
         "example-evaluation-method",
-        "example-evaluation-method{{cookiecutter._}}",
     )
 )
 sys.path.insert(0, parent_dir)
