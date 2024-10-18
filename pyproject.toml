@@ -17,16 +17,16 @@ classifiers = [
 grand-challenge-forge = "grand_challenge_forge.cli:cli"
 
 [tool.poetry.dependencies]
-python = "^3.10"
-jinja2 = "^3.1.4"
+python = ">3.10"
+jinja2 = ">=3.1.4"
 click = "*"
-jsonschema = "^4.20.0"
+jsonschema = ">=4.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
 pytest-xdist = "*"
-psutil = "^5.9.8"
-pytest-timeout = "^2.3.1"
+psutil = ">=5.9.8"
+pytest-timeout = ">=2.3.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
