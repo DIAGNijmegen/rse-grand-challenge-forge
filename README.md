@@ -28,10 +28,12 @@ A challenge pack consists of challenge-tailored examples for the following:
 * An _evaluation method_ that evaluates algorithm submissions and generates performance
   metrics for ranking
 
-### Usage
+## Usage
+
+### PACK generation
 
 ```shell
-grand-challenge-forge pack-context.json
+grand-challenge-forge pack pack-context.json
 ```
 
 Will use the context found in `pack-context.json` and generate a pack at the current working directory in
@@ -112,7 +114,7 @@ a directory `dist/` (default).
 Alternatively, you generate a pack by providing a JSON string directly:
 
 ```shell
-grand-challenge-forge --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
+grand-challenge-forge pack --output-dir /tmp '{ "challenge": { "slug": "a-slug"...'
 ```
 
 This will output a pack directory in the `/tmp` directory.
@@ -120,6 +122,103 @@ This will output a pack directory in the `/tmp` directory.
 > [!NOTE]
 > By default, the forge does quality checks on the pack that may require docker.
 > You can disable these via `-n`
+
+Via API pack generation can be done via:
+
+``` Python
+from grand_challenge_forge.forge import generate_challenge_pack
+from Pathlib import Path
+
+qc = []
+generate_challenge_pack(
+    context={"challenge": {...}}
+    output_path=Path("dist/"),
+    quality_control_registry=qc,
+    force=False,
+)
+for check in qc:
+    check()
+```
+
+### ALGORITHM-TEMPLATE generation
+
+```shell
+grand-challenge-forge algorithm algorithm-context.json
+```
+
+Will use the context found in `algorithm-context.json` and generate a algorith-template directory at the current working directory in a directory `dist/` (default).
+
+<details>
+
+<summary> Example of the content of algorithm-context.json </summary>
+
+```JSON
+{
+    "algorithm": {
+        "title": "An Algorithm Title",
+        "url": "https://grand-challenge.org/algorithms/an-algorithm/",
+        "inputs": [
+                {
+                    "slug": "input-ci-slug",
+                    "kind": "Segmentation",
+                    "super_kind": "Image",
+                    "relative_path": "images/input-value"
+                },
+                {
+                    "slug": "another-input-ci-slug",
+                    "kind": "Anything",
+                    "super_kind": "File",
+                    "relative_path": "another-input-value.json"
+                }
+            ],
+        "outputs": [
+                {
+                    "slug": "output-ci-slug",
+                    "kind": "Image",
+                    "super_kind": "Image",
+                    "relative_path": "images/output-value"
+                },
+                {
+                    "slug": "another-output-ci-slug",
+                    "kind": "Anything",
+                    "super_kind": "File",
+                    "relative_path": "output-value.json"
+                }
+            ]
+        },
+}
+```
+
+</details>
+
+Alternatively, you generate an algorithm template by providing a JSON string directly:
+
+```shell
+grand-challenge-forge algorithm --output-dir /tmp '{ "algorithm": { ... } }'
+```
+
+This will output an algorithm-template directory in the `/tmp` directory.
+
+> [!NOTE]
+> By default, the forge does quality checks on the template that may require docker.
+> You can disable these via `-n`
+
+Via API the algorithm-template generation can be done via:
+
+``` Python
+from grand_challenge_forge.forge import generate_algorithm_template
+from Pathlib import Path
+
+qc = []
+generate_algorithm_template(
+    context={"algorithm": { ... }}
+    output_path=Path("dist/"),
+    quality_control_registry=qc,
+    force=False,
+)
+for check in qc:
+    check()
+```
 
 ## 🏗️ Development
 
