@@ -1,5 +1,7 @@
 import importlib
 import os
+import re
+import unicodedata
 from contextlib import contextmanager
 
 
@@ -33,3 +35,28 @@ def directly_import_module(name, path):
     spec.loader.exec_module(module)
 
     return module
+
+
+def slugify(title):
+    """Convert a title into a slug that is filename-friendly."""
+    # Normalize unicode data to NFKD form
+    title = unicodedata.normalize("NFKD", title)
+
+    # Remove non-ASCII characters
+    title = title.encode("ascii", "ignore").decode("ascii")
+
+    # Convert to lowercase
+    title = title.lower()
+
+    # Replace spaces and undesired characters with hyphens
+    title = re.sub(
+        r"[\s\-_]+", "-", title
+    )  # Replace spaces, underscores, and repeated hyphens with single hyphen
+    title = re.sub(
+        r"[^\w\-]", "", title
+    )  # Remove any remaining non-word characters
+
+    # Strip leading/trailing hyphens
+    title = title.strip("-")
+
+    return title
