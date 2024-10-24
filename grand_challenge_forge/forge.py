@@ -13,7 +13,11 @@ from grand_challenge_forge.generation_utils import (
     copy_and_render,
     create_civ_stub_file,
 )
-from grand_challenge_forge.schemas import validate_pack_context
+from grand_challenge_forge.schemas import (
+    validate_algorithm_template_context,
+    validate_pack_context,
+)
+from grand_challenge_forge.utils import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -143,12 +147,20 @@ def generate_example_algorithm(
 ):
     algorithm_path = output_path / "example-algorithm"
 
-    context["_no_gpus"] = context.get("_no_gpus", False)
-
     copy_and_render(
         templates_dir_name="example-algorithm",
         output_path=algorithm_path,
         context=context,
+    )
+
+    # Add .sh files
+    copy_and_render(
+        templates_dir_name="docker-bash-scripts",
+        output_path=algorithm_path,
+        context={
+            "image_tag": f"example-algorithm-{context['phase']['slug']}",
+            "_no_gpus": context.get("_no_gpus", False),
+        },
     )
 
     # Create input files
@@ -175,12 +187,20 @@ def generate_example_evaluation(
 ):
     evaluation_path = output_path / "example-evaluation-method"
 
-    context["_no_gpus"] = context.get("_no_gpus", False)
-
     copy_and_render(
         templates_dir_name="example-evaluation-method",
         output_path=evaluation_path,
         context=context,
+    )
+
+    # Add .sh files
+    copy_and_render(
+        templates_dir_name="docker-bash-scripts",
+        output_path=evaluation_path,
+        context={
+            "image_tag": f"example-evaluation-{context['phase']['slug']}",
+            "_no_gpus": context.get("_no_gpus", False),
+        },
     )
 
     generate_predictions(context, evaluation_path)
@@ -234,3 +254,58 @@ def generate_predictions(context, evaluation_path, n=3):
                 target_path=job_path,
                 component_interface=civ["interface"],
             )
+
+
+def generate_algorithm_template(
+    *,
+    context,
+    output_path,
+    quality_control_registry=None,
+    force=False,
+):
+    validate_algorithm_template_context(context)
+
+    context["grand_challenge_forge_version"] = metadata.version(
+        "grand-challenge-forge"
+    )
+
+    algorithm_slug = slugify(context["algorithm"]["title"])
+
+    template_path = output_path / f"{algorithm_slug}-template"
+
+    if template_path.exists():
+        _handle_existing(template_path, force=force)
+
+    copy_and_render(
+        templates_dir_name="algorithm-template",
+        output_path=template_path,
+        context=context,
+    )
+
+    # Create input files
+    input_dir = template_path / "test" / "input"
+    for input_ci in context["algorithm"]["inputs"]:
+        create_civ_stub_file(
+            target_path=input_dir / input_ci["relative_path"],
+            component_interface=input_ci,
+        )
+
+    # Add .sh files
+    copy_and_render(
+        templates_dir_name="docker-bash-scripts",
+        output_path=template_path,
+        context={
+            "image_tag": algorithm_slug,
+            "_no_gpus": context.get("_no_gpus", False),
+        },
+    )
+
+    def quality_check():
+        qc.algorithm_template(
+            algorithm_context=context, algorithm_template_path=template_path
+        )
+
+    if quality_control_registry is not None:
+        quality_control_registry.append(quality_check)
+
+    return template_path

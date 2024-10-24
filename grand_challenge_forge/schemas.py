@@ -83,3 +83,41 @@ def validate_pack_context(context):
         raise InvalidContextError(
             f"Invalid pack context provided:\n'{truncate_with_epsilons(context)!r}'"
         ) from e
+
+
+ALGORITHM_TEMPLATE_CONTEXT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "algorithm": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "url": {"type": "string"},
+                "inputs": {
+                    "type": "array",
+                    "items": COMPONENT_INTERFACE_SCHEMA,
+                },
+                "outputs": {
+                    "type": "array",
+                    "items": COMPONENT_INTERFACE_SCHEMA,
+                },
+            },
+            "required": ["title", "url", "inputs", "outputs"],
+        },
+    },
+    "required": ["algorithm"],
+    "additionalProperties": True,  # Allow additional properties
+}
+
+
+def validate_algorithm_template_context(context):
+    try:
+        jsonschema.validate(
+            instance=context, schema=ALGORITHM_TEMPLATE_CONTEXT_SCHEMA
+        )
+        logging.debug("Context valid")
+    except jsonschema.exceptions.ValidationError as e:
+        raise InvalidContextError(
+            "Invalid algorithm template context provided:\n"
+            f"'{truncate_with_epsilons(context)!r}'"
+        ) from e
