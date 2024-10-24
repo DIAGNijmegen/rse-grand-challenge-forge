@@ -10,6 +10,7 @@ from grand_challenge_forge.exceptions import QualityFailureError
 from grand_challenge_forge.utils import (
     change_directory,
     directly_import_module,
+    slugify,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,28 +68,38 @@ def example_algorithm(phase_context, algorithm_dir):
         logger.debug(
             f"Staring quality check run [{n+1}/{runs}] over example algorithm"
         )
-        _test_example_algorithm(phase_context, algorithm_dir, number_run=n + 1)
+        _test_algorithm(
+            phase_context["phase"]["algorithm_outputs"],
+            algorithm_dir,
+            number_run=n + 1,
+        )
 
-    _test_example_algorithm_save(phase_context, algorithm_dir)
+    _test_save(
+        pattern=str(
+            algorithm_dir
+            / f"example-algorithm-{phase_context['phase']['slug']}_*.tar.gz"
+        ),
+        script_dir=algorithm_dir,
+    )
 
     logger.debug("💚 Quality OK!")
 
 
-def _test_example_algorithm(phase_context, algorithm_dir, number_run):
+def _test_algorithm(expected_outputs, algorithm_dir, number_run):
     output_dir = algorithm_dir / "test" / "output"
 
     _test_subprocess(
         script_dir=algorithm_dir,
         number_run=number_run,
-        script_name="test_run.sh",
+        script_name="do_test_run.sh",
     )
 
     # Check if output is generated (ignore content)
-    for output in phase_context["phase"]["algorithm_outputs"]:
+    for output in expected_outputs:
         expected_file = output_dir / output["relative_path"]
         if not expected_file.exists():
             raise QualityFailureError(
-                f"Example algorithm does not generate output on run {number_run}: "
+                f"Algorithm does not generate output on run {number_run}: "
                 f"{output['relative_path']}"
             )
 
@@ -110,27 +121,19 @@ def _test_save(pattern, script_dir):
         _test_subprocess(
             script_dir=script_dir,
             number_run=1,
-            script_name="save.sh",
+            script_name="do_save.sh",
         )
 
     # Check if saved image exists
     matching_files = glob.glob(pattern)
     if not len(matching_files) == 1:
         raise QualityFailureError(
-            f"Example save.sh does not generate the exported image matching: "
+            f"Example do_save.sh does not generate the exported image matching: "
             f"{pattern}"
         )
 
     for filename in matching_files:
         os.remove(filename)
-
-
-def _test_example_algorithm_save(phase_context, algorithm_dir):
-    pattern = str(
-        algorithm_dir
-        / f"example-algorithm-{phase_context['phase']['slug']}_*.tar.gz"
-    )
-    _test_save(pattern, script_dir=algorithm_dir)
 
 
 def example_evaluation(phase_context, evaluation_dir):
@@ -147,7 +150,13 @@ def example_evaluation(phase_context, evaluation_dir):
             phase_context, evaluation_dir, number_run=n + 1
         )
 
-    _test_example_evaluation_save(phase_context, evaluation_dir)
+    _test_save(
+        pattern=str(
+            evaluation_dir
+            / f"example-evaluation-{phase_context['phase']['slug']}_*.tar.gz"
+        ),
+        script_dir=evaluation_dir,
+    )
 
     logger.debug("💚 Quality OK!")
 
@@ -158,7 +167,7 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
     _test_subprocess(
         script_dir=evaluation_dir,
         number_run=number_run,
-        script_name="test_run.sh",
+        script_name="do_test_run.sh",
     )
 
     # Check if output is generated (ignore content)
@@ -168,14 +177,6 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
             f"Example evaluation does not generate output on run {number_run}: "
             f"{expected_file}"
         )
-
-
-def _test_example_evaluation_save(phase_context, evaluation_dir):
-    pattern = str(
-        evaluation_dir
-        / f"example-evaluation-{phase_context['phase']['slug']}_*.tar.gz"
-    )
-    _test_save(pattern, script_dir=evaluation_dir)
 
 
 def _test_subprocess(script_dir, number_run, script_name):
@@ -219,3 +220,31 @@ def _test_subprocess(script_dir, number_run, script_name):
         )
 
     return result
+
+
+def algorithm_template(algorithm_context, algorithm_template_path):
+    """Checks if the algorithm template works as intended"""
+    logger.debug(
+        f"Quality check over algorithm template in: {algorithm_template_path}"
+    )
+
+    # Run it twice to ensure all permissions are correctly handled
+    runs = 2
+    for n in range(0, runs):
+        logger.debug(
+            f"Staring quality check run [{n+1}/{runs}] over algorithm template"
+        )
+        _test_algorithm(
+            algorithm_context["algorithm"]["outputs"],
+            algorithm_template_path,
+            number_run=n + 1,
+        )
+
+    algorithm_slug = slugify(algorithm_context["algorithm"]["title"])
+
+    _test_save(
+        pattern=str(algorithm_template_path / f"{algorithm_slug}_*.tar.gz"),
+        script_dir=algorithm_template_path,
+    )
+
+    logger.debug("💚 Quality OK!")

@@ -147,12 +147,20 @@ def generate_example_algorithm(
 ):
     algorithm_path = output_path / "example-algorithm"
 
-    context["_no_gpus"] = context.get("_no_gpus", False)
-
     copy_and_render(
         templates_dir_name="example-algorithm",
         output_path=algorithm_path,
         context=context,
+    )
+
+    # Add .sh files
+    copy_and_render(
+        templates_dir_name="docker-bash-scripts",
+        output_path=algorithm_path,
+        context={
+            "image_tag": f"example-algorithm-{context['phase']['slug']}",
+            "_no_gpus": context.get("_no_gpus", False),
+        },
     )
 
     # Create input files
@@ -179,12 +187,20 @@ def generate_example_evaluation(
 ):
     evaluation_path = output_path / "example-evaluation-method"
 
-    context["_no_gpus"] = context.get("_no_gpus", False)
-
     copy_and_render(
         templates_dir_name="example-evaluation-method",
         output_path=evaluation_path,
         context=context,
+    )
+
+    # Add .sh files
+    copy_and_render(
+        templates_dir_name="docker-bash-scripts",
+        output_path=evaluation_path,
+        context={
+            "image_tag": f"example-evaluation-{context['phase']['slug']}",
+            "_no_gpus": context.get("_no_gpus", False),
+        },
     )
 
     generate_predictions(context, evaluation_path)
@@ -284,12 +300,12 @@ def generate_algorithm_template(
         },
     )
 
-    # def quality_check():
-    #     qc.example_algorithm(
-    #         phase_context=context, algorithm_dir=algorithm_path
-    #     )
+    def quality_check():
+        qc.algorithm_template(
+            algorithm_context=context, algorithm_template_path=template_path
+        )
 
-    # if quality_control_registry is not None:
-    #     quality_control_registry.append(quality_check)
+    if quality_control_registry is not None:
+        quality_control_registry.append(quality_check)
 
     return template_path
