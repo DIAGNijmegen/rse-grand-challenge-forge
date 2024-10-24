@@ -13,7 +13,10 @@ from grand_challenge_forge.generation_utils import (
     copy_and_render,
     create_civ_stub_file,
 )
-from grand_challenge_forge.schemas import validate_pack_context
+from grand_challenge_forge.schemas import (
+    validate_algorithm_template_context,
+    validate_pack_context,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -243,4 +246,4 @@ def generate_algorithm_template(
     quality_control_registry=None,
     force=False,
 ):
-    pass
+    validate_algorithm_template_context(context)
