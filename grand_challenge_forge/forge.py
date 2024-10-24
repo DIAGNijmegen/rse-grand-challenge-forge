@@ -234,3 +234,13 @@ def generate_predictions(context, evaluation_path, n=3):
                 target_path=job_path,
                 component_interface=civ["interface"],
             )
+
+
+def generate_algorithm_template(
+    *,
+    context,
+    output_path,
+    quality_control_registry=None,
+    force=False,
+):
+    pass
