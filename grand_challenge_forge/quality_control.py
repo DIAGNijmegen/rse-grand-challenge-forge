@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import sys
+import uuid
 from unittest.mock import MagicMock, patch
 
 from grand_challenge_forge import RESOURCES_PATH
@@ -73,13 +74,7 @@ def example_algorithm(phase_context, algorithm_dir):
             number_run=n + 1,
         )
 
-    _test_save(
-        pattern=str(
-            algorithm_dir
-            / f"example-algorithm-{phase_context['phase']['slug']}_*.tar.gz"
-        ),
-        script_dir=algorithm_dir,
-    )
+    _test_save(script_dir=algorithm_dir)
 
     logger.debug("💚 Quality OK!")
 
@@ -91,6 +86,7 @@ def _test_algorithm(expected_outputs, algorithm_dir, number_run):
         script_dir=algorithm_dir,
         number_run=number_run,
         script_name="do_test_run.sh",
+        extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
     )
 
     # Check if output is generated (ignore content)
@@ -103,11 +99,15 @@ def _test_algorithm(expected_outputs, algorithm_dir, number_run):
             )
 
 
-def _test_save(pattern, script_dir):
+def _test_save(script_dir):
     logger.debug(
         "Testing container save, using a mock save function for efficiency"
     )
 
+    # Running multiple tests ate the same time.
+    custom_image_tag = f"test-{uuid.uuid4()}"
+
+    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
     matching_files = glob.glob(pattern)
 
     assert len(matching_files) == 0
@@ -121,6 +121,7 @@ def _test_save(pattern, script_dir):
             script_dir=script_dir,
             number_run=1,
             script_name="do_save.sh",
+            extra_arg=custom_image_tag,
         )
 
     # Check if saved image exists
@@ -149,13 +150,7 @@ def example_evaluation(phase_context, evaluation_dir):
             phase_context, evaluation_dir, number_run=n + 1
         )
 
-    _test_save(
-        pattern=str(
-            evaluation_dir
-            / f"example-evaluation-{phase_context['phase']['slug']}_*.tar.gz"
-        ),
-        script_dir=evaluation_dir,
-    )
+    _test_save(script_dir=evaluation_dir)
 
     logger.debug("💚 Quality OK!")
 
@@ -167,6 +162,7 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
         script_dir=evaluation_dir,
         number_run=number_run,
         script_name="do_test_run.sh",
+        extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
     )
 
     # Check if output is generated (ignore content)
@@ -178,7 +174,7 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
         )
 
 
-def _test_subprocess(script_dir, number_run, script_name):
+def _test_subprocess(script_dir, number_run, script_name, extra_arg=None):
     global counter
     if logger.getEffectiveLevel() is logging.DEBUG:
         kwargs = {
@@ -190,8 +186,12 @@ def _test_subprocess(script_dir, number_run, script_name):
             "capture_output": True,
         }
 
+    command = [script_dir / script_name]
+    if extra_arg:
+        command.append(extra_arg)
+
     result = subprocess.run(
-        [script_dir / script_name],
+        command,
         **kwargs,
     )
 
@@ -240,11 +240,6 @@ def algorithm_template(algorithm_context, algorithm_template_path):
             number_run=n + 1,
         )
 
-    algorithm_slug = algorithm_context["algorithm"]["slug"]
-
-    _test_save(
-        pattern=str(algorithm_template_path / f"{algorithm_slug}_*.tar.gz"),
-        script_dir=algorithm_template_path,
-    )
+    _test_save(script_dir=algorithm_template_path)
 
     logger.debug("💚 Quality OK!")
