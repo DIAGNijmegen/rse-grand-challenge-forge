@@ -92,6 +92,7 @@ ALGORITHM_TEMPLATE_CONTEXT_SCHEMA = {
             "type": "object",
             "properties": {
                 "title": {"type": "string"},
+                "slug": {"type": "string"},
                 "url": {"type": "string"},
                 "inputs": {
                     "type": "array",
