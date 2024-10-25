@@ -26,7 +26,7 @@ def generate_challenge_pack(
     context,
     output_path,
     quality_control_registry=None,
-    force=False,
+    delete_existing=False,
 ):
     validate_pack_context(context)
 
@@ -37,7 +37,7 @@ def generate_challenge_pack(
     pack_path = output_path / f"{context['challenge']['slug']}-challenge-pack"
 
     if pack_path.exists():
-        _handle_existing(pack_path, force=force)
+        _handle_existing(pack_path, delete_existing=delete_existing)
 
     generate_readme(context=context, output_path=pack_path)
 
@@ -66,13 +66,11 @@ def generate_challenge_pack(
     return pack_path
 
 
-def _handle_existing(directory, force):
-    if force:
+def _handle_existing(directory, delete_existing):
+    if delete_existing:
         shutil.rmtree(directory)
     else:
-        raise OutputOverwriteError(
-            f"{directory} already exists! Use force to overwrite"
-        )
+        raise OutputOverwriteError(f"{directory} already exists!")
 
 
 def generate_readme(*, context, output_path):
@@ -260,7 +258,7 @@ def generate_algorithm_template(
     context,
     output_path,
     quality_control_registry=None,
-    force=False,
+    delete_existing=False,
 ):
     validate_algorithm_template_context(context)
 
@@ -273,7 +271,7 @@ def generate_algorithm_template(
     template_path = output_path / f"{algorithm_slug}-template"
 
     if template_path.exists():
-        _handle_existing(template_path, force=force)
+        _handle_existing(template_path, delete_existing=delete_existing)
 
     copy_and_render(
         templates_dir_name="algorithm-template",

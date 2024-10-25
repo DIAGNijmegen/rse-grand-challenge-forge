@@ -88,7 +88,7 @@ def pack(output, force, contexts, no_quality_control, verbose=0):
                 pack_dir = generate_challenge_pack(
                     context=resolved_context,
                     output_path=output_dir,
-                    force=force,
+                    delete_existing=force,
                     quality_control_registry=quality_control_registry,
                 )
                 logger.info(f"📦 Created Pack {pack_dir.stem!r}")
@@ -133,7 +133,7 @@ def algorithm(output, force, contexts, no_quality_control, verbose):
                 template_dir = generate_algorithm_template(
                     context=resolved_context,
                     output_path=output_dir,
-                    force=force,
+                    delete_existing=force,
                     quality_control_registry=quality_control_registry,
                 )
                 logger.info(

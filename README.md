@@ -134,7 +134,7 @@ generate_challenge_pack(
     context={"challenge": {...}}
     output_path=Path("dist/"),
     quality_control_registry=qc,
-    force=False,
+    delete_existing=False,
 )
 for check in qc:
     check()
@@ -156,6 +156,7 @@ Will use the context found in `algorithm-context.json` and generate a algorith-t
 {
     "algorithm": {
         "title": "An Algorithm Title",
+        "slug": "an-algorithm-title",
         "url": "https://grand-challenge.org/algorithms/an-algorithm/",
         "inputs": [
                 {
@@ -214,7 +215,7 @@ generate_algorithm_template(
     context={"algorithm": { ... }}
     output_path=Path("dist/"),
     quality_control_registry=qc,
-    force=False,
+    delete_existing=False,
 )
 for check in qc:
     check()
