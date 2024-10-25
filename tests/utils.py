@@ -117,6 +117,7 @@ DEFAULT_PACK_CONTEXT_STUB = {
 DEFAULT_ALGORITHM_CONTEXT_STUB = {
     "algorithm": {
         "title": "An algorithm",
+        "slug": "an-algorithm",
         "url": "https://grand-challenge.org/algorithms/an-algorithm/",
         "inputs": [
             {

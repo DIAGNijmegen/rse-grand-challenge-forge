@@ -102,7 +102,7 @@ ALGORITHM_TEMPLATE_CONTEXT_SCHEMA = {
                     "items": COMPONENT_INTERFACE_SCHEMA,
                 },
             },
-            "required": ["title", "url", "inputs", "outputs"],
+            "required": ["title", "url", "slug", "inputs", "outputs"],
         },
     },
     "required": ["algorithm"],

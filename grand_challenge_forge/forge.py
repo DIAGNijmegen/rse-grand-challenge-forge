@@ -17,7 +17,6 @@ from grand_challenge_forge.schemas import (
     validate_algorithm_template_context,
     validate_pack_context,
 )
-from grand_challenge_forge.utils import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +268,7 @@ def generate_algorithm_template(
         "grand-challenge-forge"
     )
 
-    algorithm_slug = slugify(context["algorithm"]["title"])
+    algorithm_slug = context["algorithm"]["slug"]
 
     template_path = output_path / f"{algorithm_slug}-template"
 

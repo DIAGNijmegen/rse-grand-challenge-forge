@@ -10,7 +10,6 @@ from grand_challenge_forge.exceptions import QualityFailureError
 from grand_challenge_forge.utils import (
     change_directory,
     directly_import_module,
-    slugify,
 )
 
 logger = logging.getLogger(__name__)
@@ -180,6 +179,7 @@ def _test_example_evaluation(phase_context, evaluation_dir, number_run):
 
 
 def _test_subprocess(script_dir, number_run, script_name):
+    global counter
     if logger.getEffectiveLevel() is logging.DEBUG:
         kwargs = {
             "stdout": sys.stdout.buffer,
@@ -240,7 +240,7 @@ def algorithm_template(algorithm_context, algorithm_template_path):
             number_run=n + 1,
         )
 
-    algorithm_slug = slugify(algorithm_context["algorithm"]["title"])
+    algorithm_slug = algorithm_context["algorithm"]["slug"]
 
     _test_save(
         pattern=str(algorithm_template_path / f"{algorithm_slug}_*.tar.gz"),
