@@ -1,5 +1,9 @@
 # History
 
+## 0.6.0 (2024-10-28)
+- Add forging of algorithm templates.
+- Split CLI commands into 'pack' for challenge packs and 'algorithm' for algorithm templates.
+
 ## 0.5.0 (2024-10-10)
 - Fixed interoperability issues when running challenge pack scripts on macOS.
 - Fixed several Docker deprecation warnings.
