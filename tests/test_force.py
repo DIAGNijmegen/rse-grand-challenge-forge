@@ -28,6 +28,6 @@ def test_force_overwrites(tmp_path):
     generate_challenge_pack(
         context=context,
         output_path=tmp_path,
-        force=True,
+        delete_existing=True,
     )
     assert expected_pack.exists()

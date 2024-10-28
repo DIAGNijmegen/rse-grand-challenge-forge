@@ -1,5 +1,5 @@
 """
-The following is a simple example algorithm.
+The following is a simple algorithm template that matches the configuration for your algorithm.
 
 It is meant to run within a container.
 
@@ -18,10 +18,10 @@ Any container that shows the same behavior will do, this is purely an example of
 Happy programming!
 """
 from pathlib import Path
-{% if phase.algorithm_inputs | has_json or phase.algorithm_outputs | has_json -%}
+{% if algorithm.inputs | has_json or algorithm.outputs | has_json -%}
 import json
 {%- endif %}
-{% if phase.algorithm_inputs | has_image or phase.algorithm_outputs | has_image -%}
+{% if algorithm.inputs | has_image or algorithm.outputs | has_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -31,11 +31,11 @@ INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
 RESOURCE_PATH = Path("resources")
 
-{% if "__should_fail" in phase -%} 1/0 {%- endif %}
+{% if "__should_fail" in algorithm -%} 1/0 {%- endif %}
 
 def run():
     # Read the input
-    {% for ci in phase.algorithm_inputs -%}
+    {% for ci in algorithm.inputs -%}
     {% set py_slug = ci.slug.replace("-", "_") -%}
     {% if ci | is_image -%}
     input_{{ py_slug }} = load_image_file_as_array(
@@ -59,8 +59,10 @@ def run():
     with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
         print(f.read())
 
+    # TODO: add your custom inference here
+
     # For now, let us make bogus predictions
-    {%- for ci in phase.algorithm_outputs %}
+    {%- for ci in algorithm.outputs %}
     output_{{ ci.slug.replace("-", "_")}} =
         {%- if ci | is_image %} numpy.eye(4, 2)
         {%- elif ci | is_json %} {"content": "should match the required format"}
@@ -69,7 +71,7 @@ def run():
     {%- endfor %}
 
     # Save your output
-    {% for ci in phase.algorithm_outputs -%}
+    {% for ci in algorithm.outputs -%}
     {% set py_slug = ci.slug.replace("-", "_") -%}
     {% if ci | is_image -%}
     write_array_as_image_file(
@@ -91,7 +93,7 @@ def run():
     {% endif -%}
     {% endfor %}
     return 0
-{%- if phase.algorithm_inputs | has_json %}
+{%- if algorithm.inputs | has_json %}
 
 
 def load_json_file(*, location):
@@ -99,7 +101,7 @@ def load_json_file(*, location):
     with open(location, 'r') as f:
         return json.loads(f.read())
 {%- endif %}
-{%- if phase.algorithm_outputs | has_json %}
+{%- if algorithm.outputs | has_json %}
 
 
 def write_json_file(*, location, content):
@@ -107,7 +109,7 @@ def write_json_file(*, location, content):
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
 {%- endif %}
-{%- if phase.algorithm_inputs | has_image %}
+{%- if algorithm.inputs | has_image %}
 
 
 def load_image_file_as_array(*, location):
@@ -118,7 +120,7 @@ def load_image_file_as_array(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if phase.algorithm_outputs | has_image %}
+{%- if algorithm.outputs | has_image %}
 
 
 def write_array_as_image_file(*, location, array):
@@ -134,23 +136,23 @@ def write_array_as_image_file(*, location, array):
         useCompression=True,
     )
 {%- endif %}
-{%- if phase.algorithm_inputs | has_file %}
+{%- if algorithm.inputs | has_file %}
 
 
-# Note to the challenge hosts:
+# Note to the algorithm developer:
 #   the following function is very generic and should likely
-#   be adopted to something more specific for your challenge
+#   be adopted to something more specific for your algorithm
 def load_file(*, location):
     # Reads the content of a file
     with open(location) as f:
         return f.read()
 {%- endif %}
-{%- if phase.algorithm_outputs | has_file %}
+{%- if algorithm.outputs | has_file %}
 
 
-# Note to the challenge hosts:
+# Note to the algorithm developer:
 #   the following function is very generic and should likely
-#   be adopted to something more specific for your challenge
+#   be adopted to something more specific for your algorithm
 def write_file(*, location, content):
     # Write the content to a file
     with open(location, 'w') as f:

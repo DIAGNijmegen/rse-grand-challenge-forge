@@ -112,6 +112,68 @@ DEFAULT_PACK_CONTEXT_STUB = {
         ]
     }
 }
+
+
+DEFAULT_ALGORITHM_CONTEXT_STUB = {
+    "algorithm": {
+        "title": "An algorithm",
+        "slug": "an-algorithm",
+        "url": "https://grand-challenge.org/algorithms/an-algorithm/",
+        "inputs": [
+            {
+                "slug": "input-ci-slug",
+                "kind": "Segmentation",
+                "super_kind": "Image",
+                "relative_path": "images/input-value"
+            },
+            {
+                "slug": "another-input-ci-slug",
+                "kind": "Anything",
+                "super_kind": "File",
+                "relative_path": "another-input-value.json"
+            },
+            {
+                "slug": "yet-another-input-ci-slug",
+                "kind": "Anything",
+                "super_kind": "Value",
+                "relative_path": "yet-another-input-value.json"
+            },
+            {
+                "slug": "yet-another-non-json-input-ci-slug",
+                "kind": "Anything",
+                "super_kind": "File",
+                "relative_path": "yet-another-non-json-input-value"
+            }
+        ],
+        "outputs": [
+            {
+                "slug": "output-ci-slug",
+                "kind": "Image",
+                "super_kind": "Image",
+                "relative_path": "images/output-value"
+            },
+            {
+                "slug": "another-output-ci-slug",
+                "kind": "Anything",
+                "super_kind": "File",
+                "relative_path": "output-value.json"
+            },
+            {
+                "slug": "yet-another-output-ci-slug",
+                "kind": "Anything",
+                "super_kind": "Value",
+                "relative_path": "yet-another-output-value.json"
+            },
+            {
+                "slug": "yet-another-non-json-output-ci-slug",
+                "kind": "Anything",
+                "super_kind": "File",
+                "relative_path": "yet-another-non-json-output-value"
+            }
+        ]
+    }
+}
+
 # fmt: on
 
 counter = 0
@@ -158,3 +220,24 @@ def numerical_pack_context_factory(**kwargs):
             cv["slug"] = f"00-{cv['slug']}"
 
     return pack_context
+
+
+def algorithm_template_context_factory(should_fail=False, **kwargs):
+    global counter
+    result = deepcopy(DEFAULT_ALGORITHM_CONTEXT_STUB)
+    for k, v in kwargs.items():
+        result["algorithm"][k] = v
+
+    def recursive_set_fail(d):
+        if isinstance(d, dict):
+            d["__should_fail"] = True  # Any value will do
+            for item in d.values():
+                recursive_set_fail(item)
+        elif isinstance(d, list):
+            for item in d:
+                recursive_set_fail(item)
+
+    if should_fail:
+        recursive_set_fail(result)
+
+    return result
