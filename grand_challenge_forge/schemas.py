@@ -40,6 +40,7 @@ PACK_CONTEXT_SCHEMA = {
             "type": "object",
             "properties": {
                 "slug": {"type": "string"},
+                "url": {"type": "string"},
                 "archives": {"type": "array", "items": ARCHIVE_SCHEMA},
                 "phases": {
                     "type": "array",
@@ -67,7 +68,7 @@ PACK_CONTEXT_SCHEMA = {
                     },
                 },
             },
-            "required": ["slug", "phases", "archives"],
+            "required": ["slug", "url", "phases", "archives"],
         },
     },
     "required": ["challenge"],

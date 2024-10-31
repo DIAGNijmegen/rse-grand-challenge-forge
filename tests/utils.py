@@ -12,6 +12,7 @@ TEST_RESOURCES = (
 DEFAULT_PACK_CONTEXT_STUB = {
     "challenge": {
         "slug": "challenge-slug",
+        "url": "https://challenge-slug.grand-challenge.org/",
         "archives": [
             {
                 "slug": "archive-slug",
