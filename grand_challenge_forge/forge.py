@@ -34,7 +34,8 @@ def generate_challenge_pack(
         "grand-challenge-forge"
     )
 
-    pack_path = output_path / f"{context['challenge']['slug']}-challenge-pack"
+    challenge_slug = context["challenge"]["slug"]
+    pack_path = output_path / f"{challenge_slug.lower()}-challenge-pack"
 
     if pack_path.exists():
         _handle_existing(pack_path, delete_existing=delete_existing)
@@ -268,7 +269,7 @@ def generate_algorithm_template(
 
     algorithm_slug = context["algorithm"]["slug"]
 
-    template_path = output_path / f"{algorithm_slug}-template"
+    template_path = output_path / f"{algorithm_slug.lower()}-template"
 
     if template_path.exists():
         _handle_existing(template_path, delete_existing=delete_existing)
