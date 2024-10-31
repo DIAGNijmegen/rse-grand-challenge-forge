@@ -21,6 +21,7 @@ python = ">3.10"
 jinja2 = "*"
 click = "*"
 jsonschema = "*"
+black = "23.9.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

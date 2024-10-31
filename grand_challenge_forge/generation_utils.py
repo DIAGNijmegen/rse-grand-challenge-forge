@@ -1,9 +1,11 @@
+import json
 import os
 import shutil
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+import black
 from jinja2 import FileSystemLoader, StrictUndefined, TemplateNotFound
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
@@ -27,20 +29,36 @@ def is_file(component_interface):
     ] == "File" and not component_interface["relative_path"].endswith(".json")
 
 
+def has_example_value(component_interface):
+    return (
+        "example_value" in component_interface
+        and component_interface["example_value"] is not None
+    )
+
+
 def create_civ_stub_file(*, target_path, component_interface):
     """Creates a stub based on a component interface"""
     target_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if has_example_value(component_interface):
+        target_path.write_text(
+            json.dumps(
+                component_interface["example_value"],
+                indent=4,
+            )
+        )
+        return
+
+    # Copy over an example
     if is_json(component_interface):
-        src = RESOURCES_PATH / "example.json"
+        shutil.copy(RESOURCES_PATH / "example.json", target_path)
     elif is_image(component_interface):
         target_path = target_path / f"{str(uuid.uuid4())}.mha"
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        src = RESOURCES_PATH / "example.mha"
+        shutil.copy(RESOURCES_PATH / "example.mha", target_path)
     else:
         target_path.parent.mkdir(parents=True, exist_ok=True)
-        src = RESOURCES_PATH / "example.txt"
-
-    shutil.copy(src, target_path)
+        shutil.copy(RESOURCES_PATH / "example.txt", target_path)
 
 
 def ci_to_civ(component_interface):
@@ -60,7 +78,9 @@ def ci_to_civ(component_interface):
             f"{component_interface['relative_path']}"
         )
     if component_interface["super_kind"] == "Value":
-        civ["value"] = '{"some_key": "some_value"}'
+        civ["value"] = component_interface.get(
+            "example_value", {"some_key": "some_value"}
+        )
     return {
         **civ,
         "interface": component_interface,
@@ -140,10 +160,25 @@ def copy_and_render(
                 # Copy non-template files
                 shutil.copy2(source_file, output_file)
 
+    apply_black(output_path)
+
 
 def check_allowed_source(path):
     if PARTIALS_PATH.resolve() not in path.resolve().parents:
         raise PermissionError(
             f"Only files under {PARTIALS_PATH} are allowed "
             "to be copied or rendered"
+        )
+
+
+def apply_black(target_path):
+    for python_file in target_path.glob("**/*.py"):
+        # Use direct black format call because black
+        # CLI entrypoint ignores files in .gitignore
+
+        black.format_file_in_place(
+            python_file,
+            fast=False,
+            mode=black.Mode(),
+            write_back=black.WriteBack.YES,
         )

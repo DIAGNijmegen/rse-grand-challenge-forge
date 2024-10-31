@@ -36,3 +36,8 @@ def is_file(arg):
 @register_simple_filter
 def has_file(arg):
     return any(generation_utils.is_file(item) for item in arg)
+
+
+@register_simple_filter
+def has_example_value(arg):
+    return generation_utils.has_example_value(arg)

@@ -62,7 +62,8 @@ def run():
     # For now, let us make bogus predictions
     {%- for ci in phase.algorithm_outputs %}
     output_{{ ci.slug.replace("-", "_")}} =
-        {%- if ci | is_image %} numpy.eye(4, 2)
+        {%- if ci | has_example_value %} {{ ci.example_value }}
+        {%- elif ci | is_image %} numpy.eye(4, 2)
         {%- elif ci | is_json %} {"content": "should match the required format"}
         {%- elif ci | is_file %} "content: should match the required format"
         {% endif %}

@@ -38,25 +38,29 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "slug": "input-ci-slug",
                         "kind": "Segmentation",
                         "super_kind": "Image",
-                        "relative_path": "images/input-value"
+                        "relative_path": "images/input-value",
+                        "example_value": None
                     },
                     {
                         "slug": "another-input-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
-                        "relative_path": "another-input-value.json"
+                        "relative_path": "another-input-value.json",
+                        "example_value": {"key": "value"}
                     },
                     {
                         "slug": "yet-another-input-ci-slug",
                         "kind": "Anything",
                         "super_kind": "Value",
-                        "relative_path": "yet-another-input-value.json"
+                        "relative_path": "yet-another-input-value.json",
+                        "example_value": {"key": "value"}
                     },
                     {
                         "slug": "yet-another-non-json-input-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
-                        "relative_path": "yet-another-non-json-input-value"
+                        "relative_path": "yet-another-non-json-input-value",
+                        "example_value": None
                     }
                 ],
                 "algorithm_outputs": [
@@ -64,25 +68,29 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "slug": "output-ci-slug",
                         "kind": "Image",
                         "super_kind": "Image",
-                        "relative_path": "images/output-value"
+                        "relative_path": "images/output-value",
+                        "example_value": None
                     },
                     {
                         "slug": "another-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
-                        "relative_path": "output-value.json"
+                        "relative_path": "output-value.json",
+                        "example_value": {"key": "value"}
                     },
                     {
                         "slug": "yet-another-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "Value",
-                        "relative_path": "yet-another-output-value.json"
+                        "relative_path": "yet-another-output-value.json",
+                        "example_value": {"key": "value"}
                     },
                     {
                         "slug": "yet-another-non-json-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
-                        "relative_path": "yet-another-non-json-output-value"
+                        "relative_path": "yet-another-non-json-output-value",
+                        "example_value": None
                     }
                 ]
             },
@@ -97,7 +105,8 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "slug": "input-ci-slug",
                         "kind": "Image",
                         "super_kind": "Image",
-                        "relative_path": "images/input-value"
+                        "relative_path": "images/input-value",
+                        "example_value": None
                     }
                 ],
                 "algorithm_outputs": [
@@ -105,7 +114,8 @@ DEFAULT_PACK_CONTEXT_STUB = {
                         "slug": "another-output-ci-slug",
                         "kind": "Anything",
                         "super_kind": "File",
-                        "relative_path": "output-value.json"
+                        "relative_path": "output-value.json",
+                        "example_value": {"key": "value"}
                     }
                 ]
             }
@@ -124,25 +134,29 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
                 "slug": "input-ci-slug",
                 "kind": "Segmentation",
                 "super_kind": "Image",
-                "relative_path": "images/input-value"
+                "relative_path": "images/input-value",
+                "example_value": None
             },
             {
                 "slug": "another-input-ci-slug",
                 "kind": "Anything",
                 "super_kind": "File",
-                "relative_path": "another-input-value.json"
+                "relative_path": "another-input-value.json",
+                "example_value": {"key": "value"}
             },
             {
                 "slug": "yet-another-input-ci-slug",
                 "kind": "Anything",
                 "super_kind": "Value",
-                "relative_path": "yet-another-input-value.json"
+                "relative_path": "yet-another-input-value.json",
+                "example_value": {"key": "value"}
             },
             {
                 "slug": "yet-another-non-json-input-ci-slug",
                 "kind": "Anything",
                 "super_kind": "File",
-                "relative_path": "yet-another-non-json-input-value"
+                "relative_path": "yet-another-non-json-input-value",
+                "example_value": None
             }
         ],
         "outputs": [
@@ -150,25 +164,29 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
                 "slug": "output-ci-slug",
                 "kind": "Image",
                 "super_kind": "Image",
-                "relative_path": "images/output-value"
+                "relative_path": "images/output-value",
+                "example_value": None
             },
             {
                 "slug": "another-output-ci-slug",
                 "kind": "Anything",
                 "super_kind": "File",
-                "relative_path": "output-value.json"
+                "relative_path": "output-value.json",
+                "example_value": {"key": "value"}
             },
             {
                 "slug": "yet-another-output-ci-slug",
                 "kind": "Anything",
                 "super_kind": "Value",
-                "relative_path": "yet-another-output-value.json"
+                "relative_path": "yet-another-output-value.json",
+                "example_value": {"key": "value"}
             },
             {
                 "slug": "yet-another-non-json-output-ci-slug",
                 "kind": "Anything",
                 "super_kind": "File",
-                "relative_path": "yet-another-non-json-output-value"
+                "relative_path": "yet-another-non-json-output-value",
+                "example_value": None
             }
         ]
     }
