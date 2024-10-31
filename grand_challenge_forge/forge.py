@@ -34,10 +34,8 @@ def generate_challenge_pack(
         "grand-challenge-forge"
     )
 
-    challenge_slug = context['challenge']['slug']
-    pack_path = (
-        output_path / f"{challenge_slug.lower()}-challenge-pack"
-    )
+    challenge_slug = context["challenge"]["slug"]
+    pack_path = output_path / f"{challenge_slug.lower()}-challenge-pack"
 
     if pack_path.exists():
         _handle_existing(pack_path, delete_existing=delete_existing)
