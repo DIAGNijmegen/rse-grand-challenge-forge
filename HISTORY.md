@@ -1,5 +1,11 @@
 # History
 
+## 0.6.1 (2024-10-31)
+- Fix not using algorithm URL correctly in README
+- Use valid examples for JSON-like inputs/outputs
+- Fix permissions not always being restored correctly when running on latest Ubuntu LTS
+- Ensure .tif are correctly parsed by example scripts
+  
 ## 0.6.0 (2024-10-28)
 - Add forging of algorithm templates.
 - Split CLI commands into 'pack' for challenge packs and 'algorithm' for algorithm templates.
