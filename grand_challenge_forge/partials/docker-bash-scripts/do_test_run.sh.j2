@@ -16,6 +16,21 @@ DOCKER_NOOP_VOLUME="${DOCKER_IMAGE_TAG}-volume"
 INPUT_DIR="${SCRIPT_DIR}/test/input"
 OUTPUT_DIR="${SCRIPT_DIR}/test/output"
 
+echo "=+= (Re)build the container"
+source "${SCRIPT_DIR}/do_build.sh" "$DOCKER_IMAGE_TAG"
+
+cleanup() {
+    echo "=+= Cleaning permissions ..."
+    # Ensure permissions are set correctly on the output
+    # This allows the host user (e.g. you) to access and handle these files
+    docker run --rm \
+      --quiet \
+      --volume "$OUTPUT_DIR":/output \
+      --entrypoint /bin/sh \
+      $DOCKER_IMAGE_TAG \
+      -c "chmod -R -f o+rwX /output/* || true"
+}
+
 
 echo "=+= Cleaning up any earlier output"
 if [ -d "$OUTPUT_DIR" ]; then
@@ -27,10 +42,7 @@ else
   mkdir -m o+rwx "$OUTPUT_DIR"
 fi
 
-
-echo "=+= (Re)build the container"
-source "${SCRIPT_DIR}/do_build.sh" "$DOCKER_IMAGE_TAG"
-
+trap cleanup EXIT
 
 echo "=+= Doing a forward pass"
 ## Note the extra arguments that are passed here:
