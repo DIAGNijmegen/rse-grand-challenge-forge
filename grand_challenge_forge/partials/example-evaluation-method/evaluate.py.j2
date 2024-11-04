@@ -108,9 +108,9 @@ def process(job):
     with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
         report += f.read()
     print(report)
-    
+
     # TODO: compare the results to your ground truth and compute some metrics
-    
+
     # For now, we will just report back some bogus metric
     return {
         "my_metric": random.choice([1, 0]),
