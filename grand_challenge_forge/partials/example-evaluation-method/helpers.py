@@ -1,18 +1,32 @@
 import multiprocessing
 import os
+import sys
+import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager, Process
+from pathlib import Path
 
 import psutil
 
 
 class PredictionProcessingError(Exception):
-    def __init__(self, prediction, error):
-        self.prediction = prediction
-        self.error = error
+    pass
 
-    def __str__(self):
-        return f"Error for prediction {self.prediction}: {self.error}"
+
+def display_processing_report(succeeded, canceled, failed):
+    print("PROCESSING REPORT")
+    total = len(succeeded) + len(canceled) + len(failed)
+
+    print(f"Succeeded ({len(succeeded)}/{total}):")
+    for s in succeeded or "-":
+        print(f"\t{s}")
+    print(f"Canceled ({len(canceled)}/{total}):")
+    for c in canceled or "-":
+        print(f"\t{c}")
+    print(f"Failed ({len(failed)}/{total}):")
+    for f in failed or "-":
+        print(f"\t{f}")
+    print("")
 
 
 def get_max_workers():
@@ -58,8 +72,8 @@ def run_prediction_processing(*, fn, predictions):
     A list of results
     """
     with Manager() as manager:
-        results = manager.list()
-        errors = manager.list()
+        results = manager.dict()
+        errors = manager.dict()
 
         pool_worker = _start_pool_worker(
             fn=fn,
@@ -73,13 +87,22 @@ def run_prediction_processing(*, fn, predictions):
         finally:
             pool_worker.terminate()
 
-        for prediction, e in errors:
-            raise PredictionProcessingError(
-                prediction=prediction,
-                error=e,
-            ) from e
+        failed = set(errors.keys())
+        succeeded = set(results.keys())
+        canceled = set(p["pk"] for p in predictions) - (failed | succeeded)
 
-        return list(results)
+        display_processing_report(succeeded, canceled, failed)
+
+        if errors:
+            for prediction_pk, tb_str in errors.items():
+                print(
+                    f"Error in prediction: {prediction_pk}\n{tb_str}",
+                    file=sys.stderr,
+                )
+
+            raise PredictionProcessingError()
+
+        return list(results.values())
 
 
 def _start_pool_worker(fn, predictions, max_workers, results, errors):
@@ -113,17 +136,26 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
             }
 
             for future in as_completed(future_to_predictions):
-                try:
-                    result = future.result()
-                    results.append(result)
-                except Exception as e:
-                    errors.append((future_to_predictions[future], e))
+                prediction = future_to_predictions[future]
+                prediction_pk = prediction["pk"]
+
+                error = future.exception()
+
+                if error:
+                    # Cannot pickle tracestacks, so format it here
+                    tb_exception = traceback.TracebackException.from_exception(
+                        error
+                    )
+                    errors[prediction_pk] = "".join(tb_exception.format())
 
                     if not caught_exception:  # Hard stop
                         caught_exception = True
 
                         executor.shutdown(wait=False, cancel_futures=True)
                         _terminate_child_processes()
+                else:
+                    results[prediction_pk] = future.result()
+
         finally:
             # Be aggresive in cleaning up any left-over processes
             _terminate_child_processes()
@@ -153,3 +185,25 @@ def _terminate_child_processes():
         os.waitpid(-1, 0)
     except ChildProcessError:
         pass  # No child processes, that if fine
+
+
+def tree(dir_path: Path, prefix: str = ""):
+    """A recursive generator, given a directory Path object
+    will yield a visual tree structure line by line
+    with each line prefixed by the same characters
+    """
+    space = "    "
+    branch = "│   "
+    # pointers:
+    tee = "├── "
+    last = "└── "
+
+    contents = list(dir_path.iterdir())
+    # contents each get pointers that are ├── with a final └── :
+    pointers = [tee] * (len(contents) - 1) + [last]
+    for pointer, path in zip(pointers, contents, strict=True):
+        yield prefix + pointer + path.name
+        if path.is_dir():  # extend the prefix and recurse:
+            extension = branch if pointer == tee else space
+            # i.e. space because last, └── , above so no more |
+            yield from tree(path, prefix=prefix + extension)

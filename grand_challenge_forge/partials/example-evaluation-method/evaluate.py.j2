@@ -39,7 +39,7 @@ import random
 from statistics import mean
 from pathlib import Path
 from pprint import pformat, pprint
-from helpers import run_prediction_processing
+from helpers import run_prediction_processing, tree
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
@@ -143,10 +143,9 @@ def main():
 
 def print_inputs():
     # Just for convenience, in the logs you can then see what files you have to work with
-    input_files = [str(x) for x in Path(INPUT_DIRECTORY).rglob("*") if x.is_file()]
-
     print("Input Files:")
-    pprint(input_files)
+    for line in tree(INPUT_DIRECTORY):
+        print(line)
     print("")
 
 
