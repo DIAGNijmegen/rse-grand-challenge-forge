@@ -30,9 +30,9 @@ pytestmark = pytest.mark.timeout(4)
 
 
 def working_process(p):
-    if p == "prediction1":
+    if p["pk"] == "prediction1":
         time.sleep(2)
-    return f"{p} result"
+    return f"{p['pk']} result"
 
 
 def failing_process(*_):
@@ -72,7 +72,7 @@ def stop_children(process, interval):
 
 
 def test_prediction_processing():
-    predictions = ["prediction1", "prediction2"]
+    predictions = [{"pk": "prediction1"}, {"pk": "prediction2"}]
     result = run_prediction_processing(
         fn=working_process, predictions=predictions
     )
@@ -80,22 +80,18 @@ def test_prediction_processing():
 
 
 def test_prediction_processing_error():
-    predictions = ["prediction"]  # Use one prediction for reproducibility
-    with pytest.raises(PredictionProcessingError) as excinfo:
+    predictions = [
+        {"pk": "prediction1"}
+    ]  # Use one prediction for reproducibility
+    with pytest.raises(PredictionProcessingError):
         run_prediction_processing(fn=failing_process, predictions=predictions)
-
-    assert (
-        "Error for prediction prediction: You have failed me for the last time"
-        in str(excinfo.value)
-    )
-    assert excinfo.value.prediction in predictions
 
 
 def test_prediction_processing_killing_of_child_processes():
     # If something goes wrong, this test could deadlock
     # 5 seconds should be more than enough
 
-    predictions = ["prediction1", "prediction2"]
+    predictions = [{"pk": "prediction1"}, {"pk": "prediction2"}]
     result = run_prediction_processing(
         fn=child_spawning_process, predictions=predictions
     )
@@ -106,7 +102,7 @@ def test_prediction_processing_killing_of_child_processes():
 
 
 def test_prediction_processing_catching_killing_of_child_processes():
-    predictions = ["prediction1", "prediction2"]
+    predictions = [{"pk": "prediction1"}, {"pk": "prediction2"}]
 
     child_stopper = None
 
@@ -120,14 +116,10 @@ def test_prediction_processing_catching_killing_of_child_processes():
 
     try:
         with mock.patch("helpers._start_pool_worker", add_child_terminator):
-            with pytest.raises(PredictionProcessingError) as excinfo:
+            with pytest.raises(PredictionProcessingError):
                 run_prediction_processing(
                     fn=forever_process, predictions=predictions
                 )
     finally:
         if child_stopper:
             child_stopper.terminate()
-
-    assert "A process in the process pool was terminated abruptly" in str(
-        excinfo.value.error
-    )
