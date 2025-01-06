@@ -32,7 +32,6 @@ import numpy
 
 INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
-RESOURCE_PATH = Path("resources")
 
 {% if "__should_fail" in algorithm -%} 1/0 {%- endif %}
 
@@ -59,7 +58,16 @@ def run():
     # Process the inputs: any way you'd like
     _show_torch_cuda_info()
 
-    with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
+    # Some additional resources might be required, place these in one of two locations.
+
+    # First location: part of the Docker-container image: resources/
+    resource_dir = Path("/opt/app/resources")
+    with open(resource_dir / "some_resource.txt", "r") as f:
+        print(f.read())
+
+    # Second location: part of the model tarball
+    model_dir = Path("/opt/ml/model")
+    with open(model_dir / "a_tarball_subdirectory" / "some_tarball_resource.txt", "r") as f:
         print(f.read())
 
     # TODO: add your custom inference here

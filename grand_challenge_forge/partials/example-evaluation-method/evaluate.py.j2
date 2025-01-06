@@ -43,9 +43,6 @@ from helpers import run_prediction_processing, tree
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
-GROUND_TRUTH_DIRECTORY = Path("ground_truth")
-
-
 
 {% if "__should_fail" in phase -%} 1/0 {%- endif %}
 
@@ -104,9 +101,21 @@ def process(job):
     {%- endfor %}
 
     # Fourthly, load your ground truth
-    # Include it in your evaluation container by placing it in ground_truth/
-    with open(GROUND_TRUTH_DIRECTORY / "some_resource.txt", "r") as f:
-        report += f.read()
+    # Include it in your evaluation-method container by placing it one of two locations:
+
+    # First location: part of the Docker-container image: resources/
+    resource_dir = Path("/opt/app/resources")
+    with open(resource_dir / "some_resource.txt", "r") as f:
+        truth = f.read()
+    report += truth
+
+
+    # Second location: part of the ground-truth tarball
+    ground_truth_dir = Path("/opt/ml/input/data/ground_truth")
+    with open(ground_truth_dir / "a_tarball_subdirectory" / "some_tarball_resource.txt", "r") as f:
+        truth = f.read()
+    report += truth
+
     print(report)
 
     # TODO: compare the results to your ground truth and compute some metrics
