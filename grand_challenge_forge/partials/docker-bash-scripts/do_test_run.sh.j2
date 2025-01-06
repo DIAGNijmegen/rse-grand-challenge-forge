@@ -24,6 +24,7 @@ cleanup() {
     # Ensure permissions are set correctly on the output
     # This allows the host user (e.g. you) to access and handle these files
     docker run --rm \
+      --platform=linux/amd64 \
       --quiet \
       --volume "$OUTPUT_DIR":/output \
       --entrypoint /bin/sh \
