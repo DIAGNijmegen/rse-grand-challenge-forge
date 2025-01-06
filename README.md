@@ -45,67 +45,50 @@ a directory `dist/` (default).
 
 ```JSON
 {
-    "challenge": {
-        "slug": "challenge-slug",
-        "phases": [
-            {
-                "slug": "phase-slug",
-                "archive": {
-                    "url": "https://grand-challenge.org/archives/archive-slug/"
-                },
-                "algorithm_inputs": [
-                    {
-                        "slug": "input-ci-slug",
-                        "kind": "Segmentation",
-                        "super_kind": "Image",
-                        "relative_path": "images/input-value"
-                    },
-                    {
-                        "slug": "another-input-ci-slug",
-                        "kind": "Anything",
-                        "super_kind": "File",
-                        "relative_path": "another-input-value.json"
-                    }
-                ],
-                "algorithm_outputs": [
-                    {
-                        "slug": "output-ci-slug",
-                        "kind": "Image",
-                        "super_kind": "Image",
-                        "relative_path": "images/output-value"
-                    },
-                    {
-                        "slug": "another-output-ci-slug",
-                        "kind": "Anything",
-                        "super_kind": "File",
-                        "relative_path": "output-value.json"
-                    }
-                ]
-            },
-            {
-                "slug": "another-phase-slug",
-                "archive": {
-                    "url": "https://grand-challenge.org/archives/another-archive-slug/"
-                },
-                "algorithm_inputs": [
-                    {
-                        "slug": "input-ci-slug",
-                        "kind": "Image",
-                        "super_kind": "Image",
-                        "relative_path": "images/input-value"
-                    }
-                ],
-                "algorithm_outputs": [
-                    {
-                        "slug": "another-output-ci-slug",
-                        "kind": "Anything",
-                        "super_kind": "File",
-                        "relative_path": "output-value.json"
-                    }
-                ]
-            }
+  "challenge": {
+    "slug": "DEMO",
+    "url": "https://demo.grand-challenge.org/",
+    "phases": [
+      {
+        "slug": "test-phase",
+        "archive": {
+          "slug": "demo-challenge",
+          "url": "https://grand-challenge.org/archives/demo-challenge/"
+        },
+        "algorithm_inputs": [
+          {
+            "slug": "color-fundus-image",
+            "kind": "Image",
+            "super_kind": "Image",
+            "relative_path": "images/color-fundus",
+            "example_value": null
+          },
+          {
+            "slug": "age-in-months",
+            "kind": "Integer",
+            "super_kind": "Value",
+            "relative_path": "age-in-months.json",
+            "example_value": 42
+          }
+        ],
+        "algorithm_outputs": [
+          {
+            "slug": "binary-vessel-segmentation",
+            "kind": "Segmentation",
+            "super_kind": "Image",
+            "relative_path": "images/binary-vessel-segmentation",
+            "example_value": null
+          }
         ]
-    }
+      }
+    ],
+    "archives": [
+      {
+        "slug": "demo-challenge",
+        "url": "https://grand-challenge.org/archives/demo-challenge/"
+      }
+    ]
+  }
 }
 ```
 
@@ -154,39 +137,46 @@ Will use the context found in `algorithm-context.json` and generate a algorith-t
 
 ```JSON
 {
-    "algorithm": {
-        "title": "An Algorithm Title",
-        "slug": "an-algorithm-title",
-        "url": "https://grand-challenge.org/algorithms/an-algorithm/",
-        "inputs": [
-                {
-                    "slug": "input-ci-slug",
-                    "kind": "Segmentation",
-                    "super_kind": "Image",
-                    "relative_path": "images/input-value"
-                },
-                {
-                    "slug": "another-input-ci-slug",
-                    "kind": "Anything",
-                    "super_kind": "File",
-                    "relative_path": "another-input-value.json"
-                }
-            ],
-        "outputs": [
-                {
-                    "slug": "output-ci-slug",
-                    "kind": "Image",
-                    "super_kind": "Image",
-                    "relative_path": "images/output-value"
-                },
-                {
-                    "slug": "another-output-ci-slug",
-                    "kind": "Anything",
-                    "super_kind": "File",
-                    "relative_path": "output-value.json"
-                }
-            ]
-        },
+  "algorithm": {
+    "title": "CIRRUSCoreWeb release testing (Pathology/GLEASON)",
+    "slug": "cirruscoreweb-release-testing-pathologygleason",
+    "url": "https://grand-challenge.org/algorithms/cirruscoreweb-release-testing-pathologygleason/",
+    "inputs": [
+      {
+        "slug": "generic-medical-image",
+        "kind": "Image",
+        "super_kind": "Image",
+        "relative_path": "",
+        "example_value": null
+      }
+    ],
+    "outputs": [
+      {
+        "slug": "generic-overlay",
+        "kind": "Heat Map",
+        "super_kind": "Image",
+        "relative_path": "images",
+        "example_value": null
+      },
+      {
+        "slug": "results-json-file",
+        "kind": "Anything",
+        "super_kind": "Value",
+        "relative_path": "results.json",
+        "example_value": {
+          "key": "value",
+          "None": null
+        }
+      },
+      {
+        "slug": "gleason-score",
+        "kind": "Integer",
+        "super_kind": "Value",
+        "relative_path": "gleason-score.json",
+        "example_value": 42
+      }
+    ]
+  }
 }
 ```
 
