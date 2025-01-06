@@ -66,7 +66,7 @@ def example_algorithm(phase_context, algorithm_dir):
     runs = 2
     for n in range(0, runs):
         logger.debug(
-            f"Staring quality check run [{n+1}/{runs}] over example algorithm"
+            f"Staring quality check run [{n + 1}/{runs}] over example algorithm"
         )
         _test_algorithm(
             phase_context["phase"]["algorithm_outputs"],
@@ -144,7 +144,7 @@ def example_evaluation(phase_context, evaluation_dir):
     runs = 2
     for n in range(0, runs):
         logger.debug(
-            f"Staring quality check run [{n+1}/{runs}] over example evaluation"
+            f"Staring quality check run [{n + 1}/{runs}] over example evaluation"
         )
         _test_example_evaluation(
             phase_context, evaluation_dir, number_run=n + 1
@@ -208,14 +208,14 @@ def _test_subprocess(script_dir, number_run, script_name, extra_arg=None):
 
     if result.returncode != 0:  # Not a clean exit
         raise QualityFailureError(
-            f"Script in {script_dir!r} does not exit with 0 "
-            f"on run {number_run}" + report_output
+            f"Script in {script_dir!r} did not exit with 0 "
+            f"on run {number_run}"
             and f":\n {report_output}"
         )
     elif result.stderr:
         raise QualityFailureError(
-            f"Example algorithm in {script_dir!r} produces errors "
-            f"on run {number_run}" + report_output
+            f"Example algorithm in {script_dir!r} produced errors "
+            f"on run {number_run}"
             and f":\n {report_output}"
         )
 
@@ -232,7 +232,7 @@ def algorithm_template(algorithm_context, algorithm_template_path):
     runs = 2
     for n in range(0, runs):
         logger.debug(
-            f"Staring quality check run [{n+1}/{runs}] over algorithm template"
+            f"Staring quality check run [{n + 1}/{runs}] over algorithm template"
         )
         _test_algorithm(
             algorithm_context["algorithm"]["outputs"],
