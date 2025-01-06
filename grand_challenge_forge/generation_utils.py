@@ -136,7 +136,7 @@ def copy_and_render(
         # Create directories in the output path
         current_output_dir.mkdir(parents=True, exist_ok=True)
 
-        for file in files:
+        for file in sorted(files):
             source_file = root / file
             output_file = current_output_dir / file
 

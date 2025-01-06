@@ -56,10 +56,10 @@ def forever_process(*_):
         time.sleep(1)
 
 
-def stop_children(process, interval):
+def stop_children(process_pid, interval):
     stopped = False
     while not stopped:
-        process = psutil.Process(process.pid)
+        process = psutil.Process(process_pid)
         children = process.children(recursive=True)
         if children:
             for child in children:
@@ -110,7 +110,9 @@ def test_prediction_processing_catching_killing_of_child_processes():
     def add_child_terminator(*args, **kwargs):
         process = _start_pool_worker(*args, **kwargs)
         nonlocal child_stopper
-        child_stopper = Process(target=partial(stop_children, process, 0.5))
+        child_stopper = Process(
+            target=partial(stop_children, process.pid, 0.5)
+        )
         child_stopper.start()  # Hasta la vista, baby
         return process
 
@@ -121,5 +123,5 @@ def test_prediction_processing_catching_killing_of_child_processes():
                     fn=forever_process, predictions=predictions
                 )
     finally:
-        if child_stopper:
+        if child_stopper and child_stopper.is_alive():
             child_stopper.terminate()
