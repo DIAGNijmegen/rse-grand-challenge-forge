@@ -69,16 +69,6 @@ docker run --rm \
     $DOCKER_IMAGE_TAG
 docker volume rm "$DOCKER_NOOP_VOLUME" > /dev/null
 
-# Ensure permissions are set correctly on the output
-# This allows the host user (e.g. you) to access and handle these files
-docker run --rm \
-    --quiet \
-    --env HOST_UID=`id -u` \
-    --env HOST_GID=`id -g` \
-    --volume "$OUTPUT_DIR":/output \
-    alpine:latest \
-    /bin/sh -c 'chown -R ${HOST_UID}:${HOST_GID} /output'
-
 echo "=+= Wrote results to ${OUTPUT_DIR}"
 
 echo "=+= Save this image for uploading via ./do_save.sh \"${DOCKER_IMAGE_TAG}\""
