@@ -101,7 +101,7 @@ def pack(output, force, contexts, no_quality_control, verbose=0):
                 print(str(pack_dir))
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
-                    logger.error(f"💔 {e}")
+                    logger.error(f"💔 {e}", exc_info=True)
                 else:
                     raise e
 

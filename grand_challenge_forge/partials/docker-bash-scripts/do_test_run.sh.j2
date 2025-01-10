@@ -53,6 +53,8 @@ echo "=+= Doing a forward pass"
 #    enables access to any GPUs present
 # '--volume <NAME>:/tmp'
 #   is added because on Grand Challenge this directory cannot be used to store permanent files
+# '-volume ../{{ tarball_dirname }}:{{tarball_extraction_dir }}:ro'
+#   is added to provide access to the (optional) tarball-upload locally
 docker volume create "$DOCKER_NOOP_VOLUME" > /dev/null
 docker run --rm \
     --platform=linux/amd64 \
@@ -63,6 +65,7 @@ docker run --rm \
     --volume "$INPUT_DIR":/input:ro \
     --volume "$OUTPUT_DIR":/output \
     --volume "$DOCKER_NOOP_VOLUME":/tmp \
+    --volume "${SCRIPT_DIR}/{{ tarball_dirname }}":{{ tarball_extraction_dir }}:ro \
     $DOCKER_IMAGE_TAG
 docker volume rm "$DOCKER_NOOP_VOLUME" > /dev/null
 

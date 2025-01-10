@@ -156,6 +156,8 @@ def generate_example_algorithm(
         output_path=algorithm_path,
         context={
             "image_tag": f"example-algorithm-{context['phase']['slug']}",
+            "tarball_dirname": "model",
+            "tarball_extraction_dir": "/opt/ml/model/",
             "_no_gpus": context.get("_no_gpus", False),
         },
     )
@@ -196,6 +198,8 @@ def generate_example_evaluation(
         output_path=evaluation_path,
         context={
             "image_tag": f"example-evaluation-{context['phase']['slug']}",
+            "tarball_dirname": "ground_truth",
+            "tarball_extraction_dir": "/opt/ml/input/data/ground_truth/",
             "_no_gpus": context.get("_no_gpus", False),
         },
     )
@@ -293,6 +297,8 @@ def generate_algorithm_template(
         output_path=template_path,
         context={
             "image_tag": algorithm_slug,
+            "tarball_dirname": "model",
+            "tarball_extraction_dir": "/opt/ml/model/",
             "_no_gpus": context.get("_no_gpus", False),
         },
     )

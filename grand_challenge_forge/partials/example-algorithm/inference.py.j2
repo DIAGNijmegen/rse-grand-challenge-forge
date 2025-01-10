@@ -59,7 +59,16 @@ def run():
     # Process the inputs: any way you'd like
     _show_torch_cuda_info()
 
-    with open(RESOURCE_PATH / "some_resource.txt", "r") as f:
+    # Some additional resources might be required, include these in one of two ways.
+
+    # Option 1: part of the Docker-container image: resources/
+    resource_dir = Path("/opt/app/resources")
+    with open(resource_dir / "some_resource.txt", "r") as f:
+        print(f.read())
+
+    # Option 2: upload them as a separate tarball to Grand Challenge (go to your Algorithm > Models). The resources in the tarball will be extracted to `model_dir` at runtime.
+    model_dir = Path("/opt/ml/model")
+    with open(model_dir / "a_tarball_subdirectory" / "some_tarball_resource.txt", "r") as f:
         print(f.read())
 
     # For now, let us make bogus predictions

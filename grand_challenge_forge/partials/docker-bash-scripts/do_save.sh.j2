@@ -30,8 +30,23 @@ formatted_build_info=$(echo $build_timestamp | sed -E 's/(.*)T(.*)\..*Z/\1_\2/' 
 # Set the output filename with timestamp and build information
 output_filename="${SCRIPT_DIR}/${DOCKER_IMAGE_TAG}_${formatted_build_info}.tar.gz"
 
-# Save the Docker container and gzip it
-echo "Saving the container as ${output_filename}. This can take a while."
-docker save "$DOCKER_IMAGE_TAG" | gzip -c > "$output_filename"
+# Save the Docker-container image and gzip it
+echo "==+=="
+echo "Saving the container image as ${output_filename}. This can take a while."
 
-echo "Container saved as ${output_filename}"
+echo ""
+
+docker save "$DOCKER_IMAGE_TAG" | gzip -c > "$output_filename"
+echo "Container image saved as ${output_filename}"
+echo "==+=="
+
+# Create the tarbal
+echo "==+=="
+output_tarball_name="${SCRIPT_DIR}/{{ tarball_dirname }}.tar.gz"
+echo "Creating the optional tarball as ${output_tarball_name}. This can take a while."
+
+echo ""
+
+tar -czf $output_tarball_name -C "${SCRIPT_DIR}/{{ tarball_dirname }}" .
+echo "(Optional) Uploadable tarball was created as ${output_tarball_name}"
+echo "==+=="
