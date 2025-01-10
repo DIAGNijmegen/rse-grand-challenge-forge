@@ -101,16 +101,16 @@ def process(job):
     {%- endfor %}
 
     # Fourthly, load your ground truth
-    # Include it in your evaluation-method container by placing it one of two locations:
+    # Include your ground truth in one of two ways:
 
-    # First location: part of the Docker-container image: resources/
+    # Option 1: include it in your Docker-container image under resources/
     resource_dir = Path("/opt/app/resources")
     with open(resource_dir / "some_resource.txt", "r") as f:
         truth = f.read()
     report += truth
 
-
-    # Second location: part of the ground-truth tarball
+    # Option 2: upload it as a tarball to Grand Challenge 
+    # Go to phase settings and upload it under Ground Truths. Your ground truth will be extracted to `ground_truth_dir` at runtime.
     ground_truth_dir = Path("/opt/ml/input/data/ground_truth")
     with open(ground_truth_dir / "a_tarball_subdirectory" / "some_tarball_resource.txt", "r") as f:
         truth = f.read()
