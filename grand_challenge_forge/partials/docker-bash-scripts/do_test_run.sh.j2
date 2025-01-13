@@ -29,20 +29,26 @@ cleanup() {
       --volume "$OUTPUT_DIR":/output \
       --entrypoint /bin/sh \
       $DOCKER_IMAGE_TAG \
-      -c "chmod -R -f o-t+rwX /output/* || true"
+      -c "chmod -R -f o+rwX /output/* || true"
 }
-
-echo "=+= Cleaning up any earlier output"
 
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
-  ls -lDR "${OUTPUT_DIR}"
-  rm -rf "${OUTPUT_DIR}"/*
+  chmod -f o+rwx "$OUTPUT_DIR"
+
+  echo "=+= Cleaning up any earlier output"
+  # Use the container itself to circumvent ownership problems
+  docker run --rm \
+      --platform=linux/amd64 \
+      --quiet \
+      --volume "$OUTPUT_DIR":/output \
+      --entrypoint /bin/sh \
+      $DOCKER_IMAGE_TAG \
+      -c "rm -rf /output/* || true"
 else
-  mkdir "$OUTPUT_DIR"
+  mkdir -m o+rwx "$OUTPUT_DIR"
 fi
-chmod -f o-t+rwx "$OUTPUT_DIR"
 
 trap cleanup EXIT
 
