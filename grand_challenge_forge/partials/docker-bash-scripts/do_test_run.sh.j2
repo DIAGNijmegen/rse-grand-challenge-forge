@@ -29,23 +29,19 @@ cleanup() {
       --volume "$OUTPUT_DIR":/output \
       --entrypoint /bin/sh \
       $DOCKER_IMAGE_TAG \
-      -c "chmod -R -f o+rwX /output/* || true"
+      -c "chmod -R -f o-t+rwX /output/* || true"
 }
 
-
 echo "=+= Cleaning up any earlier output"
-
 
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
-  echo "prior to cleaning: permissions"
-  ls -alhR "$OUTPUT_DIR"
   rm -rf "${OUTPUT_DIR}"/*
-  chmod -f o+rwx "$OUTPUT_DIR"
 else
-  mkdir -m o+rwx "$OUTPUT_DIR"
+  mkdir "$OUTPUT_DIR"
 fi
+chmod -f o-t+rwx "$OUTPUT_DIR"
 
 trap cleanup EXIT
 
