@@ -34,9 +34,13 @@ cleanup() {
 
 
 echo "=+= Cleaning up any earlier output"
+
+
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
+  echo "prior to cleaning: permissions"
+  ls -alhR "$OUTPUT_DIR"
   rm -rf "${OUTPUT_DIR}"/*
   chmod -f o+rwx "$OUTPUT_DIR"
 else
