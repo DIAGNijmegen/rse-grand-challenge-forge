@@ -37,6 +37,7 @@ echo "=+= Cleaning up any earlier output"
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
   # This allows for the Docker user to write to this location
+  ls -lDR "${OUTPUT_DIR}"
   rm -rf "${OUTPUT_DIR}"/*
 else
   mkdir "$OUTPUT_DIR"
