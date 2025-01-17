@@ -41,3 +41,8 @@ def has_file(arg):
 @register_simple_filter
 def has_example_value(arg):
     return generation_utils.has_example_value(arg)
+
+
+@register_simple_filter
+def escape_strings(arg):
+    return generation_utils.escape_strings(arg)

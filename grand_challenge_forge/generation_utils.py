@@ -36,6 +36,12 @@ def has_example_value(component_interface):
     )
 
 
+def escape_strings(arg):
+    if isinstance(arg, str):
+        return json.dumps(arg)
+    return arg
+
+
 def create_civ_stub_file(*, target_path, component_interface):
     """Creates a stub based on a component interface"""
     target_path.parent.mkdir(parents=True, exist_ok=True)
