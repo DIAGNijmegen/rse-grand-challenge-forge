@@ -187,7 +187,7 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
                 "kind": "Anything",
                 "super_kind": "File",
                 "relative_path": "yet-another-non-json-output-value",
-                "example_value": None
+                "example_value": "A string that needs to be escaped"
             }
         ]
     }
