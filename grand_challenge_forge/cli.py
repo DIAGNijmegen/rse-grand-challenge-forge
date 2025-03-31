@@ -37,12 +37,6 @@ def common_options(func):
         is_flag=True,
         default=False,
     )(func)
-    func = click.option(
-        "-n",
-        "--no-quality-control",
-        is_flag=True,
-        default=False,
-    )(func)
     func = click.argument(
         "contexts",
         nargs=-1,
@@ -65,7 +59,7 @@ def cli():
 
 @cli.command()
 @common_options
-def pack(output, force, contexts, no_quality_control, verbose=0):
+def pack(output, force, contexts, verbose=0):
     """
     Generates a challenge pack using provided context.
 
@@ -81,7 +75,6 @@ def pack(output, force, contexts, no_quality_control, verbose=0):
         resolved_context = _resolve_context(src=context)
         if resolved_context:
             try:
-                quality_control_registry = None if no_quality_control else []
                 logger.info(
                     f"🏗️Started working on pack [{index + 1} of {len(contexts)}]"
                 )
@@ -89,14 +82,8 @@ def pack(output, force, contexts, no_quality_control, verbose=0):
                     context=resolved_context,
                     output_path=output_dir,
                     delete_existing=force,
-                    quality_control_registry=quality_control_registry,
                 )
                 logger.info(f"📦 Created Pack {pack_dir.stem!r}")
-                if quality_control_registry:
-                    logger.info("👷 Starting quality checks...")
-                    for check in quality_control_registry:
-                        check()
-                    logger.info("✅ Quality checks complete!")
                 logger.info(f"📢 Pack is here: {pack_dir}")
                 print(str(pack_dir))
             except Exception as e:
@@ -108,7 +95,7 @@ def pack(output, force, contexts, no_quality_control, verbose=0):
 
 @cli.command()
 @common_options
-def algorithm(output, force, contexts, no_quality_control, verbose):
+def algorithm(output, force, contexts, verbose):
     """
     Generates an algorithm template using provided context.
 
@@ -125,7 +112,6 @@ def algorithm(output, force, contexts, no_quality_control, verbose):
         resolved_context = _resolve_context(src=context)
         if resolved_context:
             try:
-                quality_control_registry = None if no_quality_control else []
                 logger.info(
                     f"🏗️Started working on Algorithm Template [{index + 1} "
                     f"of {len(contexts)}]"
@@ -134,16 +120,10 @@ def algorithm(output, force, contexts, no_quality_control, verbose):
                     context=resolved_context,
                     output_path=output_dir,
                     delete_existing=force,
-                    quality_control_registry=quality_control_registry,
                 )
                 logger.info(
                     f"📦 Created Algorithm Template {template_dir.stem!r}"
                 )
-                if quality_control_registry:
-                    logger.info("👷 Starting quality checks...")
-                    for check in quality_control_registry:
-                        check()
-                    logger.info("✅ Quality checks complete!")
                 logger.info(f"📢 Algorithm Template is here: {template_dir}")
                 print(str(template_dir))
             except Exception as e:

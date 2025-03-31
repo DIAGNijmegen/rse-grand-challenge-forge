@@ -112,15 +112,11 @@ Via API pack generation can be done via:
 from grand_challenge_forge.forge import generate_challenge_pack
 from Pathlib import Path
 
-qc = []
 generate_challenge_pack(
     context={"challenge": {...}}
     output_path=Path("dist/"),
-    quality_control_registry=qc,
     delete_existing=False,
 )
-for check in qc:
-    check()
 ```
 
 ### ALGORITHM-TEMPLATE generation
@@ -200,15 +196,11 @@ Via API the algorithm-template generation can be done via:
 from grand_challenge_forge.forge import generate_algorithm_template
 from Pathlib import Path
 
-qc = []
 generate_algorithm_template(
     context={"algorithm": { ... }}
     output_path=Path("dist/"),
-    quality_control_registry=qc,
     delete_existing=False,
 )
-for check in qc:
-    check()
 ```
 
 ## 🏗️ Development

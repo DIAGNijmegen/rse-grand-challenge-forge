@@ -6,7 +6,6 @@ from copy import deepcopy
 from importlib import metadata
 from pathlib import Path
 
-import grand_challenge_forge.quality_control as qc
 from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
     ci_to_civ,
@@ -25,7 +24,6 @@ def generate_challenge_pack(
     *,
     context,
     output_path,
-    quality_control_registry=None,
     delete_existing=False,
 ):
     validate_pack_context(context)
@@ -48,19 +46,16 @@ def generate_challenge_pack(
         generate_upload_to_archive_script(
             context=phase_context,
             output_path=phase_path,
-            quality_control_registry=quality_control_registry,
         )
 
         generate_example_algorithm(
             context=phase_context,
             output_path=phase_path,
-            quality_control_registry=quality_control_registry,
         )
 
         generate_example_evaluation(
             context=phase_context,
             output_path=phase_path,
-            quality_control_registry=quality_control_registry,
         )
 
     return pack_path
@@ -81,9 +76,7 @@ def generate_readme(*, context, output_path):
     )
 
 
-def generate_upload_to_archive_script(
-    *, context, output_path, quality_control_registry=None
-):
+def generate_upload_to_archive_script(*, context, output_path):
     context = deepcopy(context)
 
     script_path = (
@@ -105,12 +98,6 @@ def generate_upload_to_archive_script(
     )
 
     create_files_func()
-
-    def quality_check():
-        qc.upload_to_archive_script(script_path=script_path)
-
-    if quality_control_registry is not None:
-        quality_control_registry.append(quality_check)
 
     return script_path
 
@@ -139,9 +126,7 @@ def _gen_expected_archive_cases(inputs, output_path, n=3):
     return [json.dumps(entry) for entry in result], create_files
 
 
-def generate_example_algorithm(
-    *, context, output_path, quality_control_registry=None
-):
+def generate_example_algorithm(*, context, output_path):
     algorithm_path = output_path / "example-algorithm"
 
     copy_and_render(
@@ -170,20 +155,10 @@ def generate_example_algorithm(
             component_interface=input_ci,
         )
 
-    def quality_check():
-        qc.example_algorithm(
-            phase_context=context, algorithm_dir=algorithm_path
-        )
-
-    if quality_control_registry is not None:
-        quality_control_registry.append(quality_check)
-
     return algorithm_path
 
 
-def generate_example_evaluation(
-    context, output_path, quality_control_registry=None
-):
+def generate_example_evaluation(*, context, output_path):
     evaluation_path = output_path / "example-evaluation-method"
 
     copy_and_render(
@@ -205,14 +180,6 @@ def generate_example_evaluation(
     )
 
     generate_predictions(context, evaluation_path)
-
-    def quality_check():
-        qc.example_evaluation(
-            phase_context=context, evaluation_dir=evaluation_path
-        )
-
-    if quality_control_registry is not None:
-        quality_control_registry.append(quality_check)
 
     return evaluation_path
 
@@ -261,7 +228,6 @@ def generate_algorithm_template(
     *,
     context,
     output_path,
-    quality_control_registry=None,
     delete_existing=False,
 ):
     validate_algorithm_template_context(context)
@@ -302,13 +268,5 @@ def generate_algorithm_template(
             "_no_gpus": context.get("_no_gpus", False),
         },
     )
-
-    def quality_check():
-        qc.algorithm_template(
-            algorithm_context=context, algorithm_template_path=template_path
-        )
-
-    if quality_control_registry is not None:
-        quality_control_registry.append(quality_check)
 
     return template_path
