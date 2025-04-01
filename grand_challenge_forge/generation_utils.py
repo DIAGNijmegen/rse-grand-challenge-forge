@@ -3,7 +3,6 @@ import os
 import shutil
 import uuid
 from datetime import datetime, timezone
-from logging import DEBUG
 from pathlib import Path
 
 import black
@@ -11,6 +10,7 @@ from jinja2 import FileSystemLoader, StrictUndefined, TemplateNotFound
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from grand_challenge_forge import PARTIALS_PATH
+from tests.utils import DEBUG
 
 SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"
