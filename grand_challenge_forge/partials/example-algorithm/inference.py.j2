@@ -34,7 +34,6 @@ INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
 RESOURCE_PATH = Path("resources")
 
-{% if "__should_fail" in phase -%} 1/0 {%- endif %}
 
 def run():
     # Read the input

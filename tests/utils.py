@@ -220,18 +220,6 @@ def make_slugs_unique(d):
     return d
 
 
-def add_fail_flags(d):
-    """Add fail flags to all dictionaries and lists in the structure."""
-    if isinstance(d, dict):
-        d["__should_fail"] = True  # Any value will do
-        for item in d.values():
-            add_fail_flags(item)
-    elif isinstance(d, list):
-        for item in d:
-            add_fail_flags(item)
-    return d
-
-
 def add_numerical_slugs(d):
     """Add '00-' prefix to all slugs in the structure."""
     if isinstance(d, dict):
@@ -295,7 +283,7 @@ def _test_script(
     )
     if result.stderr:
         raise subprocess.CalledProcessError(
-            returncode=0,
+            returncode=result.returncode,
             cmd=command,
             stderr=result.stderr,
             output=result.stdout,
@@ -303,7 +291,7 @@ def _test_script(
 
 
 def _test_save(script_dir):
-    """Test the save functionality of a script directory.
+    """Test the save script
 
     Args
     ----

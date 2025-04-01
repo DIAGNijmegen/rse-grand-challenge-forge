@@ -33,7 +33,6 @@ import numpy
 INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
 
-{% if "__should_fail" in algorithm -%} 1/0 {%- endif %}
 
 def run():
     # Read the input
