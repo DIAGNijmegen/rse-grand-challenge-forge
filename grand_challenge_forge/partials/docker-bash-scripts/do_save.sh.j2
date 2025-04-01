@@ -3,6 +3,10 @@
 # Stop at first error
 set -e
 
+{%- if __should_fail is defined and __should_fail %}
+echo "Failing as requested via __should_fail"
+exit 1
+{%- endif %}
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Set default container name
@@ -35,6 +39,7 @@ echo "==+=="
 echo "Saving the container image as ${output_filename}. This can take a while."
 
 echo ""
+
 
 docker save "$DOCKER_IMAGE_TAG" | gzip -c > "$output_filename"
 echo "Container image saved as ${output_filename}"

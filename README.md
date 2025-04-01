@@ -102,10 +102,6 @@ grand-challenge-forge pack --output-dir /tmp '{ "challenge": { "slug": "a-slug".
 
 This will output a pack directory in the `/tmp` directory.
 
-> [!NOTE]
-> By default, the forge does quality checks on the pack that may require docker.
-> You can disable these via `-n`
-
 Via API pack generation can be done via:
 
 ``` Python
@@ -185,10 +181,6 @@ grand-challenge-forge algorithm --output-dir /tmp '{ "algorithm": { ... } }'
 ```
 
 This will output an algorithm-template directory in the `/tmp` directory.
-
-> [!NOTE]
-> By default, the forge does quality checks on the template that may require docker.
-> You can disable these via `-n`
 
 Via API the algorithm-template generation can be done via:
 

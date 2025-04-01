@@ -69,6 +69,7 @@ docker run --rm \
     {% if not _no_gpus -%}
     --gpus all \
     {% endif -%}
+    --env DEBUG=true \
     --volume "$INPUT_DIR":/input:ro \
     --volume "$OUTPUT_DIR":/output \
     --volume "$DOCKER_NOOP_VOLUME":/tmp \

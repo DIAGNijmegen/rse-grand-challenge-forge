@@ -3,6 +3,7 @@ import os
 import shutil
 import uuid
 from datetime import datetime, timezone
+from logging import DEBUG
 from pathlib import Path
 
 import black
@@ -147,7 +148,10 @@ def copy_and_render(
                 template = env.get_template(
                     name=str(source_file.relative_to(source_path))
                 )
-                rendered_content = template.render(**context)
+                rendered_content = template.render(
+                    **context,
+                    _no_gpus=DEBUG,
+                )
 
                 # Write rendered content to output file (without .j2 extension)
                 output_file = output_file.with_suffix("")
