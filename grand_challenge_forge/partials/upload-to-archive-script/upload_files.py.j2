@@ -48,7 +48,6 @@ EXPECTED_CASES = [
 {%- endfor %}
 ]
 
-{% if "__should_fail" in phase -%} 1/0 {%- endif %}
 def main():
     check_files()
     upload_files()

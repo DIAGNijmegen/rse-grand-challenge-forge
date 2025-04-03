@@ -1,6 +1,14 @@
+import glob
 import os
+import subprocess
+import uuid
 from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
+
+from grand_challenge_forge import RESOURCES_PATH
+
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 TEST_RESOURCES = (
     Path(os.path.dirname(os.path.realpath(__file__))) / "resources"
@@ -198,65 +206,114 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
 counter = 0
 
 
-def pack_context_factory(should_fail=False, **kwargs):
+def make_slugs_unique(d):
+    """Add counter to all slugs in the structure to make them unique."""
     global counter
+    if isinstance(d, dict):
+        if "slug" in d:
+            d["slug"] = f"{d['slug']}-{counter}"
+        for item in d.values():
+            make_slugs_unique(item)
+    elif isinstance(d, list):
+        for item in d:
+            make_slugs_unique(item)
+    return d
+
+
+def add_numerical_slugs(d):
+    """Add '00-' prefix to all slugs in the structure."""
+    if isinstance(d, dict):
+        if "slug" in d:
+            d["slug"] = f"00-{d['slug']}"
+        for item in d.values():
+            add_numerical_slugs(item)
+    elif isinstance(d, list):
+        for item in d:
+            add_numerical_slugs(item)
+    return d
+
+
+def pack_context_factory(**kwargs):
     result = deepcopy(DEFAULT_PACK_CONTEXT_STUB)
-    for k, v in kwargs.items():
-        result["challenge"][k] = v
+    result["challenge"].update(kwargs)
 
-    def recursive_set_fail(d):
-        if isinstance(d, dict):
-            d["__should_fail"] = True  # Any value will do
-            for item in d.values():
-                recursive_set_fail(item)
-        elif isinstance(d, list):
-            for item in d:
-                recursive_set_fail(item)
+    # Generate phases using phase_context_factory
+    result["challenge"]["phases"] = [
+        phase_context_factory(archive=phase["archive"])["phase"]
+        for phase in result["challenge"]["phases"]
+    ]
 
-    if should_fail:
-        recursive_set_fail(result)
-
-    # Ensure unique slugs
-    result["challenge"]["slug"] = result["challenge"]["slug"] + f"-{counter}"
-
-    for phase in result["challenge"]["phases"]:
-        phase["slug"] = phase["slug"] + f"-{counter}"
-
-    counter = counter + 1
-    return result
+    return make_slugs_unique(result)
 
 
-def numerical_pack_context_factory(**kwargs):
-    pack_context = pack_context_factory(**kwargs)
-
-    for archive in pack_context["challenge"]["archives"]:
-        archive["slug"] = f"00-{archive['slug']}"
-
-    for phase in pack_context["challenge"]["phases"]:
-        phase["slug"] = f"00-{phase['slug']}"
-
-        for cv in [*phase["algorithm_inputs"], *phase["algorithm_outputs"]]:
-            cv["slug"] = f"00-{cv['slug']}"
-
-    return pack_context
+def phase_context_factory(**kwargs):
+    # Create a phase context from the first phase in the default pack context
+    result = deepcopy(DEFAULT_PACK_CONTEXT_STUB["challenge"]["phases"][0])
+    result.update(kwargs)
+    return make_slugs_unique({"phase": result})
 
 
-def algorithm_template_context_factory(should_fail=False, **kwargs):
-    global counter
+def algorithm_template_context_factory(**kwargs):
     result = deepcopy(DEFAULT_ALGORITHM_CONTEXT_STUB)
-    for k, v in kwargs.items():
-        result["algorithm"][k] = v
+    result["algorithm"].update(kwargs)
+    return make_slugs_unique(result)
 
-    def recursive_set_fail(d):
-        if isinstance(d, dict):
-            d["__should_fail"] = True  # Any value will do
-            for item in d.values():
-                recursive_set_fail(item)
-        elif isinstance(d, list):
-            for item in d:
-                recursive_set_fail(item)
 
-    if should_fail:
-        recursive_set_fail(result)
+def _test_script(
+    *,
+    script_path,
+    extra_arg=None,
+):
+    """Test a subprocess execution.
 
-    return result
+    Args
+    ----
+        script_path: The path to the script to execute
+        extra_arg: Optional additional argument to pass to the script
+
+    """
+    command = [script_path]
+    if extra_arg:
+        command.append(extra_arg)
+
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        check=True,  # This will raise CalledProcessError if returncode != 0
+    )
+    if result.stderr:
+        raise subprocess.CalledProcessError(
+            returncode=result.returncode,
+            cmd=command,
+            stderr=result.stderr,
+            output=result.stdout,
+        )
+
+
+def _test_save(script_dir):
+    """Test the save script
+
+    Args
+    ----
+        script_dir: The directory containing the script to test
+
+    """
+    # Running multiple tests at the same time.
+    custom_image_tag = f"test-{uuid.uuid4()}"
+
+    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
+    matching_files = glob.glob(pattern)
+
+    assert len(matching_files) == 0
+
+    mocks_bin = RESOURCES_PATH / "mocks" / "bin"
+    current_path = os.environ.get("PATH", "")
+    extended_path = f"{mocks_bin}:{current_path}"
+
+    with patch.dict("os.environ", PATH=extended_path):
+        _test_script(
+            script_path=script_dir / "do_save.sh",
+            extra_arg=custom_image_tag,
+        )
+
+    return custom_image_tag

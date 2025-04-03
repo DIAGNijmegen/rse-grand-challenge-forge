@@ -102,25 +102,17 @@ grand-challenge-forge pack --output-dir /tmp '{ "challenge": { "slug": "a-slug".
 
 This will output a pack directory in the `/tmp` directory.
 
-> [!NOTE]
-> By default, the forge does quality checks on the pack that may require docker.
-> You can disable these via `-n`
-
 Via API pack generation can be done via:
 
 ``` Python
 from grand_challenge_forge.forge import generate_challenge_pack
 from Pathlib import Path
 
-qc = []
 generate_challenge_pack(
     context={"challenge": {...}}
     output_path=Path("dist/"),
-    quality_control_registry=qc,
     delete_existing=False,
 )
-for check in qc:
-    check()
 ```
 
 ### ALGORITHM-TEMPLATE generation
@@ -190,25 +182,17 @@ grand-challenge-forge algorithm --output-dir /tmp '{ "algorithm": { ... } }'
 
 This will output an algorithm-template directory in the `/tmp` directory.
 
-> [!NOTE]
-> By default, the forge does quality checks on the template that may require docker.
-> You can disable these via `-n`
-
 Via API the algorithm-template generation can be done via:
 
 ``` Python
 from grand_challenge_forge.forge import generate_algorithm_template
 from Pathlib import Path
 
-qc = []
 generate_algorithm_template(
     context={"algorithm": { ... }}
     output_path=Path("dist/"),
-    quality_control_registry=qc,
     delete_existing=False,
 )
-for check in qc:
-    check()
 ```
 
 ## 🏗️ Development

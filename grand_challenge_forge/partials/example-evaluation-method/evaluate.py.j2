@@ -44,7 +44,6 @@ from helpers import run_prediction_processing, tree
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
 
-{% if "__should_fail" in phase -%} 1/0 {%- endif %}
 
 def process(job):
     """Processes a single algorithm job, looking at the outputs"""

@@ -10,6 +10,7 @@ from jinja2 import FileSystemLoader, StrictUndefined, TemplateNotFound
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from grand_challenge_forge import PARTIALS_PATH
+from tests.utils import DEBUG
 
 SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"
@@ -147,7 +148,10 @@ def copy_and_render(
                 template = env.get_template(
                     name=str(source_file.relative_to(source_path))
                 )
-                rendered_content = template.render(**context)
+                rendered_content = template.render(
+                    **context,
+                    _no_gpus=DEBUG,
+                )
 
                 # Write rendered content to output file (without .j2 extension)
                 output_file = output_file.with_suffix("")

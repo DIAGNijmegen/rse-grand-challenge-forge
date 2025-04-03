@@ -36,6 +36,7 @@ echo "Saving the container image as ${output_filename}. This can take a while."
 
 echo ""
 
+
 docker save "$DOCKER_IMAGE_TAG" | gzip -c > "$output_filename"
 echo "Container image saved as ${output_filename}"
 echo "==+=="
