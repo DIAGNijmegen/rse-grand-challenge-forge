@@ -1,4 +1,5 @@
 from contextlib import nullcontext
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +11,7 @@ from grand_challenge_forge.forge import (
 from tests.utils import (
     algorithm_template_context_factory,
     pack_context_factory,
+    zipfile_to_filesystem,
 )
 
 
@@ -35,7 +37,12 @@ from tests.utils import (
 )
 def test_pack_context_validity(json_context, condition, tmp_path):
     with condition:
-        generate_challenge_pack(context=json_context, output_path=tmp_path)
+        with zipfile_to_filesystem() as zip_file:
+            generate_challenge_pack(
+                output_zip_file=zip_file,
+                output_zpath=Path(""),
+                context=json_context,
+            )
 
 
 @pytest.mark.parametrize(
@@ -58,4 +65,9 @@ def test_algorithm_template_context_validity(
     json_context, condition, tmp_path
 ):
     with condition:
-        generate_algorithm_template(context=json_context, output_path=tmp_path)
+        with zipfile_to_filesystem() as zip_file:
+            generate_algorithm_template(
+                output_zip_file=zip_file,
+                output_zpath=Path(""),
+                context=json_context,
+            )

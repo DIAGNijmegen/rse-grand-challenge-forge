@@ -1,16 +1,14 @@
 import json
 import logging
-import shutil
 import uuid
 from copy import deepcopy
 from importlib import metadata
 from pathlib import Path
 
-from grand_challenge_forge.exceptions import OutputOverwriteError
 from grand_challenge_forge.generation_utils import (
-    ci_to_civ,
     copy_and_render,
-    create_civ_stub_file,
+    generate_socket_value_stub_file,
+    socket_to_socket_value,
 )
 from grand_challenge_forge.schemas import (
     validate_algorithm_template_context,
@@ -22,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 def generate_challenge_pack(
     *,
+    output_zip_file,
+    output_zpath,
     context,
-    output_path,
-    delete_existing=False,
 ):
     validate_pack_context(context)
 
@@ -32,113 +30,112 @@ def generate_challenge_pack(
         "grand-challenge-forge"
     )
 
-    pack_path = output_path / f"{context['challenge']['slug']}-challenge-pack"
+    pack_zpath = (
+        output_zpath / f"{context['challenge']['slug']}-challenge-pack"
+    )
 
-    if pack_path.exists():
-        _handle_existing(pack_path, delete_existing=delete_existing)
-
-    generate_readme(context=context, output_path=pack_path)
+    # Generate the README.md file
+    copy_and_render(
+        templates_dir_name="pack-readme",
+        output_zip_file=output_zip_file,
+        target_zpath=pack_zpath,
+        context=context,
+    )
 
     for phase in context["challenge"]["phases"]:
-        phase_path = pack_path / phase["slug"]
+        phase_zpath = pack_zpath / phase["slug"]
         phase_context = {"phase": phase}
 
         generate_upload_to_archive_script(
             context=phase_context,
-            output_path=phase_path,
+            output_zip_file=output_zip_file,
+            output_zpath=phase_zpath,
         )
 
         generate_example_algorithm(
             context=phase_context,
-            output_path=phase_path,
+            output_zip_file=output_zip_file,
+            output_zpath=phase_zpath,
         )
 
         generate_example_evaluation(
             context=phase_context,
-            output_path=phase_path,
+            output_zip_file=output_zip_file,
+            output_zpath=phase_zpath,
         )
 
-    return pack_path
+    return pack_zpath
 
 
-def _handle_existing(directory, delete_existing):
-    if delete_existing:
-        shutil.rmtree(directory)
-    else:
-        raise OutputOverwriteError(f"{directory} already exists!")
-
-
-def generate_readme(*, context, output_path):
-    copy_and_render(
-        templates_dir_name="pack-readme",
-        output_path=output_path,
-        context=context,
-    )
-
-
-def generate_upload_to_archive_script(*, context, output_path):
+def generate_upload_to_archive_script(
+    *,
+    output_zip_file,
+    output_zpath,
+    context,
+):
     context = deepcopy(context)
 
-    script_path = (
-        output_path
+    script_zdir = (
+        output_zpath
         / f"upload-to-archive-{context['phase']['archive']['slug']}"
     )
 
-    # Map the expected case, but only create after the script
-    expected_cases, create_files_func = _gen_expected_archive_cases(
+    context["phase"]["expected_cases"] = generate_archive_cases(
         inputs=context["phase"]["algorithm_inputs"],
-        output_path=script_path,
+        output_zip_file=output_zip_file,
+        output_zpath=script_zdir,
+        number_of_cases=3,
     )
-    context["phase"]["expected_cases"] = expected_cases
 
     copy_and_render(
         templates_dir_name="upload-to-archive-script",
-        output_path=script_path,
+        output_zip_file=output_zip_file,
+        target_zpath=script_zdir,
         context=context,
     )
 
-    create_files_func()
-
-    return script_path
+    return script_zdir
 
 
-def _gen_expected_archive_cases(inputs, output_path, n=3):
-    to_create_files = []
+def generate_archive_cases(
+    *, inputs, output_zip_file, output_zpath, number_of_cases
+):
     result = []
-    for i in range(0, n):
+    for i in range(0, number_of_cases):
         item_files = []
-        for j in range(0, len(inputs)):
-            item_files.append(
-                f"case{i}/file{j}.example"
-                if len(inputs) > 1
-                else f"file{i}.example"
+        for input_socket in inputs:
+            zpath = Path(f"case_{i}") / input_socket["relative_path"]
+
+            generate_socket_value_stub_file(
+                output_zip_file=output_zip_file,
+                target_zpath=output_zpath / zpath,
+                socket=input_socket,
             )
-        to_create_files.extend(item_files)
+
+            item_files.append(str(zpath))
+
         result.append(item_files)
 
-    def create_files():
-        for filename in to_create_files:
-            filepath = output_path / Path(filename)
-            filepath.parent.mkdir(parents=True, exist_ok=True)
-            with open(filepath, "w") as f:
-                f.write('"This is just placeholder data, move along!>"')
-
-    return [json.dumps(entry) for entry in result], create_files
+    return result
 
 
-def generate_example_algorithm(*, context, output_path):
-    algorithm_path = output_path / "example-algorithm"
+def generate_example_algorithm(*, output_zip_file, output_zpath, context):
+    context = deepcopy(context)
+
+    algorithm_zdir = output_zpath / "example-algorithm"
 
     copy_and_render(
         templates_dir_name="example-algorithm",
-        output_path=algorithm_path,
+        output_zip_file=output_zip_file,
+        target_zpath=algorithm_zdir,
         context=context,
     )
 
     # Add .sh files
     copy_and_render(
         templates_dir_name="docker-bash-scripts",
-        output_path=algorithm_path,
+        output_zip_file=output_zip_file,
+        target_zpath=algorithm_zdir,
         context={
             "image_tag": f"example-algorithm-{context['phase']['slug']}",
             "tarball_dirname": "model",
@@ -147,29 +144,32 @@ def generate_example_algorithm(*, context, output_path):
     )
 
     # Create input files
-    input_dir = algorithm_path / "test" / "input"
+    input_zdir = algorithm_zdir / "test" / "input"
     for input_ci in context["phase"]["algorithm_inputs"]:
-        create_civ_stub_file(
-            target_path=input_dir / input_ci["relative_path"],
-            component_interface=input_ci,
+        generate_socket_value_stub_file(
+            output_zip_file=output_zip_file,
+            target_zpath=input_zdir / input_ci["relative_path"],
+            socket=input_ci,
         )
 
-    return algorithm_path
+    return algorithm_zdir
 
 
-def generate_example_evaluation(*, context, output_path):
-    evaluation_path = output_path / "example-evaluation-method"
+def generate_example_evaluation(*, output_zip_file, output_zpath, context):
+    evaluation_zdir = output_zpath / "example-evaluation-method"
 
     copy_and_render(
         templates_dir_name="example-evaluation-method",
-        output_path=evaluation_path,
+        output_zip_file=output_zip_file,
+        target_zpath=evaluation_zdir,
         context=context,
     )
 
     # Add .sh files
     copy_and_render(
         templates_dir_name="docker-bash-scripts",
-        output_path=evaluation_path,
+        output_zip_file=output_zip_file,
+        target_zpath=evaluation_zdir,
         context={
             "image_tag": f"example-evaluation-{context['phase']['slug']}",
             "tarball_dirname": "ground_truth",
@@ -177,56 +177,64 @@ def generate_example_evaluation(*, context, output_path):
         },
     )
 
-    generate_predictions(context, evaluation_path)
+    generate_predictions(
+        output_zip_file=output_zip_file,
+        target_zpath=evaluation_zdir / "test" / "input",
+        context=context,
+        number_of_jobs=3,
+    )
 
-    return evaluation_path
+    return evaluation_zdir
 
 
-def generate_predictions(context, evaluation_path, n=3):
-    input_dir = evaluation_path / "test" / "input"
-    input_dir.mkdir(parents=True, exist_ok=True)
-
+def generate_predictions(
+    *,
+    output_zip_file,
+    target_zpath,
+    context,
+    number_of_jobs,
+):
     predictions = []
-    for _ in range(0, n):
+    for _ in range(0, number_of_jobs):
         predictions.append(
             {
                 "pk": str(uuid.uuid4()),
                 "inputs": [
-                    ci_to_civ(ci)
-                    for ci in context["phase"]["algorithm_inputs"]
+                    socket_to_socket_value(socket)
+                    for socket in context["phase"]["algorithm_inputs"]
                 ],
                 "outputs": [
-                    ci_to_civ(ci)
-                    for ci in context["phase"]["algorithm_outputs"]
+                    socket_to_socket_value(socket)
+                    for socket in context["phase"]["algorithm_outputs"]
                 ],
                 "status": "Succeeded",
                 "started_at": "2024-11-29T10:31:25.691799Z",
                 "completed_at": "2024-11-29T10:31:50.691799Z",
             }
         )
-    with open(input_dir / "predictions.json", "w") as f:
-        f.write(json.dumps(predictions, indent=4))
+
+    output_zip_file.writestr(
+        str(target_zpath / "predictions.json"),
+        json.dumps(predictions, indent=4),
+    )
 
     for prediction in predictions:
-        for civ in prediction["outputs"]:
-            job_path = (
-                input_dir
-                / prediction["pk"]
+        prediction_zpath = target_zpath / prediction["pk"]
+        for socket_value in prediction["outputs"]:
+            generate_socket_value_stub_file(
+                output_zip_file=output_zip_file,
+                target_zpath=prediction_zpath
                 / "output"
-                / civ["interface"]["relative_path"]
-            )
-            job_path.parent.mkdir(parents=True, exist_ok=True)
-            create_civ_stub_file(
-                target_path=job_path,
-                component_interface=civ["interface"],
+                / socket_value["interface"]["relative_path"],
+                socket=socket_value["interface"],
             )
 
 
 def generate_algorithm_template(
     *,
     context,
-    output_path,
-    delete_existing=False,
+    output_zip_file,
+    output_zpath,
 ):
     validate_algorithm_template_context(context)
 
@@ -236,29 +244,29 @@ def generate_algorithm_template(
 
     algorithm_slug = context["algorithm"]["slug"]
 
-    template_path = output_path / f"{algorithm_slug}-template"
-
-    if template_path.exists():
-        _handle_existing(template_path, delete_existing=delete_existing)
+    template_zdir = f"{algorithm_slug}-template"
 
     copy_and_render(
         templates_dir_name="algorithm-template",
-        output_path=template_path,
+        output_zip_file=output_zip_file,
+        target_zpath=output_zpath / template_zdir,
         context=context,
     )
 
     # Create input files
-    input_dir = template_path / "test" / "input"
+    input_dir = output_zpath / template_zdir / "test" / "input"
     for input_ci in context["algorithm"]["inputs"]:
-        create_civ_stub_file(
-            target_path=input_dir / input_ci["relative_path"],
-            component_interface=input_ci,
+        generate_socket_value_stub_file(
+            output_zip_file=output_zip_file,
+            target_zpath=input_dir / input_ci["relative_path"],
+            socket=input_ci,
         )
 
     # Add .sh files
     copy_and_render(
         templates_dir_name="docker-bash-scripts",
-        output_path=template_path,
+        output_zip_file=output_zip_file,
+        target_zpath=output_zpath / template_zdir,
         context={
             "image_tag": algorithm_slug,
             "tarball_dirname": "model",
@@ -266,4 +274,4 @@ def generate_algorithm_template(
         },
     )
 
-    return template_path
+    return template_zdir
