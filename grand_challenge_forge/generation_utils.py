@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import uuid
 import zipfile
 from datetime import datetime, timezone
@@ -148,8 +149,14 @@ def copy_and_render(
                 # Collect information about the file to be written to the zip file
                 # (permissions, et cetera)
                 zinfo = zipfile.ZipInfo.from_file(
-                    source_file, arcname=str(output_file.with_suffix(""))
+                    source_file,
+                    arcname=str(output_file.with_suffix("")),
                 )
+
+                # Update the date time of creation, since we are technically
+                # writing creating new file
+                zinfo.date_time = time.localtime()[0:6]
+
                 output_zip_file.writestr(zinfo, rendered_content)
             else:
                 output_zip_file.write(
