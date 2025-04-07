@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 import uuid
@@ -15,6 +16,9 @@ from tests.utils import DEBUG
 
 SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"
+
+
+logger = logging.getLogger(__name__)
 
 
 def is_json(socket):
@@ -146,11 +150,17 @@ def copy_and_render(
                     **context,
                     _no_gpus=DEBUG,
                 )
+
+                targetfile_zpath = output_file.with_suffix("")
+
+                if targetfile_zpath.suffix == ".py":
+                    rendered_content = apply_black(rendered_content)
+
                 # Collect information about the file to be written to the zip file
                 # (permissions, et cetera)
                 zinfo = zipfile.ZipInfo.from_file(
                     source_file,
-                    arcname=str(output_file.with_suffix("")),
+                    arcname=str(targetfile_zpath),
                 )
 
                 # Update the date time of creation, since we are technically
@@ -172,15 +182,19 @@ def check_allowed_source(path):
         )
 
 
-# TODO, make this work with strings
-def apply_black(target_path):
-    for python_file in target_path.glob("**/*.py"):
-        # Use direct black format call because black
-        # CLI entrypoint ignores files in .gitignore
-
-        black.format_file_in_place(
-            python_file,
-            fast=False,
+def apply_black(content):
+    # Format rendered Python code string using black
+    try:
+        formatted_content = black.format_str(
+            content,
             mode=black.Mode(),
-            write_back=black.WriteBack.YES,
         )
+        return formatted_content
+    except black.InvalidInput as e:
+        # If not debugging/testing: return original content if black formatting fails
+
+        if DEBUG:
+            raise
+
+        logger.info(f"Black formatting failed {e}, using original content")
+        return content
