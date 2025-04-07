@@ -6,18 +6,13 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 DOCKER_IMAGE_TAG="{{ image_tag }}"
 
-# Check if an argument is provided
-if [ "$#" -eq 1 ]; then
-    DOCKER_IMAGE_TAG="$1"
-fi
-
 DOCKER_NOOP_VOLUME="${DOCKER_IMAGE_TAG}-volume"
 
 INPUT_DIR="${SCRIPT_DIR}/test/input"
 OUTPUT_DIR="${SCRIPT_DIR}/test/output"
 
 echo "=+= (Re)build the container"
-source "${SCRIPT_DIR}/do_build.sh" "$DOCKER_IMAGE_TAG"
+source "${SCRIPT_DIR}/do_build.sh"
 
 cleanup() {
     echo "=+= Cleaning permissions ..."
@@ -33,10 +28,6 @@ cleanup() {
 }
 
 if [ -d "$OUTPUT_DIR" ]; then
-  # Ensure permissions are setup correctly
-  # This allows for the Docker user to write to this location
-  chmod -f o+rwx "$OUTPUT_DIR"
-
   echo "=+= Cleaning up any earlier output"
   # Use the container itself to circumvent ownership problems
   docker run --rm \
@@ -46,6 +37,10 @@ if [ -d "$OUTPUT_DIR" ]; then
       --entrypoint /bin/sh \
       $DOCKER_IMAGE_TAG \
       -c "rm -rf /output/* || true"
+
+  # Ensure permissions are setup correctly
+  # This allows for the Docker user to write to this location
+  chmod -f o+rwx "$OUTPUT_DIR"
 else
   mkdir -m o+rwx "$OUTPUT_DIR"
 fi
@@ -78,4 +73,4 @@ docker volume rm "$DOCKER_NOOP_VOLUME" > /dev/null
 
 echo "=+= Wrote results to ${OUTPUT_DIR}"
 
-echo "=+= Save this image for uploading via ./do_save.sh \"${DOCKER_IMAGE_TAG}\""
+echo "=+= Save this image for uploading via ./do_save.sh"

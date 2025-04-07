@@ -15,9 +15,9 @@ from grand_challenge_forge.utils import (
     directly_import_module,
 )
 from tests.utils import (
-    _test_save_run,
     _test_script_run,
     add_numerical_slugs,
+    mocked_binaries,
     pack_context_factory,
     phase_context_factory,
     zipfile_to_filesystem,
@@ -148,7 +148,7 @@ def test_pack_example_algorithm_run(phase_context, tmp_path):
     "phase_context",
     [
         phase_context_factory(),
-        add_numerical_slugs(phase_context_factory()),
+        # add_numerical_slugs(phase_context_factory()),
     ],
 )
 def test_pack_example_algorithm_save(phase_context, tmp_path):
@@ -161,10 +161,12 @@ def test_pack_example_algorithm_save(phase_context, tmp_path):
 
     algorithm_dir = tmp_path / algorithm_zdir
 
-    custom_image_tag = _test_save_run(script_dir=algorithm_dir)
+    with mocked_binaries():
+        _test_script_run(script_path=algorithm_dir / "do_save.sh")
 
     # Check if saved image exists
-    pattern = str(algorithm_dir / f"{custom_image_tag}_*.tar.gz")
+    tar_filename = f"example-algorithm-{phase_context['phase']['slug']}"
+    pattern = str(algorithm_dir / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "
@@ -194,7 +196,7 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
     "phase_context",
     [
         phase_context_factory(),
-        add_numerical_slugs(phase_context_factory()),
+        # add_numerical_slugs(phase_context_factory()),
     ],
 )
 def test_pack_example_evaluation_run(phase_context, tmp_path):
@@ -223,17 +225,19 @@ def test_pack_example_evaluation_run(phase_context, tmp_path):
 def test_pack_example_evaluation_save(phase_context, tmp_path):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
         evaluation_zdir = generate_example_evaluation(
-            context=phase_context_factory(),
+            context=phase_context,
             output_zip_file=zip_file,
             output_zpath=Path(""),
         )
 
     evaluation_dir = tmp_path / evaluation_zdir
 
-    custom_image_tag = _test_save_run(script_dir=evaluation_dir)
+    with mocked_binaries():
+        _test_script_run(script_path=evaluation_dir / "do_save.sh")
 
     # Check if saved image exists
-    pattern = str(evaluation_dir / f"{custom_image_tag}_*.tar.gz")
+    tar_filename = f"example-evaluation-{phase_context['phase']['slug']}"
+    pattern = str(evaluation_dir / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "

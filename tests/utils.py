@@ -1,4 +1,3 @@
-import glob
 import os
 import subprocess
 import tempfile
@@ -238,12 +237,13 @@ def pack_context_factory(**kwargs):
     result = deepcopy(DEFAULT_PACK_CONTEXT_STUB)
     result["challenge"].update(kwargs)
 
+    make_slugs_unique(result)
+
     result["challenge"]["phases"] = [
         phase_context_factory(**phase)["phase"]
         for phase in result["challenge"]["phases"]
     ]
-
-    return make_slugs_unique(result)
+    return result
 
 
 def phase_context_factory(**kwargs):
@@ -283,7 +283,7 @@ def _test_script_run(
         capture_output=True,
         check=True,  # This will raise CalledProcessError if returncode != 0
     )
-    if result.stderr:
+    if result.stderr:  # Stderr should not be empty
         raise subprocess.CalledProcessError(
             returncode=result.returncode,
             cmd=command,
@@ -292,33 +292,15 @@ def _test_script_run(
         )
 
 
-def _test_save_run(script_dir):
-    """Test the save script
-
-    Args
-    ----
-        script_dir: The directory containing the script to test
-
-    """
-    # Running multiple tests at the same time.
-    custom_image_tag = f"test-{uuid.uuid4()}"
-
-    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
-    matching_files = glob.glob(pattern)
-
-    assert len(matching_files) == 0
-
+@contextmanager
+def mocked_binaries():
+    """Mock the binaries in the PATH to avoid computationally intensive operations during testing."""
     mocks_bin = RESOURCES_PATH / "mocks" / "bin"
     current_path = os.environ.get("PATH", "")
     extended_path = f"{mocks_bin}:{current_path}"
 
     with patch.dict("os.environ", PATH=extended_path):
-        _test_script_run(
-            script_path=script_dir / "do_save.sh",
-            extra_arg=custom_image_tag,
-        )
-
-    return custom_image_tag
+        yield
 
 
 @contextmanager

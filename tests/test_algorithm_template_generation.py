@@ -1,15 +1,14 @@
 import glob
-import uuid
 from pathlib import Path
 
 import pytest
 
 from grand_challenge_forge.forge import generate_algorithm_template
 from tests.utils import (
-    _test_save_run,
     _test_script_run,
     add_numerical_slugs,
     algorithm_template_context_factory,
+    mocked_binaries,
     zipfile_to_filesystem,
 )
 
@@ -52,7 +51,6 @@ def test_algorithm_template_run_permissions(tmp_path):
     for _ in range(0, 2):
         _test_script_run(
             script_path=template_path / "do_test_run.sh",
-            extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
         )
 
         # Check if output is generated (ignore content)
@@ -79,10 +77,7 @@ def test_algorithm_template_run(context, tmp_path):
 
     template_path = tmp_path / template_zdir
 
-    _test_script_run(
-        script_path=template_path / "do_test_run.sh",
-        extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
-    )
+    _test_script_run(script_path=template_path / "do_test_run.sh")
 
     output_dir = template_path / "test" / "output"
     # Check if output is generated (ignore content)
@@ -108,10 +103,11 @@ def test_algorithm_template_save(context, tmp_path):
 
     template_path = tmp_path / template_zdir
 
-    custom_image_tag = _test_save_run(script_dir=template_path)
+    with mocked_binaries():
+        _test_script_run(script_path=template_path / "do_save.sh")
 
     # Check if saved image exists
-    pattern = str(template_path / f"{custom_image_tag}_*.tar.gz")
+    pattern = str(template_path / f"{context['algorithm']['slug']}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Algorithm template do_save.sh does not generate the exported "
