@@ -88,15 +88,17 @@ def pack(output, force, contexts, verbose=0):
                     )
                     pack_dir = output_dir / pack_zpath
 
-                    if force and pack_dir.exists():
-                        shutil.rmtree(pack_dir)
-                    else:
-                        raise ChallengeForgeError(
-                            f"Pack {pack_dir.stem!r} already exists"
-                        )
+                    if pack_dir.exists():
+                        if force:
+                            shutil.rmtree(pack_dir)
+                        else:
+                            raise ChallengeForgeError(
+                                f"Pack {pack_dir.stem!r} already exists!"
+                            )
 
                 logger.info(f"📦 Created Pack {pack_dir.stem!r}")
                 logger.info(f"📢 Pack is here: {pack_dir}")
+                print(str(pack_dir))
             except Exception as e:
                 if isinstance(e, ChallengeForgeError):
                     logger.error(f"💔 {e}", exc_info=True)
@@ -136,12 +138,14 @@ def algorithm(output, force, contexts, verbose):
                     )
                     template_dir = output_dir / template_zpath
 
-                    if force and template_dir.exists():
-                        shutil.rmtree(template_dir)
-                    else:
-                        raise ChallengeForgeError(
-                            f"Algorithm Template {template_dir.stem!r} already exists"
-                        )
+                    if template_dir.exists():
+                        if force:
+                            shutil.rmtree(template_dir)
+                        else:
+                            raise ChallengeForgeError(
+                                f"Algorithm Template {template_dir.stem!r} "
+                                "already exists!"
+                            )
                 logger.info(
                     f"📦 Created Algorithm Template {template_dir.stem!r}"
                 )
