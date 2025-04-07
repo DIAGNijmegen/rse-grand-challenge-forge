@@ -196,7 +196,7 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
     "phase_context",
     [
         phase_context_factory(),
-        # add_numerical_slugs(phase_context_factory()),
+        add_numerical_slugs(phase_context_factory()),
     ],
 )
 def test_pack_example_evaluation_run(phase_context, tmp_path):
