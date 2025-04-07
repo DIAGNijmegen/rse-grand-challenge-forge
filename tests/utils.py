@@ -323,7 +323,8 @@ def zipfile_to_filesystem(output_path=None):
 
     if output_path is not None:
         # Extract contents to disk if output_dir is specified
-        # Use a subprocess because the ZipFile.extractall does not keep permissions: https://github.com/python/cpython/issues/59999
+        # Use a subprocess because the ZipFile.extractall does
+        # not keep permissions: https://github.com/python/cpython/issues/59999
 
         zip_handle.seek(0)
         os.makedirs(output_path, exist_ok=True)
@@ -334,7 +335,14 @@ def zipfile_to_filesystem(output_path=None):
             temp_zip.close()
 
             subprocess.run(
-                ["unzip", "-o", temp_zip.name, "-d", str(output_path)],
+                [
+                    "unzip",
+                    "-o",
+                    "-DD",  # Set consistent timestamps for all files in the zip to ensure reproducible builds
+                    temp_zip.name,
+                    "-d",
+                    str(output_path),
+                ],
                 check=True,
                 capture_output=True,
             )

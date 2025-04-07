@@ -154,7 +154,7 @@ def copy_and_render(
                 )
 
                 # Update the date time of creation, since we are technically
-                # writing creating new file
+                # creating a new file
                 zinfo.date_time = time.localtime()[0:6]
 
                 output_zip_file.writestr(zinfo, rendered_content)
