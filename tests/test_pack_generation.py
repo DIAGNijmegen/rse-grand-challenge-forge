@@ -192,6 +192,9 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
         assert expected_file.exists()
 
 
+@pytest.mark.flaky(
+    reruns=2
+)  # Flaky because: https://github.com/docker/buildx/issues/3093
 @pytest.mark.parametrize(
     "phase_context",
     [
@@ -215,6 +218,9 @@ def test_pack_example_evaluation_run(phase_context, tmp_path):
     assert expected_file.exists()
 
 
+@pytest.mark.flaky(
+    reruns=2
+)  # Flaky because: https://github.com/docker/buildx/issues/3093
 @pytest.mark.parametrize(
     "phase_context",
     [

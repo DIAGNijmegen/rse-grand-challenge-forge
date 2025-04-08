@@ -338,7 +338,6 @@ def zipfile_to_filesystem(output_path=None):
                 [
                     "unzip",
                     "-o",
-                    "-DD",  # Set different timestamps for all files in the zip to enhance cache busting
                     temp_zip.name,
                     "-d",
                     str(output_path),

@@ -28,7 +28,8 @@ pytest = "*"
 pytest-xdist = "*"
 psutil = "*"
 pytest-timeout = "*"
-pytest-env="*"
+pytest-env = "*"
+pytest-rerunfailures = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
