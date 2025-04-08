@@ -184,17 +184,7 @@ def check_allowed_source(path):
 
 def apply_black(content):
     # Format rendered Python code string using black
-    try:
-        formatted_content = black.format_str(
-            content,
-            mode=black.Mode(),
-        )
-        return formatted_content
-    except black.InvalidInput as e:
-        # If not debugging/testing: return original content if black formatting fails
-
-        if DEBUG:
-            raise
-
-        logger.info(f"Black formatting failed {e}, using original content")
-        return content
+    return black.format_str(
+        content,
+        mode=black.Mode(),
+    )
