@@ -1,5 +1,4 @@
 import glob
-from pathlib import Path
 
 import pytest
 
@@ -13,15 +12,15 @@ from tests.utils import (
 )
 
 
-def test_for_algorithm_template_content(tmp_path):
+def test_for_algorithm_template_content(tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        template_zdir = generate_algorithm_template(
+        generate_algorithm_template(
             context=algorithm_template_context_factory(),
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    template_path = tmp_path / template_zdir
+    template_path = tmp_path / testrun_zpath
 
     for filename in [
         "Dockerfile",
@@ -36,16 +35,16 @@ def test_for_algorithm_template_content(tmp_path):
         assert (template_path / filename).exists()
 
 
-def test_algorithm_template_run_permissions(tmp_path):
+def test_algorithm_template_run_permissions(tmp_path, testrun_zpath):
     algorithm_template_context = algorithm_template_context_factory()
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        template_zdir = generate_algorithm_template(
+        generate_algorithm_template(
             context=algorithm_template_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    template_path = tmp_path / template_zdir
+    template_path = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
@@ -67,15 +66,15 @@ def test_algorithm_template_run_permissions(tmp_path):
         add_numerical_slugs(algorithm_template_context_factory()),
     ],
 )
-def test_algorithm_template_run(context, tmp_path):
+def test_algorithm_template_run(context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        template_zdir = generate_algorithm_template(
+        generate_algorithm_template(
             context=context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    template_path = tmp_path / template_zdir
+    template_path = tmp_path / testrun_zpath
 
     _test_script_run(script_path=template_path / "do_test_run.sh")
 
@@ -93,15 +92,15 @@ def test_algorithm_template_run(context, tmp_path):
         add_numerical_slugs(algorithm_template_context_factory()),
     ],
 )
-def test_algorithm_template_save(context, tmp_path):
+def test_algorithm_template_save(context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        template_zdir = generate_algorithm_template(
+        generate_algorithm_template(
             context=context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    template_path = tmp_path / template_zdir
+    template_path = tmp_path / testrun_zpath
 
     with mocked_binaries():
         _test_script_run(script_path=template_path / "do_save.sh")

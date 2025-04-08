@@ -1,5 +1,4 @@
 import glob
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,17 +23,17 @@ from tests.utils import (
 )
 
 
-def test_for_pack_content(tmp_path):
+def test_for_pack_content(tmp_path, testrun_zpath):
     context = pack_context_factory()
 
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        pack_zdir = generate_challenge_pack(
+        generate_challenge_pack(
             output_zip_file=zip_file,
-            output_zpath=Path(""),  # Use relative path instead of root
+            target_zpath=testrun_zpath,
             context=context,
         )
 
-    pack_dir = tmp_path / pack_zdir
+    pack_dir = tmp_path / testrun_zpath
 
     assert (pack_dir / "README.md").exists()
 
@@ -61,17 +60,17 @@ def test_for_pack_content(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_upload_to_archive_script(phase_context, tmp_path):
+def test_pack_upload_to_archive_script(phase_context, tmp_path, testrun_zpath):
     """Checks if the upload to archive script works as intended"""
 
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        script_zdir = generate_upload_to_archive_script(
+        generate_upload_to_archive_script(
             output_zip_file=zip_file,
-            output_zpath=Path(""),  # Use relative path instead of root
+            target_zpath=testrun_zpath,
             context=phase_context,
         )
 
-    script_dir = tmp_path / script_zdir
+    script_dir = tmp_path / testrun_zpath
 
     with change_directory(script_dir):
         gcapi = MagicMock()
@@ -95,17 +94,17 @@ def test_pack_upload_to_archive_script(phase_context, tmp_path):
         gcapi.Client().update_archive_item.assert_called()
 
 
-def test_pack_example_algorithm_run_permissions(tmp_path):
+def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
     phase_context = phase_context_factory()
 
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        algorithm_zdir = generate_example_algorithm(
+        generate_example_algorithm(
             context=phase_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / algorithm_zdir
+    algorithm_dir = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
@@ -125,15 +124,15 @@ def test_pack_example_algorithm_run_permissions(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_algorithm_run(phase_context, tmp_path):
+def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        algorithm_zdir = generate_example_algorithm(
+        generate_example_algorithm(
             context=phase_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / algorithm_zdir
+    algorithm_dir = tmp_path / testrun_zpath
 
     _test_script_run(script_path=algorithm_dir / "do_test_run.sh")
 
@@ -151,15 +150,15 @@ def test_pack_example_algorithm_run(phase_context, tmp_path):
         # add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_algorithm_save(phase_context, tmp_path):
+def test_pack_example_algorithm_save(phase_context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        algorithm_zdir = generate_example_algorithm(
+        generate_example_algorithm(
             context=phase_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / algorithm_zdir
+    algorithm_dir = tmp_path / testrun_zpath
 
     with mocked_binaries():
         _test_script_run(script_path=algorithm_dir / "do_save.sh")
@@ -174,15 +173,15 @@ def test_pack_example_algorithm_save(phase_context, tmp_path):
     )
 
 
-def test_pack_example_evaluation_run_permissions(tmp_path):
+def test_pack_example_evaluation_run_permissions(tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        evaluation_zdir = generate_example_evaluation(
+        generate_example_evaluation(
             context=phase_context_factory(),
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / evaluation_zdir
+    evaluation_dir = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
@@ -192,9 +191,6 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
         assert expected_file.exists()
 
 
-@pytest.mark.flaky(
-    reruns=4
-)  # Flaky because: https://github.com/docker/buildx/issues/3093
 @pytest.mark.parametrize(
     "phase_context",
     [
@@ -202,15 +198,15 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_evaluation_run(phase_context, tmp_path):
+def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        evaluation_zdir = generate_example_evaluation(
+        generate_example_evaluation(
             context=phase_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / evaluation_zdir
+    evaluation_dir = tmp_path / testrun_zpath
 
     _test_script_run(script_path=evaluation_dir / "do_test_run.sh")
 
@@ -218,9 +214,6 @@ def test_pack_example_evaluation_run(phase_context, tmp_path):
     assert expected_file.exists()
 
 
-@pytest.mark.flaky(
-    reruns=4
-)  # Flaky because: https://github.com/docker/buildx/issues/3093
 @pytest.mark.parametrize(
     "phase_context",
     [
@@ -228,15 +221,15 @@ def test_pack_example_evaluation_run(phase_context, tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_evaluation_save(phase_context, tmp_path):
+def test_pack_example_evaluation_save(phase_context, tmp_path, testrun_zpath):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
-        evaluation_zdir = generate_example_evaluation(
+        generate_example_evaluation(
             context=phase_context,
             output_zip_file=zip_file,
-            output_zpath=Path(""),
+            target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / evaluation_zdir
+    evaluation_dir = tmp_path / testrun_zpath
 
     with mocked_binaries():
         _test_script_run(script_path=evaluation_dir / "do_save.sh")
