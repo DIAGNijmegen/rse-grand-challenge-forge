@@ -138,8 +138,6 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
             socket=input_ci,
         )
 
-    return target_zpath
-
 
 def generate_example_evaluation(*, output_zip_file, target_zpath, context):
     copy_and_render(
