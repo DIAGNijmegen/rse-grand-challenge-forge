@@ -32,8 +32,12 @@ cleanup() {
 
 if [ -d "$OUTPUT_DIR" ]; then
   # Ensure permissions are setup correctly
-  # This allows for the Docker user to write to this location
-  chmod -f o+rwx "$OUTPUT_DIR"
+
+  # This allows for the Docker user to read
+  chmod -f -R o+rX "$INPUT_DIR"
+
+  # This allows for the Docker user to write
+  chmod -f -R o+rwX "$OUTPUT_DIR"
 
   echo "=+= Cleaning up any earlier output"
   # Use the container itself to circumvent ownership problems
