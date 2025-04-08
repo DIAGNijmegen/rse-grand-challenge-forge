@@ -30,14 +30,12 @@ cleanup() {
     docker volume rm "$DOCKER_NOOP_VOLUME" > /dev/null
 }
 
+# This allows for the Docker user to read
+chmod -R -f o+rX "$INPUT_DIR" "${SCRIPT_DIR}/{{ tarball_dirname }}"
+
 if [ -d "$OUTPUT_DIR" ]; then
-  # Ensure permissions are setup correctly
-
-  # This allows for the Docker user to read
-  chmod -f -R o+rX "$INPUT_DIR"
-
   # This allows for the Docker user to write
-  chmod -f -R o+rwX "$OUTPUT_DIR"
+  chmod -f o+rwX "$OUTPUT_DIR"
 
   echo "=+= Cleaning up any earlier output"
   # Use the container itself to circumvent ownership problems
@@ -49,7 +47,7 @@ if [ -d "$OUTPUT_DIR" ]; then
       $DOCKER_IMAGE_TAG \
       -c "rm -rf /output/* || true"
 else
-  mkdir -m o+rwx "$OUTPUT_DIR"
+  mkdir -m o+rwX "$OUTPUT_DIR"
 fi
 
 docker volume create "$DOCKER_NOOP_VOLUME" > /dev/null
