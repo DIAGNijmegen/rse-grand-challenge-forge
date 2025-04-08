@@ -31,6 +31,10 @@ cleanup() {
 }
 
 if [ -d "$OUTPUT_DIR" ]; then
+  # Ensure permissions are setup correctly
+  # This allows for the Docker user to write to this location
+  chmod -f o+rwx "$OUTPUT_DIR"
+
   echo "=+= Cleaning up any earlier output"
   # Use the container itself to circumvent ownership problems
   docker run --rm \
@@ -40,10 +44,6 @@ if [ -d "$OUTPUT_DIR" ]; then
       --entrypoint /bin/sh \
       $DOCKER_IMAGE_TAG \
       -c "rm -rf /output/* || true"
-
-  # Ensure permissions are setup correctly
-  # This allows for the Docker user to write to this location
-  chmod -f o+rwx "$OUTPUT_DIR"
 else
   mkdir -m o+rwx "$OUTPUT_DIR"
 fi
