@@ -278,12 +278,8 @@ def _test_script_run(
     if extra_arg:
         command.append(extra_arg)
 
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        check=True,  # This will raise CalledProcessError if returncode != 0
-    )
-    if result.stderr:  # Stderr should not be empty
+    result = subprocess.run(command, capture_output=True)
+    if result.stderr or result.returncode != 0:  # Stderr should not be empty
         raise subprocess.CalledProcessError(
             returncode=result.returncode,
             cmd=command,
