@@ -33,22 +33,22 @@ def test_for_pack_content(tmp_path, testrun_zpath):
             context=context,
         )
 
-    pack_dir = tmp_path / testrun_zpath
+    pack_path = tmp_path / testrun_zpath
 
-    assert (pack_dir / "README.md").exists()
+    assert (pack_path / "README.md").exists()
 
     for phase in context["challenge"]["phases"]:
-        assert (pack_dir / phase["slug"]).exists()
+        assert (pack_path / phase["slug"]).exists()
 
         assert (
-            pack_dir
+            pack_path
             / phase["slug"]
             / f"upload-to-archive-{phase['archive']['slug']}"
         ).exists()
 
-        assert (pack_dir / phase["slug"] / "example-algorithm").exists()
+        assert (pack_path / phase["slug"] / "example-algorithm").exists()
 
-        eval_path = pack_dir / phase["slug"] / "example-evaluation-method"
+        eval_path = pack_path / phase["slug"] / "example-evaluation-method"
         assert eval_path.exists()
         assert (eval_path / "test" / "input" / "predictions.json").exists()
 
@@ -104,14 +104,14 @@ def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / testrun_zpath
+    algorithm_path = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
-        _test_script_run(script_path=algorithm_dir / "do_test_run.sh")
+        _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
         # Check if output is generated (ignore content)
-        output_dir = algorithm_dir / "test" / "output"
+        output_dir = algorithm_path / "test" / "output"
         for output in phase_context["phase"]["algorithm_outputs"]:
             expected_file = output_dir / output["relative_path"]
             assert expected_file.exists()
@@ -132,11 +132,11 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / testrun_zpath
+    algorithm_path = tmp_path / testrun_zpath
 
-    _test_script_run(script_path=algorithm_dir / "do_test_run.sh")
+    _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
-    output_dir = algorithm_dir / "test" / "output"
+    output_dir = algorithm_path / "test" / "output"
     # Check if output is generated (ignore content)
     for output in phase_context["phase"]["algorithm_outputs"]:
         expected_file = output_dir / output["relative_path"]
@@ -158,14 +158,14 @@ def test_pack_example_algorithm_save(phase_context, tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    algorithm_dir = tmp_path / testrun_zpath
+    algorithm_path = tmp_path / testrun_zpath
 
     with mocked_binaries():
-        _test_script_run(script_path=algorithm_dir / "do_save.sh")
+        _test_script_run(script_path=algorithm_path / "do_save.sh")
 
     # Check if saved image exists
     tar_filename = f"example-algorithm-{phase_context['phase']['slug']}"
-    pattern = str(algorithm_dir / f"{tar_filename}_*.tar.gz")
+    pattern = str(algorithm_path / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "
@@ -181,13 +181,13 @@ def test_pack_example_evaluation_run_permissions(tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / testrun_zpath
+    evaluation_path = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
-        _test_script_run(script_path=evaluation_dir / "do_test_run.sh")
+        _test_script_run(script_path=evaluation_path / "do_test_run.sh")
 
-        expected_file = evaluation_dir / "test" / "output" / "metrics.json"
+        expected_file = evaluation_path / "test" / "output" / "metrics.json"
         assert expected_file.exists()
 
 
@@ -206,11 +206,11 @@ def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / testrun_zpath
+    evaluation_path = tmp_path / testrun_zpath
 
-    _test_script_run(script_path=evaluation_dir / "do_test_run.sh")
+    _test_script_run(script_path=evaluation_path / "do_test_run.sh")
 
-    expected_file = evaluation_dir / "test" / "output" / "metrics.json"
+    expected_file = evaluation_path / "test" / "output" / "metrics.json"
     assert expected_file.exists()
 
 
@@ -229,14 +229,14 @@ def test_pack_example_evaluation_save(phase_context, tmp_path, testrun_zpath):
             target_zpath=testrun_zpath,
         )
 
-    evaluation_dir = tmp_path / testrun_zpath
+    evaluation_path = tmp_path / testrun_zpath
 
     with mocked_binaries():
-        _test_script_run(script_path=evaluation_dir / "do_save.sh")
+        _test_script_run(script_path=evaluation_path / "do_save.sh")
 
     # Check if saved image exists
     tar_filename = f"example-evaluation-{phase_context['phase']['slug']}"
-    pattern = str(evaluation_dir / f"{tar_filename}_*.tar.gz")
+    pattern = str(evaluation_path / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "
