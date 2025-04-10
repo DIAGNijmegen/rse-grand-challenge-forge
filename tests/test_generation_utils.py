@@ -10,7 +10,7 @@ from grand_challenge_forge.generation_utils import (
     copy_and_render,
     get_jinja2_environment,
 )
-from tests.utils import TEST_RESOURCES
+from tests.utils import TEST_RESOURCES, zipfile_to_filesystem
 
 
 def test_jinja2_environment_sandbox():
@@ -60,14 +60,16 @@ def test_jinja2_environment_sandbox():
         ),
     ),
 )
-def test_copy_and_render_source_restrictions(name, context, tmpdir):
+def test_copy_and_render_source_restrictions(name, context):
     with patch(
         "grand_challenge_forge.generation_utils.PARTIALS_PATH",
         new=TEST_RESOURCES / "partials",
     ):
         with context:
-            copy_and_render(
-                templates_dir_name=name,
-                output_path=Path(tmpdir),
-                context={},
-            )
+            with zipfile_to_filesystem() as zip_file:
+                copy_and_render(
+                    templates_dir_name=name,
+                    output_zip_file=zip_file,
+                    target_zpath=Path(""),
+                    context={},
+                )

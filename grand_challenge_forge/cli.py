@@ -1,5 +1,6 @@
 import json
 import logging
+import shutil
 from importlib import metadata
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from grand_challenge_forge.forge import (
     generate_challenge_pack,
 )
 from grand_challenge_forge.utils import truncate_with_epsilons
+from tests.utils import zipfile_to_filesystem
 
 
 # Shared options decorator
@@ -78,11 +80,24 @@ def pack(output, force, contexts, verbose=0):
                 logger.info(
                     f"🏗️Started working on pack [{index + 1} of {len(contexts)}]"
                 )
-                pack_dir = generate_challenge_pack(
-                    context=resolved_context,
-                    output_path=output_dir,
-                    delete_existing=force,
-                )
+                with zipfile_to_filesystem(output_path=output_dir) as zip_file:
+                    pack_zpath = generate_challenge_pack(
+                        target_zpath=Path(
+                            f"{resolved_context['challenge']['slug']}-challenge-pack"
+                        ),
+                        context=resolved_context,
+                        output_zip_file=zip_file,
+                    )
+                    pack_dir = output_dir / pack_zpath
+
+                    if pack_dir.exists():
+                        if force:
+                            shutil.rmtree(pack_dir)
+                        else:
+                            raise ChallengeForgeError(
+                                f"Pack {pack_dir.stem!r} already exists!"
+                            )
+
                 logger.info(f"📦 Created Pack {pack_dir.stem!r}")
                 logger.info(f"📢 Pack is here: {pack_dir}")
                 print(str(pack_dir))
@@ -116,11 +131,25 @@ def algorithm(output, force, contexts, verbose):
                     f"🏗️Started working on Algorithm Template [{index + 1} "
                     f"of {len(contexts)}]"
                 )
-                template_dir = generate_algorithm_template(
-                    context=resolved_context,
-                    output_path=output_dir,
-                    delete_existing=force,
-                )
+
+                with zipfile_to_filesystem(output_path=output_dir) as zip_file:
+                    template_zpath = generate_algorithm_template(
+                        target_zpath=Path(
+                            f"{resolved_context['algorithm']['slug']}-template"
+                        ),
+                        context=resolved_context,
+                        output_zip_file=zip_file,
+                    )
+                    template_dir = output_dir / template_zpath
+
+                    if template_dir.exists():
+                        if force:
+                            shutil.rmtree(template_dir)
+                        else:
+                            raise ChallengeForgeError(
+                                f"Algorithm Template {template_dir.stem!r} "
+                                "already exists!"
+                            )
                 logger.info(
                     f"📦 Created Algorithm Template {template_dir.stem!r}"
                 )
@@ -130,7 +159,7 @@ def algorithm(output, force, contexts, verbose):
                 if isinstance(e, ChallengeForgeError):
                     logger.error(f"💔 {e}")
                 else:
-                    raise e
+                    raise
 
 
 def _set_verbosity(verbosity):

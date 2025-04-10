@@ -1,5 +1,4 @@
 import glob
-import uuid
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -15,20 +14,26 @@ from grand_challenge_forge.utils import (
     directly_import_module,
 )
 from tests.utils import (
-    _test_save,
-    _test_script,
+    _test_script_run,
     add_numerical_slugs,
+    mocked_binaries,
     pack_context_factory,
     phase_context_factory,
+    zipfile_to_filesystem,
 )
 
 
-def test_for_pack_content(tmp_path):
+def test_for_pack_content(tmp_path, testrun_zpath):
     context = pack_context_factory()
-    pack_path = generate_challenge_pack(
-        context=context,
-        output_path=tmp_path,
-    )
+
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_challenge_pack(
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+            context=context,
+        )
+
+    pack_path = tmp_path / testrun_zpath
 
     assert (pack_path / "README.md").exists()
 
@@ -55,13 +60,18 @@ def test_for_pack_content(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_upload_to_archive_script(phase_context, tmp_path):
+def test_pack_upload_to_archive_script(phase_context, tmp_path, testrun_zpath):
     """Checks if the upload to archive script works as intended"""
 
-    script_dir = generate_upload_to_archive_script(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_upload_to_archive_script(
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+            context=phase_context,
+        )
+
+    script_dir = tmp_path / testrun_zpath
+
     with change_directory(script_dir):
         gcapi = MagicMock()
         with patch.dict("sys.modules", gcapi=gcapi):
@@ -84,23 +94,24 @@ def test_pack_upload_to_archive_script(phase_context, tmp_path):
         gcapi.Client().update_archive_item.assert_called()
 
 
-def test_pack_example_algorithm_run_permissions(tmp_path):
+def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
     phase_context = phase_context_factory()
 
-    algorithm_dir = generate_example_algorithm(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_algorithm(
+            context=phase_context,
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
+
+    algorithm_path = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
-        _test_script(
-            script_path=algorithm_dir / "do_test_run.sh",
-            extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
-        )
+        _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
         # Check if output is generated (ignore content)
-        output_dir = algorithm_dir / "test" / "output"
+        output_dir = algorithm_path / "test" / "output"
         for output in phase_context["phase"]["algorithm_outputs"]:
             expected_file = output_dir / output["relative_path"]
             assert expected_file.exists()
@@ -113,18 +124,19 @@ def test_pack_example_algorithm_run_permissions(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_algorithm_run(phase_context, tmp_path):
-    algorithm_dir = generate_example_algorithm(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_algorithm(
+            context=phase_context,
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
 
-    _test_script(
-        script_path=algorithm_dir / "do_test_run.sh",
-        extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
-    )
+    algorithm_path = tmp_path / testrun_zpath
 
-    output_dir = algorithm_dir / "test" / "output"
+    _test_script_run(script_path=algorithm_path / "do_test_run.sh")
+
+    output_dir = algorithm_path / "test" / "output"
     # Check if output is generated (ignore content)
     for output in phase_context["phase"]["algorithm_outputs"]:
         expected_file = output_dir / output["relative_path"]
@@ -138,16 +150,22 @@ def test_pack_example_algorithm_run(phase_context, tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_algorithm_save(phase_context, tmp_path):
-    script_dir = generate_example_algorithm(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+def test_pack_example_algorithm_save(phase_context, tmp_path, testrun_zpath):
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_algorithm(
+            context=phase_context,
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
 
-    custom_image_tag = _test_save(script_dir=script_dir)
+    algorithm_path = tmp_path / testrun_zpath
+
+    with mocked_binaries():
+        _test_script_run(script_path=algorithm_path / "do_save.sh")
 
     # Check if saved image exists
-    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
+    tar_filename = f"example-algorithm-{phase_context['phase']['slug']}"
+    pattern = str(algorithm_path / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "
@@ -155,20 +173,21 @@ def test_pack_example_algorithm_save(phase_context, tmp_path):
     )
 
 
-def test_pack_example_evaluation_run_permissions(tmp_path):
-    evaluation_dir = generate_example_evaluation(
-        context=phase_context_factory(),
-        output_path=tmp_path,
-    )
+def test_pack_example_evaluation_run_permissions(tmp_path, testrun_zpath):
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_evaluation(
+            context=phase_context_factory(),
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
+
+    evaluation_path = tmp_path / testrun_zpath
 
     # Run it twice to ensure all permissions are correctly handled
     for _ in range(0, 2):
-        _test_script(
-            script_path=evaluation_dir / "do_test_run.sh",
-            extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
-        )
+        _test_script_run(script_path=evaluation_path / "do_test_run.sh")
 
-        expected_file = evaluation_dir / "test" / "output" / "metrics.json"
+        expected_file = evaluation_path / "test" / "output" / "metrics.json"
         assert expected_file.exists()
 
 
@@ -179,18 +198,19 @@ def test_pack_example_evaluation_run_permissions(tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_evaluation_run(phase_context, tmp_path):
-    evaluation_dir = generate_example_evaluation(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_evaluation(
+            context=phase_context,
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
 
-    _test_script(
-        script_path=evaluation_dir / "do_test_run.sh",
-        extra_arg=f"test-{uuid.uuid4()}",  # Ensure unique build and tests
-    )
+    evaluation_path = tmp_path / testrun_zpath
 
-    expected_file = evaluation_dir / "test" / "output" / "metrics.json"
+    _test_script_run(script_path=evaluation_path / "do_test_run.sh")
+
+    expected_file = evaluation_path / "test" / "output" / "metrics.json"
     assert expected_file.exists()
 
 
@@ -201,16 +221,22 @@ def test_pack_example_evaluation_run(phase_context, tmp_path):
         add_numerical_slugs(phase_context_factory()),
     ],
 )
-def test_pack_example_evaluation_save(phase_context, tmp_path):
-    script_dir = generate_example_evaluation(
-        context=phase_context,
-        output_path=tmp_path,
-    )
+def test_pack_example_evaluation_save(phase_context, tmp_path, testrun_zpath):
+    with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
+        generate_example_evaluation(
+            context=phase_context,
+            output_zip_file=zip_file,
+            target_zpath=testrun_zpath,
+        )
 
-    custom_image_tag = _test_save(script_dir=script_dir)
+    evaluation_path = tmp_path / testrun_zpath
+
+    with mocked_binaries():
+        _test_script_run(script_path=evaluation_path / "do_save.sh")
 
     # Check if saved image exists
-    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
+    tar_filename = f"example-evaluation-{phase_context['phase']['slug']}"
+    pattern = str(evaluation_path / f"{tar_filename}_*.tar.gz")
     matching_files = glob.glob(pattern)
     assert len(matching_files) == 1, (
         f"Example do_save.sh does not generate the exported "
