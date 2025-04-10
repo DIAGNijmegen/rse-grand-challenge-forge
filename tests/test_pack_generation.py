@@ -147,7 +147,7 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
     "phase_context",
     [
         phase_context_factory(),
-        # add_numerical_slugs(phase_context_factory()),
+        add_numerical_slugs(phase_context_factory()),
     ],
 )
 def test_pack_example_algorithm_save(phase_context, tmp_path, testrun_zpath):
