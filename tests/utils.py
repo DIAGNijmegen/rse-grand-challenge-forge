@@ -1,8 +1,8 @@
 import os
 import subprocess
 import tempfile
-import uuid
 import zipfile
+from collections import Counter
 from contextlib import contextmanager
 from copy import deepcopy
 from io import BytesIO
@@ -206,12 +206,19 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
 
 # fmt: on
 
+unique_slugs_suffix = Counter()
+
 
 def make_slugs_unique(d):
-    """Add unique id to all slugs in the structure to make them unique, also accross distributed tests."""
+    """Ensure all slugs in the structure to make them unique"""
+    global unique_slugs_suffix
+
     if isinstance(d, dict):
         if "slug" in d:
-            d["slug"] = f"{d['slug']}-{uuid.uuid4()}"
+            original_slug = d["slug"]
+            suffix = unique_slugs_suffix[original_slug]
+            d["slug"] = f"{original_slug}-{suffix}"
+            unique_slugs_suffix.update([original_slug])
         for item in d.values():
             make_slugs_unique(item)
     elif isinstance(d, list):
@@ -223,7 +230,7 @@ def make_slugs_unique(d):
 def add_numerical_slugs(d):
     """Add '00-' prefix to all slugs in the structure."""
     if isinstance(d, dict):
-        if "slug" in d:
+        if "slug" in d and not d["slug"].startswith("00-"):
             d["slug"] = f"00-{d['slug']}"
         for item in d.values():
             add_numerical_slugs(item)
