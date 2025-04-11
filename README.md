@@ -39,61 +39,6 @@ grand-challenge-forge pack pack-context.json
 Will use the context found in `pack-context.json` and generate a pack at the current working directory in
 a directory `dist/` (default).
 
-<details>
-
-<summary> Example of the content of pack-context.json </summary>
-
-```JSON
-{
-  "challenge": {
-    "slug": "DEMO",
-    "url": "https://demo.grand-challenge.org/",
-    "phases": [
-      {
-        "slug": "test-phase",
-        "archive": {
-          "slug": "demo-challenge",
-          "url": "https://grand-challenge.org/archives/demo-challenge/"
-        },
-        "algorithm_inputs": [
-          {
-            "slug": "color-fundus-image",
-            "kind": "Image",
-            "super_kind": "Image",
-            "relative_path": "images/color-fundus",
-            "example_value": null
-          },
-          {
-            "slug": "age-in-months",
-            "kind": "Integer",
-            "super_kind": "Value",
-            "relative_path": "age-in-months.json",
-            "example_value": 42
-          }
-        ],
-        "algorithm_outputs": [
-          {
-            "slug": "binary-vessel-segmentation",
-            "kind": "Segmentation",
-            "super_kind": "Image",
-            "relative_path": "images/binary-vessel-segmentation",
-            "example_value": null
-          }
-        ]
-      }
-    ],
-    "archives": [
-      {
-        "slug": "demo-challenge",
-        "url": "https://grand-challenge.org/archives/demo-challenge/"
-      }
-    ]
-  }
-}
-```
-
-</details>
-
 Alternatively, you generate a pack by providing a JSON string directly:
 
 ```shell
@@ -122,57 +67,6 @@ grand-challenge-forge algorithm algorithm-context.json
 ```
 
 Will use the context found in `algorithm-context.json` and generate a algorith-template directory at the current working directory in a directory `dist/` (default).
-
-<details>
-
-<summary> Example of the content of algorithm-context.json </summary>
-
-```JSON
-{
-  "algorithm": {
-    "title": "CIRRUSCoreWeb release testing (Pathology/GLEASON)",
-    "slug": "cirruscoreweb-release-testing-pathologygleason",
-    "url": "https://grand-challenge.org/algorithms/cirruscoreweb-release-testing-pathologygleason/",
-    "inputs": [
-      {
-        "slug": "generic-medical-image",
-        "kind": "Image",
-        "super_kind": "Image",
-        "relative_path": "",
-        "example_value": null
-      }
-    ],
-    "outputs": [
-      {
-        "slug": "generic-overlay",
-        "kind": "Heat Map",
-        "super_kind": "Image",
-        "relative_path": "images",
-        "example_value": null
-      },
-      {
-        "slug": "results-json-file",
-        "kind": "Anything",
-        "super_kind": "Value",
-        "relative_path": "results.json",
-        "example_value": {
-          "key": "value",
-          "None": null
-        }
-      },
-      {
-        "slug": "gleason-score",
-        "kind": "Integer",
-        "super_kind": "Value",
-        "relative_path": "gleason-score.json",
-        "example_value": 42
-      }
-    ]
-  }
-}
-```
-
-</details>
 
 Alternatively, you generate an algorithm template by providing a JSON string directly:
 
