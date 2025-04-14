@@ -79,10 +79,12 @@ def generate_upload_to_archive_script(
             target_zpath=target_zpath / interface_name,
             number_of_cases=3,
         )
+
         # Make cases relative to the script
         for case in archive_cases:
             for k, v in case.items():
                 case[k] = Path(*v.parts[1:])
+
         expected_cases_per_interface[interface_name] = archive_cases
 
     all_algorithm_inputs = {}
@@ -90,10 +92,12 @@ def generate_upload_to_archive_script(
         for socket in interface["inputs"]:
             all_algorithm_inputs[socket["slug"]] = socket
 
-    context["phase"]["all_algorithm_inputs"] = all_algorithm_inputs
-    context["phase"][
-        "expected_cases_per_interface"
-    ] = expected_cases_per_interface
+    context["phase"].update(
+        {
+            "all_algorithm_inputs": all_algorithm_inputs,
+            "expected_cases_per_interface": expected_cases_per_interface,
+        }
+    )
 
     copy_and_render(
         templates_dir_name="upload-to-archive-script",

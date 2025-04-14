@@ -59,7 +59,7 @@ EXPECTED_CASES = [
 {%- endfor %}
 ]
 
-EXPECTED_INTERFACES = [
+EXPECTED_SOCKETS = [
 {%- for interface in phase.algorithm_interfaces %}
     {
         {%- for socket in interface.inputs %}
@@ -105,18 +105,21 @@ def prepare_contents(case):
     contents = {}
 
     input_set = set(case.keys())
-    assert input_set in EXPECTED_INTERFACES, f"The input set {input_set} is unexpected and probably incorrect!"
+    assert input_set in EXPECTED_SOCKETS, f"The input set {input_set} is unexpected and probably incorrect!"
 
     for slug, file in case.items():
         file_path = Path(file)
         assert file_path.exists(), f"File {file} does not exist"
     {% for socket in phase.all_algorithm_inputs.values() %}
         {% if loop.first %}if{% else %}elif{% endif %} slug == "{{ socket.slug }}":
-            {% if socket | is_json %}
+            {%- if socket | is_json -%}
             contents[slug] = json.loads(file_path.read_text())
-            {% else %}
+            {%- elif socket | is_image %}
+            contents[slug] = list(file_path.rglob("*"))
+            assert contents[slug], f"No files found in {slug}"
+            {%- else -%}
             contents[slug] = [file_path]
-            {% endif %}
+            {%- endif -%}
     {%- endfor %}
         else:
             raise RuntimeError(f"Unexpected socket: {key}")

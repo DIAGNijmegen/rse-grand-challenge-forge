@@ -187,7 +187,8 @@ def check_allowed_source(path):
 
 def apply_black(content):
     # Format rendered Python code string using black
-    return black.format_str(
+    result = black.format_str(
         content,
         mode=black.Mode(),
     )
+    return result
