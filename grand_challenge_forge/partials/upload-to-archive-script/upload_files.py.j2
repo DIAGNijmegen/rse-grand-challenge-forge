@@ -33,7 +33,7 @@ Happy uploading!
 from pathlib import Path
 
 import gcapi
-{% if phase.algorithm_inputs | has_json -%}
+{% if phase.all_algorithm_inputs.values() | has_json -%}
 import json
 {%- endif %}
 
@@ -41,28 +41,46 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
 ARCHIVE_SLUG = "{{ phase.archive.slug }}"
 
+{% for interface, cases in phase.expected_cases_per_interface.items() %}
+EXPECTED_CASE_FILES_FOR_{{ interface.upper() }} = [
+    {%- for case in cases %}
+    {
+        {%- for socket_slug, case in case.items() %}
+        "{{ socket_slug }}": "{{ case }}",
+        {%- endfor %}
+    },
+    {% endfor %}
+]
+{% endfor %}
+
 EXPECTED_CASES = [
-    # for: {% for ci in phase.algorithm_inputs -%}{{ ci.slug }}{%- if not loop.last -%}, {% endif -%}{% endfor %}
-{%- for expected_cases in phase.expected_cases %}
-    {{ expected_cases }},
+{%- for interface in phase.algorithm_interfaces %}
+    *EXPECTED_CASE_FILES_FOR_INTERFACE_{{ loop.index - 1 }},
+{%- endfor %}
+]
+
+EXPECTED_INTERFACES = [
+{%- for interface in phase.algorithm_interfaces %}
+    {
+        {%- for socket in interface.inputs %}
+        "{{ socket.slug }}",
+        {% endfor %}
+    },
 {%- endfor %}
 ]
 
 def main():
-    check_files()
+    pre_flight_check()
     upload_files()
     return 0
 
 
-def check_files():
-    # Perform a sanity-check to see if we have all the files we expect
+def pre_flight_check():
+    # Perform a sanity-check to see if everything is in place
+    # before we start uploading files to the archive
+
     for case in EXPECTED_CASES:
-        for file in case:
-            path = Path(file)
-            if not path.exists():
-                raise RuntimeError(
-                    f"Could not find {path.absolute()}, check that you're running in the right directory"
-                )
+        prepare_contents(case)
 
 
 def upload_files():
@@ -75,24 +93,35 @@ def upload_files():
     for case in EXPECTED_CASES:
         print(f"Uploading {case} to {archive['title']}")
 
-        content = map_case_content_to_interfaces(case)
+        contents = prepare_contents(case)
         archive_item = client.archive_items.create(archive=archive_api_url, values=[])
         client.update_archive_item(
             archive_item_pk=archive_item["pk"],
-            values=content,
+            values=contents,
         )
 
 
-def map_case_content_to_interfaces(case):
-    return {
-        {%- for ci in phase.algorithm_inputs %}
-        {%- if ci | is_json %}
-        "{{ ci.slug }}": json.loads(Path(case[{{ loop.index - 1}}]).read_text()),
-        {%- else %}
-        "{{ ci.slug }}": [Path(case[{{ loop.index - 1}}])],
-        {%- endif %}
-        {%- endfor %}
-    }
+def prepare_contents(case):
+    contents = {}
+
+    input_set = set(case.keys())
+    assert input_set in EXPECTED_INTERFACES, f"The input set {input_set} is unexpected and probably incorrect!"
+
+    for slug, file in case.items():
+        file_path = Path(file)
+        assert file_path.exists(), f"File {file} does not exist"
+    {% for socket in phase.all_algorithm_inputs.values() %}
+        {% if loop.first %}if{% else %}elif{% endif %} slug == "{{ socket.slug }}":
+            {% if socket | is_json %}
+            contents[slug] = json.loads(file_path.read_text())
+            {% else %}
+            contents[slug] = [file_path]
+            {% endif %}
+    {%- endfor %}
+        else:
+            raise RuntimeError(f"Unexpected socket: {key}")
+
+    return contents
 
 
 if __name__ == "__main__":

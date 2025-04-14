@@ -70,12 +70,30 @@ def generate_upload_to_archive_script(
 ):
     context = deepcopy(context)
 
-    context["phase"]["expected_cases"] = generate_archive_cases(
-        inputs=context["phase"]["algorithm_inputs"],
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        number_of_cases=3,
-    )
+    expected_cases_per_interface = {}
+    for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
+        interface_name = f"interface_{idx}"
+        archive_cases = generate_archive_cases(
+            inputs=interface["inputs"],
+            output_zip_file=output_zip_file,
+            target_zpath=target_zpath / interface_name,
+            number_of_cases=3,
+        )
+        # Make cases relative to the script
+        for case in archive_cases:
+            for k, v in case.items():
+                case[k] = Path(*v.parts[1:])
+        expected_cases_per_interface[interface_name] = archive_cases
+
+    all_algorithm_inputs = {}
+    for interface in context["phase"]["algorithm_interfaces"]:
+        for socket in interface["inputs"]:
+            all_algorithm_inputs[socket["slug"]] = socket
+
+    context["phase"]["all_algorithm_inputs"] = all_algorithm_inputs
+    context["phase"][
+        "expected_cases_per_interface"
+    ] = expected_cases_per_interface
 
     copy_and_render(
         templates_dir_name="upload-to-archive-script",
@@ -90,17 +108,23 @@ def generate_archive_cases(
 ):
     result = []
     for i in range(0, number_of_cases):
-        item_files = []
+        item_files = {}
         for input_socket in inputs:
-            zpath = Path(f"case_{i}") / input_socket["relative_path"]
+            # Use deep zpath to create the files
+            zpath = (
+                target_zpath
+                / Path(f"case_{i}")
+                / input_socket["relative_path"]
+            )
 
+            # Report back relative to script paths
             generate_socket_value_stub_file(
                 output_zip_file=output_zip_file,
-                target_zpath=target_zpath / zpath,
+                target_zpath=zpath,
                 socket=input_socket,
             )
 
-            item_files.append(str(zpath))
+            item_files[input_socket["slug"]] = zpath
 
         result.append(item_files)
 

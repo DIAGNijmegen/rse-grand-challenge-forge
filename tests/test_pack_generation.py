@@ -89,9 +89,11 @@ def test_pack_upload_to_archive_script(phase_context, tmp_path, testrun_zpath):
                 upload_files.main()
 
         # Assert that it reaches out via gcapi
-        gcapi.Client.assert_called()
-        gcapi.Client().archive_items.create.assert_called()
-        gcapi.Client().update_archive_item.assert_called()
+        assert gcapi.Client.call_count == 1
+
+        # Two interface, each with 3 cases
+        assert gcapi.Client().archive_items.create.call_count == 6
+        assert gcapi.Client().update_archive_item.call_count == 6
 
 
 def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
