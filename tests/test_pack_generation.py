@@ -112,11 +112,16 @@ def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
     for _ in range(0, 2):
         _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
-        # Check if output is generated (ignore content)
-        output_dir = algorithm_path / "test" / "output"
-        for output in phase_context["phase"]["algorithm_outputs"]:
-            expected_file = output_dir / output["relative_path"]
-            assert expected_file.exists()
+        for idx, interface in enumerate(
+            phase_context["phase"]["algorithm_interfaces"]
+        ):
+            output_dir = (
+                algorithm_path / "test" / "output" / f"interface_{idx}"
+            )
+            # Check if output is generated
+            for output in interface["outputs"]:
+                expected_file = output_dir / output["relative_path"]
+                assert expected_file.exists()
 
 
 @pytest.mark.parametrize(
@@ -138,11 +143,14 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
 
     _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
-    output_dir = algorithm_path / "test" / "output"
-    # Check if output is generated (ignore content)
-    for output in phase_context["phase"]["algorithm_outputs"]:
-        expected_file = output_dir / output["relative_path"]
-        assert expected_file.exists()
+    for idx, interface in enumerate(
+        phase_context["phase"]["algorithm_interfaces"]
+    ):
+        output_dir = algorithm_path / "test" / "output" / f"interface_{idx}"
+        # Check if output is generated
+        for output in interface["outputs"]:
+            expected_file = output_dir / output["relative_path"]
+            assert expected_file.exists()
 
 
 @pytest.mark.parametrize(

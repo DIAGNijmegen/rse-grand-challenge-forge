@@ -108,6 +108,7 @@ def get_jinja2_environment(searchpath=None):
         undefined=StrictUndefined,
     )
     env.filters = custom_filters
+    env.filters["zip"] = zip
     env.globals["now"] = datetime.now(timezone.utc)
 
     return env

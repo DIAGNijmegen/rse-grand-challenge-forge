@@ -138,33 +138,64 @@ def generate_archive_cases(
 def generate_example_algorithm(*, output_zip_file, target_zpath, context):
     context = deepcopy(context)
 
+    interface_names = []
+    for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
+        interface_name = f"interface_{idx}"
+        interface_names.append(interface_name)
+
+        input_zdir = target_zpath / "test" / "input" / interface_name
+        inputs = interface["inputs"]
+
+        # create inputs.json
+        output_zip_file.writestr(
+            str(input_zdir / "inputs.json"),
+            json.dumps(
+                [socket_to_socket_value(socket) for socket in inputs], indent=4
+            ),
+        )
+
+        # Create actual input files
+        for input in inputs:
+            generate_socket_value_stub_file(
+                output_zip_file=output_zip_file,
+                target_zpath=input_zdir / input["relative_path"],
+                socket=input,
+            )
+
+    # Build context
+    algorithm_input_sockets = [
+        socket
+        for interface in context["phase"]["algorithm_interfaces"]
+        for socket in interface["inputs"]
+    ]
+    algorithm_output_sockets = [
+        socket
+        for interface in context["phase"]["algorithm_interfaces"]
+        for socket in interface["outputs"]
+    ]
+
+    algorithm_interface_keys = []
+    for interface in context["phase"]["algorithm_interfaces"]:
+        algorithm_interface_keys.append(
+            tuple(sorted([socket["slug"] for socket in interface["inputs"]]))
+        )
+
+    context.update(
+        {
+            "algorithm_interface_names": interface_names,
+            "algorithm_interface_keys": algorithm_interface_keys,
+            "image_tag": f"example-algorithm-{context['phase']['slug']}",
+            "algorithm_input_sockets": algorithm_input_sockets,
+            "algorithm_output_sockets": algorithm_output_sockets,
+        }
+    )
+
     copy_and_render(
         templates_dir_name="example-algorithm",
         output_zip_file=output_zip_file,
         target_zpath=target_zpath,
         context=context,
     )
-
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": f"example-algorithm-{context['phase']['slug']}",
-            "tarball_dirname": "model",
-            "tarball_extraction_dir": "/opt/ml/model/",
-        },
-    )
-
-    # Create input files
-    input_zdir = target_zpath / "test" / "input"
-    for input_ci in context["phase"]["algorithm_inputs"]:
-        generate_socket_value_stub_file(
-            output_zip_file=output_zip_file,
-            target_zpath=input_zdir / input_ci["relative_path"],
-            socket=input_ci,
-        )
 
 
 def generate_example_evaluation(*, output_zip_file, target_zpath, context):
