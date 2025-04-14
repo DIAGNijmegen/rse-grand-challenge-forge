@@ -33,7 +33,7 @@ Happy uploading!
 from pathlib import Path
 
 import gcapi
-{% if phase.all_algorithm_inputs.values() | has_json -%}
+{% if all_algorithm_inputs.values() | has_json -%}
 import json
 {%- endif %}
 
@@ -41,7 +41,7 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
 ARCHIVE_SLUG = "{{ phase.archive.slug }}"
 
-{% for interface_name, cases in phase.expected_cases_per_interface.items() %}
+{% for interface_name, cases in expected_cases_per_interface.items() %}
 EXPECTED_CASE_FILES_FOR_{{ interface_name.upper() }} = [
     {%- for case in cases %}
     {
@@ -54,7 +54,7 @@ EXPECTED_CASE_FILES_FOR_{{ interface_name.upper() }} = [
 {% endfor %}
 
 EXPECTED_CASES = [
-{% for interface_name in phase.expected_cases_per_interface %}
+{% for interface_name in expected_cases_per_interface %}
     *EXPECTED_CASE_FILES_FOR_{{ interface_name.upper() }},
 {%- endfor %}
 ]
@@ -110,7 +110,7 @@ def prepare_contents(case):
     for slug, file in case.items():
         file_path = Path(file)
         assert file_path.exists(), f"File {file} does not exist"
-    {% for socket in phase.all_algorithm_inputs.values() %}
+    {% for socket in all_algorithm_inputs.values() %}
         {% if loop.first %}if{% else %}elif{% endif %} slug == "{{ socket.slug }}":
             {%- if socket | is_json -%}
             contents[slug] = json.loads(file_path.read_text())

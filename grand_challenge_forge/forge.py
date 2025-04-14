@@ -92,7 +92,7 @@ def generate_upload_to_archive_script(
         for socket in interface["inputs"]:
             all_algorithm_inputs[socket["slug"]] = socket
 
-    context["phase"].update(
+    context.update(
         {
             "all_algorithm_inputs": all_algorithm_inputs,
             "expected_cases_per_interface": expected_cases_per_interface,
