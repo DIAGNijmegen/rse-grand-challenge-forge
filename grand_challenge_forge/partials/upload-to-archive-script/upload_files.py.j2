@@ -41,8 +41,8 @@ API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
 ARCHIVE_SLUG = "{{ phase.archive.slug }}"
 
-{% for interface, cases in phase.expected_cases_per_interface.items() %}
-EXPECTED_CASE_FILES_FOR_{{ interface.upper() }} = [
+{% for interface_name, cases in phase.expected_cases_per_interface.items() %}
+EXPECTED_CASE_FILES_FOR_{{ interface_name.upper() }} = [
     {%- for case in cases %}
     {
         {%- for socket_slug, case in case.items() %}
@@ -54,8 +54,8 @@ EXPECTED_CASE_FILES_FOR_{{ interface.upper() }} = [
 {% endfor %}
 
 EXPECTED_CASES = [
-{%- for interface in phase.algorithm_interfaces %}
-    *EXPECTED_CASE_FILES_FOR_INTERFACE_{{ loop.index - 1 }},
+{% for interface_name in phase.expected_cases_per_interface %}
+    *EXPECTED_CASE_FILES_FOR_{{ interface_name.upper() }},
 {%- endfor %}
 ]
 
@@ -104,8 +104,8 @@ def upload_files():
 def prepare_contents(case):
     contents = {}
 
-    input_set = set(case.keys())
-    assert input_set in EXPECTED_SOCKETS, f"The input set {input_set} is unexpected and probably incorrect!"
+    socket_set = set(case.keys())
+    assert socket_set in EXPECTED_SOCKETS, f"The input socket set {socket_set} is unexpected and probably incorrect!"
 
     for slug, file in case.items():
         file_path = Path(file)

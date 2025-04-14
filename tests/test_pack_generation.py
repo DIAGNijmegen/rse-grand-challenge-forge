@@ -57,7 +57,7 @@ def test_for_pack_content(tmp_path, testrun_zpath):
     "phase_context",
     [
         phase_context_factory(),
-        # add_numerical_slugs(phase_context_factory()),
+        add_numerical_slugs(phase_context_factory()),
     ],
 )
 def test_pack_upload_to_archive_script(phase_context, tmp_path, testrun_zpath):
