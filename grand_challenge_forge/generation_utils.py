@@ -1,7 +1,9 @@
 import json
+import logging
 import os
-import shutil
+import time
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,75 +18,77 @@ SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"
 
 
-def is_json(component_interface):
-    return component_interface["relative_path"].endswith(".json")
+logger = logging.getLogger(__name__)
 
 
-def is_image(component_interface):
-    return component_interface["super_kind"] == "Image"
+def is_json(socket):
+    return socket["relative_path"].endswith(".json")
 
 
-def is_file(component_interface):
-    return component_interface[
-        "super_kind"
-    ] == "File" and not component_interface["relative_path"].endswith(".json")
+def is_image(socket):
+    return socket["super_kind"] == "Image"
 
 
-def has_example_value(component_interface):
-    return (
-        "example_value" in component_interface
-        and component_interface["example_value"] is not None
-    )
+def is_file(socket):
+    return socket["super_kind"] == "File" and not socket[
+        "relative_path"
+    ].endswith(".json")
 
 
-def create_civ_stub_file(*, target_path, component_interface):
+def has_example_value(socket):
+    return "example_value" in socket and socket["example_value"] is not None
+
+
+def generate_socket_value_stub_file(*, output_zip_file, target_zpath, socket):
     """Creates a stub based on a component interface"""
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if has_example_value(component_interface):
-        target_path.write_text(
+    if has_example_value(socket):
+        zinfo = zipfile.ZipInfo(str(target_zpath))
+        output_zip_file.writestr(
+            zinfo,
             json.dumps(
-                component_interface["example_value"],
+                socket["example_value"],
                 indent=4,
-            )
+            ),
         )
         return
 
     # Copy over an example
-    if is_json(component_interface):
-        shutil.copy(RESOURCES_PATH / "example.json", target_path)
-    elif is_image(component_interface):
-        target_path = target_path / f"{str(uuid.uuid4())}.mha"
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(RESOURCES_PATH / "example.mha", target_path)
+
+    if is_json(socket):
+        source = RESOURCES_PATH / "example.json"
+    elif is_image(socket):
+        source = RESOURCES_PATH / "example.mha"
+        target_zpath = target_zpath / f"{str(uuid.uuid4())}.mha"
     else:
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(RESOURCES_PATH / "example.txt", target_path)
+        source = RESOURCES_PATH / "example.txt"
+
+    output_zip_file.write(
+        source,
+        arcname=str(target_zpath),
+    )
 
 
-def ci_to_civ(component_interface):
-    """Creates a stub dict repr of a component interface value"""
-    civ = {
+def socket_to_socket_value(socket):
+    """Creates a stub dict repr of a socket valuee"""
+    sv = {
         "file": None,
         "image": None,
         "value": None,
     }
-    if component_interface["super_kind"] == "Image":
-        civ["image"] = {
+    if socket["super_kind"] == "Image":
+        sv["image"] = {
             "name": "the_original_filename_of_the_file_that_was_uploaded.suffix",
         }
-    if component_interface["super_kind"] == "File":
-        civ["file"] = (
+    if socket["super_kind"] == "File":
+        sv["file"] = (
             f"https://grand-challenge.org/media/some-link/"
-            f"{component_interface['relative_path']}"
+            f"{socket['relative_path']}"
         )
-    if component_interface["super_kind"] == "Value":
-        civ["value"] = component_interface.get(
-            "example_value", {"some_key": "some_value"}
-        )
+    if socket["super_kind"] == "Value":
+        sv["value"] = socket.get("example_value", {"some_key": "some_value"})
     return {
-        **civ,
-        "interface": component_interface,
+        **sv,
+        "interface": socket,
     }
 
 
@@ -112,16 +116,14 @@ def get_jinja2_environment(searchpath=None):
 def copy_and_render(
     *,
     templates_dir_name,
-    output_path,
+    output_zip_file,
+    target_zpath,
     context,
 ):
     source_path = PARTIALS_PATH / templates_dir_name
 
     if not source_path.exists():
         raise TemplateNotFound(source_path)
-
-    # Create the output directory if it doesn't exist
-    output_path.mkdir(parents=True, exist_ok=True)
 
     env = get_jinja2_environment(searchpath=source_path)
 
@@ -132,19 +134,15 @@ def copy_and_render(
 
         # Create relative path
         rel_path = root.relative_to(source_path)
-        current_output_dir = output_path / rel_path
-
-        # Create directories in the output path
-        current_output_dir.mkdir(parents=True, exist_ok=True)
+        current_zdir = target_zpath / rel_path
 
         for file in sorted(files):
             source_file = root / file
-            output_file = current_output_dir / file
+            output_file = current_zdir / file
 
             check_allowed_source(path=source_file)
 
-            if file.endswith(".j2"):
-                # Render Jinja2 template
+            if file.endswith(".j2"):  # Jinja2 template
                 template = env.get_template(
                     name=str(source_file.relative_to(source_path))
                 )
@@ -153,18 +151,30 @@ def copy_and_render(
                     _no_gpus=DEBUG,
                 )
 
-                # Write rendered content to output file (without .j2 extension)
-                output_file = output_file.with_suffix("")
-                with output_file.open("w") as f:
-                    f.write(rendered_content)
+                targetfile_zpath = output_file.with_suffix("")
 
-                # Copy permission bits
-                shutil.copymode(source_file, output_file)
+                if targetfile_zpath.suffix == ".py":
+                    rendered_content = apply_black(rendered_content)
+
+                # Collect information about the file to be written to the zip file
+                # (permissions, et cetera)
+                zinfo = zipfile.ZipInfo.from_file(
+                    source_file,
+                    arcname=str(targetfile_zpath),
+                )
+
+                # Update the date time of creation, since we are technically
+                # creating a new file
+                # Also (partially) addresses a problem where docker build injects
+                # incorrect files:
+                # https://github.com/moby/buildkit/issues/4817#issuecomment-2032551066
+                zinfo.date_time = time.localtime()[0:6]
+
+                output_zip_file.writestr(zinfo, rendered_content)
             else:
-                # Copy non-template files
-                shutil.copy2(source_file, output_file)
-
-    apply_black(output_path)
+                output_zip_file.write(
+                    str(source_file), arcname=str(output_file)
+                )
 
 
 def check_allowed_source(path):
@@ -175,14 +185,9 @@ def check_allowed_source(path):
         )
 
 
-def apply_black(target_path):
-    for python_file in target_path.glob("**/*.py"):
-        # Use direct black format call because black
-        # CLI entrypoint ignores files in .gitignore
-
-        black.format_file_in_place(
-            python_file,
-            fast=False,
-            mode=black.Mode(),
-            write_back=black.WriteBack.YES,
-        )
+def apply_black(content):
+    # Format rendered Python code string using black
+    return black.format_str(
+        content,
+        mode=black.Mode(),
+    )

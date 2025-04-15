@@ -1,8 +1,11 @@
-import glob
 import os
 import subprocess
+import tempfile
 import uuid
+import zipfile
+from contextlib import contextmanager
 from copy import deepcopy
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -203,15 +206,12 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
 
 # fmt: on
 
-counter = 0
-
 
 def make_slugs_unique(d):
-    """Add counter to all slugs in the structure to make them unique."""
-    global counter
+    """Add unique id to all slugs in the structure to make them unique, also accross distributed tests."""
     if isinstance(d, dict):
         if "slug" in d:
-            d["slug"] = f"{d['slug']}-{counter}"
+            d["slug"] = f"{d['slug']}-{uuid.uuid4()}"
         for item in d.values():
             make_slugs_unique(item)
     elif isinstance(d, list):
@@ -237,18 +237,20 @@ def pack_context_factory(**kwargs):
     result = deepcopy(DEFAULT_PACK_CONTEXT_STUB)
     result["challenge"].update(kwargs)
 
-    # Generate phases using phase_context_factory
+    make_slugs_unique(result)
+
     result["challenge"]["phases"] = [
-        phase_context_factory(archive=phase["archive"])["phase"]
+        phase_context_factory(**phase)["phase"]
         for phase in result["challenge"]["phases"]
     ]
-
-    return make_slugs_unique(result)
+    return result
 
 
 def phase_context_factory(**kwargs):
-    # Create a phase context from the first phase in the default pack context
-    result = deepcopy(DEFAULT_PACK_CONTEXT_STUB["challenge"]["phases"][0])
+    result = deepcopy(
+        # use first phase as default
+        DEFAULT_PACK_CONTEXT_STUB["challenge"]["phases"][0]
+    )
     result.update(kwargs)
     return make_slugs_unique({"phase": result})
 
@@ -259,7 +261,7 @@ def algorithm_template_context_factory(**kwargs):
     return make_slugs_unique(result)
 
 
-def _test_script(
+def _test_script_run(
     *,
     script_path,
     extra_arg=None,
@@ -276,12 +278,8 @@ def _test_script(
     if extra_arg:
         command.append(extra_arg)
 
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        check=True,  # This will raise CalledProcessError if returncode != 0
-    )
-    if result.stderr:
+    result = subprocess.run(command, capture_output=True)
+    if result.stderr or result.returncode != 0:  # Stderr should not be empty
         raise subprocess.CalledProcessError(
             returncode=result.returncode,
             cmd=command,
@@ -290,30 +288,56 @@ def _test_script(
         )
 
 
-def _test_save(script_dir):
-    """Test the save script
-
-    Args
-    ----
-        script_dir: The directory containing the script to test
-
-    """
-    # Running multiple tests at the same time.
-    custom_image_tag = f"test-{uuid.uuid4()}"
-
-    pattern = str(script_dir / f"{custom_image_tag}_*.tar.gz")
-    matching_files = glob.glob(pattern)
-
-    assert len(matching_files) == 0
-
+@contextmanager
+def mocked_binaries():
+    """Mock the binaries in the PATH to avoid computationally intensive operations during testing."""
     mocks_bin = RESOURCES_PATH / "mocks" / "bin"
     current_path = os.environ.get("PATH", "")
     extended_path = f"{mocks_bin}:{current_path}"
 
     with patch.dict("os.environ", PATH=extended_path):
-        _test_script(
-            script_path=script_dir / "do_save.sh",
-            extra_arg=custom_image_tag,
-        )
+        yield
 
-    return custom_image_tag
+
+@contextmanager
+def zipfile_to_filesystem(output_path):
+    """Context manager that provides an in-memory zip file handle and optionally extracts its contents.
+
+    Args
+    ----
+        output_dir (str, Path): Directory to extract the zip contents to after completion.
+
+    Yields
+    ------
+        ZipFile: A ZipFile object that can be written to.
+    """
+    zip_handle = BytesIO()
+
+    with zipfile.ZipFile(zip_handle, "w") as zip_file:
+        yield zip_file
+
+    # Extract contents to disk if output_dir is specified
+    # Use a subprocess because the ZipFile.extractall does
+    # not keep permissions: https://github.com/python/cpython/issues/59999
+
+    zip_handle.seek(0)
+    os.makedirs(output_path, exist_ok=True)
+
+    temp_zip = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    try:
+        temp_zip.write(zip_handle.getvalue())
+        temp_zip.close()
+
+        subprocess.run(
+            [
+                "unzip",
+                "-o",
+                temp_zip.name,
+                "-d",
+                str(output_path),
+            ],
+            check=True,
+            capture_output=True,
+        )
+    finally:
+        os.remove(temp_zip.name)

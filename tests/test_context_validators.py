@@ -1,4 +1,7 @@
+import zipfile
 from contextlib import nullcontext
+from io import BytesIO
+from pathlib import Path
 
 import pytest
 
@@ -33,9 +36,14 @@ from tests.utils import (
         ],
     ],
 )
-def test_pack_context_validity(json_context, condition, tmp_path):
+def test_pack_context_validity(json_context, condition):
     with condition:
-        generate_challenge_pack(context=json_context, output_path=tmp_path)
+        with zipfile.ZipFile(BytesIO(), "w") as zip_file:
+            generate_challenge_pack(
+                output_zip_file=zip_file,
+                target_zpath=Path(""),
+                context=json_context,
+            )
 
 
 @pytest.mark.parametrize(
@@ -54,8 +62,11 @@ def test_pack_context_validity(json_context, condition, tmp_path):
         ],
     ],
 )
-def test_algorithm_template_context_validity(
-    json_context, condition, tmp_path
-):
+def test_algorithm_template_context_validity(json_context, condition):
     with condition:
-        generate_algorithm_template(context=json_context, output_path=tmp_path)
+        with zipfile.ZipFile(BytesIO(), "w") as zip_file:
+            generate_algorithm_template(
+                output_zip_file=zip_file,
+                target_zpath=Path(""),
+                context=json_context,
+            )

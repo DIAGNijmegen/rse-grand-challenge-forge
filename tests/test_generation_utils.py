@@ -1,4 +1,6 @@
+import zipfile
 from contextlib import nullcontext
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -60,14 +62,16 @@ def test_jinja2_environment_sandbox():
         ),
     ),
 )
-def test_copy_and_render_source_restrictions(name, context, tmpdir):
+def test_copy_and_render_source_restrictions(name, context):
     with patch(
         "grand_challenge_forge.generation_utils.PARTIALS_PATH",
         new=TEST_RESOURCES / "partials",
     ):
         with context:
-            copy_and_render(
-                templates_dir_name=name,
-                output_path=Path(tmpdir),
-                context={},
-            )
+            with zipfile.ZipFile(BytesIO(), "w") as zip_file:
+                copy_and_render(
+                    templates_dir_name=name,
+                    output_zip_file=zip_file,
+                    target_zpath=Path(""),
+                    context={},
+                )
