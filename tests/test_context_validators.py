@@ -1,4 +1,3 @@
-import zipfile
 from contextlib import nullcontext
 
 import pytest
