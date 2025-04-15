@@ -300,13 +300,12 @@ def mocked_binaries():
 
 
 @contextmanager
-def zipfile_to_filesystem(output_path=None):
+def zipfile_to_filesystem(output_path):
     """Context manager that provides an in-memory zip file handle and optionally extracts its contents.
 
     Args
     ----
-        output_dir (str, Path, optional): Directory to extract the zip contents to after completion.
-                                  If None, the zip contents won't be extracted.
+        output_dir (str, Path): Directory to extract the zip contents to after completion.
 
     Yields
     ------
@@ -317,29 +316,28 @@ def zipfile_to_filesystem(output_path=None):
     with zipfile.ZipFile(zip_handle, "w") as zip_file:
         yield zip_file
 
-    if output_path is not None:
-        # Extract contents to disk if output_dir is specified
-        # Use a subprocess because the ZipFile.extractall does
-        # not keep permissions: https://github.com/python/cpython/issues/59999
+    # Extract contents to disk if output_dir is specified
+    # Use a subprocess because the ZipFile.extractall does
+    # not keep permissions: https://github.com/python/cpython/issues/59999
 
-        zip_handle.seek(0)
-        os.makedirs(output_path, exist_ok=True)
+    zip_handle.seek(0)
+    os.makedirs(output_path, exist_ok=True)
 
-        temp_zip = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
-        try:
-            temp_zip.write(zip_handle.getvalue())
-            temp_zip.close()
+    temp_zip = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    try:
+        temp_zip.write(zip_handle.getvalue())
+        temp_zip.close()
 
-            subprocess.run(
-                [
-                    "unzip",
-                    "-o",
-                    temp_zip.name,
-                    "-d",
-                    str(output_path),
-                ],
-                check=True,
-                capture_output=True,
-            )
-        finally:
-            os.remove(temp_zip.name)
+        subprocess.run(
+            [
+                "unzip",
+                "-o",
+                temp_zip.name,
+                "-d",
+                str(output_path),
+            ],
+            check=True,
+            capture_output=True,
+        )
+    finally:
+        os.remove(temp_zip.name)
