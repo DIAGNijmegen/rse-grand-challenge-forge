@@ -316,30 +316,22 @@ def generate_algorithm_template(
         "grand-challenge-forge"
     )
 
+    context = deepcopy(context)
+
+    # Fix reference to algorithm interfaces
+    context["algorithm"]["algorithm_interfaces"] = context["algorithm"][
+        "interfaces"
+    ]
+
+    generate_example_algorithm(
+        context={"phase": context["algorithm"]},
+        output_zip_file=output_zip_file,
+        target_zpath=target_zpath,
+    )
+
     copy_and_render(
-        templates_dir_name="algorithm-template",
+        templates_dir_name="algorithm-template-readme",
         output_zip_file=output_zip_file,
         target_zpath=target_zpath,
         context=context,
-    )
-
-    # Create input files
-    input_dir = target_zpath / "test" / "input"
-    for input_ci in context["algorithm"]["inputs"]:
-        generate_socket_value_stub_file(
-            output_zip_file=output_zip_file,
-            target_zpath=input_dir / input_ci["relative_path"],
-            socket=input_ci,
-        )
-
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": context["algorithm"]["slug"],
-            "tarball_dirname": "model",
-            "tarball_extraction_dir": "/opt/ml/model/",
-        },
     )

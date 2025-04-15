@@ -290,6 +290,26 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
                     },
                 ],
             },
+            {
+                "inputs": [
+                    {
+                        "slug": "input-socket-slug-interface-2",
+                        "kind": "Segmentation",
+                        "super_kind": "Image",
+                        "relative_path": "images/input-value",
+                        "example_value": None,
+                    }
+                ],
+                "outputs": [
+                    {
+                        "slug": "output-socket-slug-interface-2",
+                        "kind": "Image",
+                        "super_kind": "Image",
+                        "relative_path": "images/output-value",
+                        "example_value": None,
+                    }
+                ],
+            },
         ],
     }
 }
