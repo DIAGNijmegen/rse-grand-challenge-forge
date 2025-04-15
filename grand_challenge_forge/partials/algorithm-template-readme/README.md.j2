@@ -19,7 +19,7 @@ If the documentation does not answer your question, feel free to reach out to us
 
 The examples in this template illustrate one approach, but they are not the only option. Any container image will do as long as it:
 
-{% for interface in algorithm.interfaces %}
+{% for interface in algorithm.algorithm_interfaces %}
 {% if not loop.first %}or input/outputs as follows:{% endif %}
 {% for input in interface.inputs %}
 - reads from the `/input/{{ input.relative_path}}`

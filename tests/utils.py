@@ -227,7 +227,7 @@ DEFAULT_ALGORITHM_CONTEXT_STUB = {
         "title": "An algorithm",
         "slug": "an-algorithm",
         "url": "https://grand-challenge.org/algorithms/an-algorithm/",
-        "interfaces": [
+        "algorithm_interfaces": [
             {
                 "inputs": [
                     {

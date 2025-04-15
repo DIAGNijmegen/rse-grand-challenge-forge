@@ -316,13 +316,6 @@ def generate_algorithm_template(
         "grand-challenge-forge"
     )
 
-    context = deepcopy(context)
-
-    # Fix reference to algorithm interfaces
-    context["algorithm"]["algorithm_interfaces"] = context["algorithm"][
-        "interfaces"
-    ]
-
     generate_example_algorithm(
         context={"phase": context["algorithm"]},
         output_zip_file=output_zip_file,

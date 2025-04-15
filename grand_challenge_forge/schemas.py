@@ -113,20 +113,12 @@ ALGORITHM_TEMPLATE_CONTEXT_SCHEMA = {
                 "title": {"type": "string"},
                 "slug": {"type": "string"},
                 "url": {"type": "string"},
-                "interfaces": {
+                "algorithm_interfaces": {
                     "type": "array",
                     "items": INTERFACE_SCHEMA,
                 },
-                "inputs": {
-                    "type": "array",
-                    "items": SOCKET_SCHEMA,
-                },
-                "outputs": {
-                    "type": "array",
-                    "items": SOCKET_SCHEMA,
-                },
             },
-            "required": ["title", "url", "slug", "interfaces"],
+            "required": ["title", "url", "slug", "algorithm_interfaces"],
         },
     },
     "required": ["algorithm"],
