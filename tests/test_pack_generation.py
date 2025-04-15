@@ -1,4 +1,5 @@
 import glob
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -222,6 +223,11 @@ def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
 
     expected_file = evaluation_path / "test" / "output" / "metrics.json"
     assert expected_file.exists()
+
+    # Read and validate the contents of the generated metrics.json file
+    with open(expected_file, "r") as f:
+        metrics_data = json.load(f)
+    assert len(metrics_data["results"]) == 6
 
 
 @pytest.mark.parametrize(

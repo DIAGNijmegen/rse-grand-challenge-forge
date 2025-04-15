@@ -135,6 +135,31 @@ def generate_archive_cases(
     return result
 
 
+def _interface_context(interfaces):
+    # Build context
+    algorithm_input_sockets = [
+        socket for interface in interfaces for socket in interface["inputs"]
+    ]
+    algorithm_output_sockets = [
+        socket for interface in interfaces for socket in interface["outputs"]
+    ]
+
+    algorithm_interface_keys = []
+    for interface in interfaces:
+        algorithm_interface_keys.append(
+            tuple(sorted([socket["slug"] for socket in interface["inputs"]]))
+        )
+
+    interface_names = [f"interface_{idx}" for idx, _ in enumerate(interfaces)]
+
+    return {
+        "algorithm_interface_names": interface_names,
+        "algorithm_interface_keys": algorithm_interface_keys,
+        "algorithm_input_sockets": algorithm_input_sockets,
+        "algorithm_output_sockets": algorithm_output_sockets,
+    }
+
+
 def generate_example_algorithm(*, output_zip_file, target_zpath, context):
     context = deepcopy(context)
 
@@ -198,6 +223,34 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
 
 
 def generate_example_evaluation(*, output_zip_file, target_zpath, context):
+    context = deepcopy(context)
+    context.update(
+        _interface_context(interfaces=context["phase"]["algorithm_interfaces"])
+    )
+
+    input_zdir = target_zpath / "test" / "input"
+
+    predictions_json = []
+    for interface in context["phase"]["algorithm_interfaces"]:
+        predictions_json.extend(
+            generate_predictions_json(
+                inputs=interface["inputs"],
+                outputs=interface["outputs"],
+                number_of_jobs=3,
+            )
+        )
+
+    output_zip_file.writestr(
+        str(input_zdir / "predictions.json"),
+        json.dumps(predictions_json, indent=4),
+    )
+
+    generate_prediction_files(
+        output_zip_file=output_zip_file,
+        target_zpath=target_zpath / "test" / "input",
+        predictions=predictions_json,
+    )
+
     copy_and_render(
         templates_dir_name="example-evaluation-method",
         output_zip_file=output_zip_file,
@@ -205,31 +258,11 @@ def generate_example_evaluation(*, output_zip_file, target_zpath, context):
         context=context,
     )
 
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": f"example-evaluation-{context['phase']['slug']}",
-            "tarball_dirname": "ground_truth",
-            "tarball_extraction_dir": "/opt/ml/input/data/ground_truth/",
-        },
-    )
 
-    generate_predictions(
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath / "test" / "input",
-        context=context,
-        number_of_jobs=3,
-    )
-
-
-def generate_predictions(
+def generate_predictions_json(
     *,
-    output_zip_file,
-    target_zpath,
-    context,
+    inputs,
+    outputs,
     number_of_jobs,
 ):
     predictions = []
@@ -238,24 +271,20 @@ def generate_predictions(
             {
                 "pk": str(uuid.uuid4()),
                 "inputs": [
-                    socket_to_socket_value(socket)
-                    for socket in context["phase"]["algorithm_inputs"]
+                    socket_to_socket_value(socket) for socket in inputs
                 ],
                 "outputs": [
-                    socket_to_socket_value(socket)
-                    for socket in context["phase"]["algorithm_outputs"]
+                    socket_to_socket_value(socket) for socket in outputs
                 ],
                 "status": "Succeeded",
                 "started_at": "2024-11-29T10:31:25.691799Z",
                 "completed_at": "2024-11-29T10:31:50.691799Z",
             }
         )
+    return predictions
 
-    output_zip_file.writestr(
-        str(target_zpath / "predictions.json"),
-        json.dumps(predictions, indent=4),
-    )
 
+def generate_prediction_files(*, output_zip_file, target_zpath, predictions):
     for prediction in predictions:
         prediction_zpath = target_zpath / prediction["pk"]
         for socket_value in prediction["outputs"]:
