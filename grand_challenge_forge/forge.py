@@ -184,7 +184,6 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
         {
             "algorithm_interface_names": interface_names,
             "algorithm_interface_keys": algorithm_interface_keys,
-            "image_tag": f"example-algorithm-{context['phase']['slug']}",
             "algorithm_input_sockets": algorithm_input_sockets,
             "algorithm_output_sockets": algorithm_output_sockets,
         }
