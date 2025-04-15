@@ -251,6 +251,13 @@ def generate_example_evaluation(*, output_zip_file, target_zpath, context):
         predictions=predictions_json,
     )
 
+    for socket in context["phase"]["evaluation_additional_inputs"]:
+        generate_socket_value_stub_file(
+            output_zip_file=output_zip_file,
+            target_zpath=input_zdir / socket["relative_path"],
+            socket=socket,
+        )
+
     copy_and_render(
         templates_dir_name="example-evaluation-method",
         output_zip_file=output_zip_file,

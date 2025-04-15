@@ -127,21 +127,63 @@ DEFAULT_PACK_CONTEXT_STUB = {
                 ],
                 "evaluation_additional_inputs": [
                     {
-                        "slug": "input-socket-slug-interface-2",
+                        "slug": "additional-input-socket-slug",
                         "kind": "Segmentation",
                         "super_kind": "Image",
                         "relative_path": "images/input-value",
                         "example_value": None,
-                    }
+                    },
+                    {
+                        "slug": "additional-another-input-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "another-input-value.json",
+                        "example_value": {"key": "value"},
+                    },
+                    {
+                        "slug": "additional-yet-another-input-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "Value",
+                        "relative_path": "yet-another-input-value.json",
+                        "example_value": {"key": "value"},
+                    },
+                    {
+                        "slug": "additional-yet-another-non-json-input-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "yet-another-non-json-input-value",
+                        "example_value": None,
+                    },
                 ],
                 "evaluation_additional_outputs": [
                     {
-                        "slug": "output-socket-slug-interface-2",
+                        "slug": "additional-output-socket-slug",
                         "kind": "Image",
                         "super_kind": "Image",
                         "relative_path": "images/output-value",
                         "example_value": None,
-                    }
+                    },
+                    {
+                        "slug": "additional-another-output-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "output-value.json",
+                        "example_value": {"key": "value"},
+                    },
+                    {
+                        "slug": "additional-yet-another-output-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "Value",
+                        "relative_path": "yet-another-output-value.json",
+                        "example_value": {"key": "value"},
+                    },
+                    {
+                        "slug": "additional-yet-another-non-json-output-socket-slug",
+                        "kind": "Anything",
+                        "super_kind": "File",
+                        "relative_path": "yet-another-non-json-output-value",
+                        "example_value": None,
+                    },
                 ],
             },
             {

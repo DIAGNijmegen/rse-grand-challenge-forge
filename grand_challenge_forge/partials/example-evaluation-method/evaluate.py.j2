@@ -28,13 +28,16 @@ https://grand-challenge.org/documentation/runtime-environment/
 Happy programming!
 """
 import json
-{% if algorithm_input_sockets | has_image -%}
+{% if algorithm_output_sockets | has_image or phase.evaluation_additional_inputs | has_image or phase.evaluation_additional_outputs | has_image  -%}
 from glob import glob
 import SimpleITK
 {%- endif %}
-{% if algorithm_input_sockets | has_image or algorithm_input_sockets | has_file -%}
+{% if algorithm_output_sockets | has_image or algorithm_output_sockets | has_file or phase.evaluation_additional_inputs | has_file -%}
 import re
 {%- endif %}
+{% if phase.evaluation_additional_outputs | has_image %}
+import numpy
+{% endif %}
 import random
 from statistics import mean
 from pathlib import Path
@@ -59,12 +62,55 @@ def main():
 
     # We have the results per prediction, we can aggregate the results and
     # generate an overall score(s) for this submission
-    metrics["aggregates"] = {
-        "my_metric": mean(result["my_metric"] for result in metrics["results"])
-    }
+    if metrics["results"]:
+        metrics["aggregates"] = {
+            "my_metric": mean(result["my_metric"] for result in metrics["results"])
+        }
 
     # Make sure to save the metrics
     write_metrics(metrics=metrics)
+
+    {% if phase.evaluation_additional_outputs %}
+
+    # For now, let us make bogus outputs for the evaluation
+    {%- for socket in phase.evaluation_additional_outputs  %}
+    output_{{ socket.slug.replace("-", "_")}} =
+        {%- if socket | has_example_value %}
+            {%- if socket.example_value is string -%}
+                "{{ socket.example_value }}"
+            {%- else -%}
+                {{ socket.example_value }}
+            {%- endif %}
+        {%- elif socket | is_image %} numpy.eye(4, 2)
+        {%- elif socket | is_json %} {"content": "should match the required format"}
+        {%- elif socket | is_file %} "content: should match the required format"
+        {% endif %}
+    {%- endfor %}
+
+    # Save your output
+    {% for socket in phase.evaluation_additional_outputs  -%}
+    {% set py_slug = socket.slug.replace("-", "_") -%}
+    {% if socket | is_image -%}
+    write_array_as_image_file(
+        location=OUTPUT_DIRECTORY / "{{ socket.relative_path }}",
+        array=output_{{ py_slug }},
+    )
+    {% endif -%}
+    {% if socket | is_json -%}
+    write_json_file(
+        location=OUTPUT_DIRECTORY / "{{ socket.relative_path }}",
+        content=output_{{ py_slug }}
+    )
+    {% endif -%}
+    {% if socket | is_file -%}
+    write_file(
+        location=OUTPUT_DIRECTORY / "{{ socket.relative_path }}",
+        content=output_{{ py_slug }}
+    )
+    {% endif -%}
+    {% endfor %}
+
+    {% endif %}
 
     return 0
 
@@ -79,11 +125,46 @@ def process(job):
     {% endfor %}
     }[interface_key]
 
+    {% if phase.evaluation_additional_inputs %}
+    # Read additional inputs from the submission
+
+    {% for socket in phase.evaluation_additional_inputs -%}
+    {% set py_slug = socket.slug.replace("-", "_") -%}
+    {% if socket | is_image -%}
+    submission_{{ py_slug }} = load_image_file_as_array(
+        location=INPUT_DIRECTORY / "{{ socket.relative_path }}",
+    )
+    {% endif -%}
+    {% if socket | is_json -%}
+    submission_{{ py_slug }} = load_json_file(
+        location=INPUT_DIRECTORY / "{{ socket.relative_path }}",
+    )
+    {% endif -%}
+    {% if socket | is_file -%}
+    submission_{{ py_slug }} = load_file(
+        location=INPUT_DIRECTORY / "{{ socket.relative_path }}",
+    )
+    {% endif -%}
+    {%- endfor %}
+    # Finally, call the handler
+    return handler(
+        job,
+    {% for socket in phase.evaluation_additional_inputs -%}
+       submission_{{ socket.slug.replace("-", "_") }},
+    {% endfor %}
+    )
+    {% else %}
     # Call the handler
     return handler(job)
+    {% endif %}
+
 
 {% for interface_name, interface in algorithm_interface_names|zip(phase.algorithm_interfaces) -%}
-def process_{{ interface_name }}(job):
+def process_{{ interface_name }}(job,
+    {% for socket in phase.evaluation_additional_inputs -%}
+    submission_{{ socket.slug.replace("-", "_") }},
+    {% endfor %}
+):
     """Processes a single algorithm job, looking at the outputs"""
     report = "Processing:\n"
     report += pformat(job)
@@ -103,7 +184,7 @@ def process_{{ interface_name }}(job):
     {% for socket in interface["outputs"] -%}
     {% set py_slug = socket.slug.replace("-", "_") -%}
     {% if socket | is_image -%}
-    result_{{ py_slug }} = load_image_file(
+    result_{{ py_slug }} = load_image_file_as_array(
         location=location_{{ py_slug }},
     )
     {% endif -%}
@@ -182,7 +263,7 @@ def get_interface_key(job):
     socket_slugs = [sv["interface"]["slug"] for sv in job["inputs"]]
     return tuple(sorted(socket_slugs))
 
-{%- if algorithm_input_sockets | has_image or algorithm_output_sockets | has_image %}
+{%- if algorithm_input_sockets | has_image or phase.evaluation_additional_inputs | has_image %}
 def get_image_name(*, values, slug):
     # This tells us the user-provided name of the input or output image
     for value in values:
@@ -193,7 +274,7 @@ def get_image_name(*, values, slug):
 {%- endif %}
 
 
-{%- if algorithm_input_sockets | has_file %}
+{%- if algorithm_output_sockets | has_file or phase.evaluation_additional_inputs | has_file %}
 def get_file_name(*, values, slug):
     # This tells us the user-provided name of the input file
     for value in values:
@@ -224,15 +305,15 @@ def get_file_location(*, job_pk, values, slug):
     return INPUT_DIRECTORY / job_pk / "output" / relative_path
 
 
-{%- if algorithm_output_sockets | has_json %}
+{%- if algorithm_output_sockets | has_json or phase.evaluation_additional_inputs | has_json %}
 def load_json_file(*, location):
     # Reads a json file
     with open(location) as f:
         return json.loads(f.read())
 {%- endif %}
 
-{%- if algorithm_output_sockets | has_image %}
-def load_image_file(*, location):
+{%- if algorithm_output_sockets | has_image or phase.evaluation_additional_inputs | has_image%}
+def load_image_file_as_array(*, location):
     # Use SimpleITK to read a file
     input_files = glob(str(location / "*.tiff")) + glob(str(location / "*.mha"))
     result = SimpleITK.ReadImage(input_files[0])
@@ -241,7 +322,7 @@ def load_image_file(*, location):
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
 
-{%- if algorithm_output_sockets | has_file %}
+{%- if algorithm_output_sockets | has_file or phase.evaluation_additional_inputs | has_file %}
 def load_file(*, location):
     # Reads the content of a file
     with open(location) as f:
@@ -253,6 +334,36 @@ def write_metrics(*, metrics):
     # Write a json document used for ranking results on the leaderboard
     with open(OUTPUT_DIRECTORY / "metrics.json", "w") as f:
         f.write(json.dumps(metrics, indent=4))
+
+{%- if phase.evaluation_additional_outputs | has_file %}
+def write_file(*, location, content):
+    # Write the content to a file
+    with open(location, 'w') as f:
+        return f.write(content)
+{%- endif %}
+
+{%- if phase.evaluation_additional_outputs  | has_image %}
+def write_array_as_image_file(*, location, array):
+    location.mkdir(parents=True, exist_ok=True)
+
+    # You may need to change the suffix to .tif to match the expected output
+    suffix = ".mha"
+
+    image = SimpleITK.GetImageFromArray(array)
+    SimpleITK.WriteImage(
+        image,
+        location / f"output{suffix}",
+        useCompression=True,
+    )
+{%- endif %}
+
+
+{%- if phase.evaluation_additional_outputs | has_json %}
+def write_json_file(*, location, content):
+    # Writes a json file
+    with open(location, 'w') as f:
+        f.write(json.dumps(content, indent=4))
+{%- endif %}
 
 
 if __name__ == "__main__":

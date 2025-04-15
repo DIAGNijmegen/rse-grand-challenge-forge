@@ -48,10 +48,26 @@ def test_for_pack_content(tmp_path, testrun_zpath):
         ).exists()
 
         assert (pack_path / phase["slug"] / "example-algorithm").exists()
+        for idx, interface in enumerate(phase["algorithm_interfaces"]):
+            for input in interface["inputs"]:
+                expected_file = (
+                    pack_path
+                    / phase["slug"]
+                    / "example-algorithm"
+                    / "test"
+                    / "input"
+                    / f"interface_{idx}"
+                    / input["relative_path"]
+                )
+                assert expected_file.exists()
 
         eval_path = pack_path / phase["slug"] / "example-evaluation-method"
         assert eval_path.exists()
-        assert (eval_path / "test" / "input" / "predictions.json").exists()
+        eval_input_path = eval_path / "test" / "input"
+        assert (eval_input_path / "predictions.json").exists()
+        for input in phase["evaluation_additional_inputs"]:
+            expected_file = eval_input_path / input["relative_path"]
+            assert expected_file.exists()
 
 
 @pytest.mark.parametrize(
@@ -113,17 +129,6 @@ def test_pack_example_algorithm_run_permissions(tmp_path, testrun_zpath):
     for _ in range(0, 2):
         _test_script_run(script_path=algorithm_path / "do_test_run.sh")
 
-        for idx, interface in enumerate(
-            phase_context["phase"]["algorithm_interfaces"]
-        ):
-            output_dir = (
-                algorithm_path / "test" / "output" / f"interface_{idx}"
-            )
-            # Check if output is generated
-            for output in interface["outputs"]:
-                expected_file = output_dir / output["relative_path"]
-                assert expected_file.exists()
-
 
 @pytest.mark.parametrize(
     "phase_context",
@@ -154,14 +159,9 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
             assert expected_file.exists()
 
 
-@pytest.mark.parametrize(
-    "phase_context",
-    [
-        phase_context_factory(),
-        add_numerical_slugs(phase_context_factory()),
-    ],
-)
-def test_pack_example_algorithm_save(phase_context, tmp_path, testrun_zpath):
+def test_pack_example_algorithm_save(tmp_path, testrun_zpath):
+    phase_context = phase_context_factory()
+
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
         generate_example_algorithm(
             context=phase_context,
@@ -198,18 +198,47 @@ def test_pack_example_evaluation_run_permissions(tmp_path, testrun_zpath):
     for _ in range(0, 2):
         _test_script_run(script_path=evaluation_path / "do_test_run.sh")
 
-        expected_file = evaluation_path / "test" / "output" / "metrics.json"
-        assert expected_file.exists()
-
 
 @pytest.mark.parametrize(
-    "phase_context",
-    [
-        phase_context_factory(),
-        add_numerical_slugs(phase_context_factory()),
-    ],
+    "phase_context, num_metrics",
+    (
+        (
+            phase_context_factory(),
+            6,
+        ),
+        (
+            add_numerical_slugs(phase_context_factory()),
+            6,
+        ),
+        # Just the algorithm interfaces
+        (
+            phase_context_factory(
+                evaluation_additional_inputs=[],
+                evaluation_additional_outputs=[],
+            ),
+            6,
+        ),
+        # Just the evaluation additional outputs
+        (
+            phase_context_factory(
+                algorithm_interfaces=[],
+                evaluation_additional_inputs=[],
+            ),
+            0,
+        ),
+        # Just the evaluation additional inputs
+        (
+            phase_context_factory(
+                algorithm_interfaces=[],
+                evaluation_additional_outputs=[],
+            ),
+            0,
+        ),
+    ),
 )
-def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
+def test_pack_example_evaluation_run(
+    phase_context, num_metrics, tmp_path, testrun_zpath
+):
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
         generate_example_evaluation(
             context=phase_context,
@@ -218,26 +247,32 @@ def test_pack_example_evaluation_run(phase_context, tmp_path, testrun_zpath):
         )
 
     evaluation_path = tmp_path / testrun_zpath
+    output_dir = evaluation_path / "test" / "output"
+    metrics_file = evaluation_path / "test" / "output" / "metrics.json"
+
+    # Sanity
+    assert not metrics_file.exists()
+    for output in phase_context["phase"]["evaluation_additional_outputs"]:
+        expected_file = output_dir / output["relative_path"]
+        assert not expected_file.exists()
 
     _test_script_run(script_path=evaluation_path / "do_test_run.sh")
 
-    expected_file = evaluation_path / "test" / "output" / "metrics.json"
-    assert expected_file.exists()
+    assert metrics_file.exists()
 
     # Read and validate the contents of the generated metrics.json file
-    with open(expected_file, "r") as f:
+    with open(metrics_file, "r") as f:
         metrics_data = json.load(f)
-    assert len(metrics_data["results"]) == 6
+    assert len(metrics_data["results"]) == num_metrics
+
+    # Check if the additional outputs are generated
+    for output in phase_context["phase"]["evaluation_additional_outputs"]:
+        expected_file = output_dir / output["relative_path"]
+        assert expected_file.exists()
 
 
-@pytest.mark.parametrize(
-    "phase_context",
-    [
-        phase_context_factory(),
-        add_numerical_slugs(phase_context_factory()),
-    ],
-)
-def test_pack_example_evaluation_save(phase_context, tmp_path, testrun_zpath):
+def test_pack_example_evaluation_save(tmp_path, testrun_zpath):
+    phase_context = phase_context_factory()
     with zipfile_to_filesystem(output_path=tmp_path) as zip_file:
         generate_example_evaluation(
             context=phase_context,
