@@ -1,5 +1,16 @@
 # History
 
+## 0.7.0 (2025-04-18)
+ - Improve error reporting for evaluation methods
+ - Upgrade Python version and minor fixes
+ - Evaluation ground truth and algorithm models tar balls
+ - Add a now what section to the pack README
+ - Remove redundant permission docker run
+ - Fix escaping string example values
+ - Remove quality assurance tests that run post-generation
+ - [Breaking] Internally generate to ZipFile-handle
+ - [Breaking] Templates now handle algorithm interfaces
+
 ## 0.6.1 (2024-10-31)
 
 - Fix not using algorithm URL correctly in README
