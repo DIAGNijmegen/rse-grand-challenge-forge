@@ -187,31 +187,8 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
                 socket=input,
             )
 
-    # Build context
-    algorithm_input_sockets = [
-        socket
-        for interface in context["phase"]["algorithm_interfaces"]
-        for socket in interface["inputs"]
-    ]
-    algorithm_output_sockets = [
-        socket
-        for interface in context["phase"]["algorithm_interfaces"]
-        for socket in interface["outputs"]
-    ]
-
-    algorithm_interface_keys = []
-    for interface in context["phase"]["algorithm_interfaces"]:
-        algorithm_interface_keys.append(
-            tuple(sorted([socket["slug"] for socket in interface["inputs"]]))
-        )
-
     context.update(
-        {
-            "algorithm_interface_names": interface_names,
-            "algorithm_interface_keys": algorithm_interface_keys,
-            "algorithm_input_sockets": algorithm_input_sockets,
-            "algorithm_output_sockets": algorithm_output_sockets,
-        }
+        _interface_context(interfaces=context["phase"]["algorithm_interfaces"])
     )
 
     copy_and_render(
