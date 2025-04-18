@@ -16,7 +16,7 @@ ARCHIVE_SCHEMA = {
     "required": ["slug", "url"],
 }
 
-COMPONENT_INTERFACE_SCHEMA = {
+SOCKET_SCHEMA = {
     "type": "object",
     "properties": {
         "slug": {"type": "string"},
@@ -29,6 +29,19 @@ COMPONENT_INTERFACE_SCHEMA = {
         "relative_path",
         "kind",
         "super_kind",
+    ],
+}
+
+
+INTERFACE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "inputs": {"type": "array", "items": SOCKET_SCHEMA},
+        "outputs": {"type": "array", "items": SOCKET_SCHEMA},
+    },
+    "required": [
+        "inputs",
+        "outputs",
     ],
 }
 
@@ -49,20 +62,25 @@ PACK_CONTEXT_SCHEMA = {
                         "properties": {
                             "slug": {"type": "string"},
                             "archive": ARCHIVE_SCHEMA,
-                            "algorithm_inputs": {
+                            "algorithm_interfaces": {
                                 "type": "array",
-                                "items": COMPONENT_INTERFACE_SCHEMA,
+                                "items": INTERFACE_SCHEMA,
                             },
-                            "algorithm_outputs": {
+                            "evaluation_additional_inputs": {
                                 "type": "array",
-                                "items": COMPONENT_INTERFACE_SCHEMA,
+                                "items": SOCKET_SCHEMA,
+                            },
+                            "evaluation_additional_outputs": {
+                                "type": "array",
+                                "items": SOCKET_SCHEMA,
                             },
                         },
                         "required": [
                             "slug",
                             "archive",
-                            "algorithm_inputs",
-                            "algorithm_outputs",
+                            "algorithm_interfaces",
+                            "evaluation_additional_inputs",
+                            "evaluation_additional_outputs",
                         ],
                         "additionalProperties": True,  # Allow additional properties
                     },
@@ -95,16 +113,12 @@ ALGORITHM_TEMPLATE_CONTEXT_SCHEMA = {
                 "title": {"type": "string"},
                 "slug": {"type": "string"},
                 "url": {"type": "string"},
-                "inputs": {
+                "algorithm_interfaces": {
                     "type": "array",
-                    "items": COMPONENT_INTERFACE_SCHEMA,
-                },
-                "outputs": {
-                    "type": "array",
-                    "items": COMPONENT_INTERFACE_SCHEMA,
+                    "items": INTERFACE_SCHEMA,
                 },
             },
-            "required": ["title", "url", "slug", "inputs", "outputs"],
+            "required": ["title", "url", "slug", "algorithm_interfaces"],
         },
     },
     "required": ["algorithm"],

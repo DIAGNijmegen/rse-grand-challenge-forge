@@ -1,14 +1,11 @@
-import zipfile
 from contextlib import nullcontext
-from io import BytesIO
-from pathlib import Path
 
 import pytest
 
 from grand_challenge_forge.exceptions import InvalidContextError
-from grand_challenge_forge.forge import (
-    generate_algorithm_template,
-    generate_challenge_pack,
+from grand_challenge_forge.schemas import (
+    validate_algorithm_template_context,
+    validate_pack_context,
 )
 from tests.utils import (
     algorithm_template_context_factory,
@@ -38,12 +35,7 @@ from tests.utils import (
 )
 def test_pack_context_validity(json_context, condition):
     with condition:
-        with zipfile.ZipFile(BytesIO(), "w") as zip_file:
-            generate_challenge_pack(
-                output_zip_file=zip_file,
-                target_zpath=Path(""),
-                context=json_context,
-            )
+        validate_pack_context(json_context)
 
 
 @pytest.mark.parametrize(
@@ -64,9 +56,4 @@ def test_pack_context_validity(json_context, condition):
 )
 def test_algorithm_template_context_validity(json_context, condition):
     with condition:
-        with zipfile.ZipFile(BytesIO(), "w") as zip_file:
-            generate_algorithm_template(
-                output_zip_file=zip_file,
-                target_zpath=Path(""),
-                context=json_context,
-            )
+        validate_algorithm_template_context(json_context)

@@ -106,8 +106,10 @@ def get_jinja2_environment(searchpath=None):
             followlinks=True,
         ),
         undefined=StrictUndefined,
+        keep_trailing_newline=True,
     )
     env.filters = custom_filters
+    env.filters["zip"] = zip
     env.globals["now"] = datetime.now(timezone.utc)
 
     return env
@@ -187,7 +189,8 @@ def check_allowed_source(path):
 
 def apply_black(content):
     # Format rendered Python code string using black
-    return black.format_str(
+    result = black.format_str(
         content,
         mode=black.Mode(),
     )
+    return result

@@ -3,7 +3,7 @@ The following is a simple example algorithm.
 
 It is meant to run within a container.
 
-To run it locally, you can call the following bash script:
+To run the container locally, you can call the following bash script:
 
   ./do_test_run.sh
 
@@ -21,10 +21,8 @@ https://grand-challenge.org/documentation/runtime-environment/
 Happy programming!
 """
 from pathlib import Path
-{% if phase.algorithm_inputs | has_json or phase.algorithm_outputs | has_json -%}
 import json
-{%- endif %}
-{% if phase.algorithm_inputs | has_image or phase.algorithm_outputs | has_image -%}
+{% if algorithm_input_sockets | has_image or algorithm_output_sockets | has_image -%}
 from glob import glob
 import SimpleITK
 import numpy
@@ -34,24 +32,38 @@ INPUT_PATH = Path("/input")
 OUTPUT_PATH = Path("/output")
 RESOURCE_PATH = Path("resources")
 
-
 def run():
+    # The key is a tuple of the slugs of the input sockets
+    interface_key = get_interface_key()
+
+    # Lookup the handler for this particular set of sockets (i.e. the interface)
+    handler = {
+    {% for interface_name, interface_key in algorithm_interface_names|zip(algorithm_interface_keys) -%}
+    {{ interface_key }} : {{ interface_name }}_handler,
+    {% endfor %}
+    }[interface_key]
+
+    # Call the handler
+    return handler()
+
+{% for interface_name, interface in algorithm_interface_names|zip(phase.algorithm_interfaces) -%}
+def {{ interface_name }}_handler():
     # Read the input
-    {% for ci in phase.algorithm_inputs -%}
-    {% set py_slug = ci.slug.replace("-", "_") -%}
-    {% if ci | is_image -%}
+    {% for socket in interface["inputs"] -%}
+    {% set py_slug = socket.slug.replace("-", "_") -%}
+    {% if socket | is_image -%}
     input_{{ py_slug }} = load_image_file_as_array(
-        location=INPUT_PATH / "{{ ci.relative_path }}",
+        location=INPUT_PATH / "{{ socket.relative_path }}",
     )
     {% endif -%}
-    {% if ci | is_json -%}
+    {% if socket | is_json -%}
     input_{{ py_slug }} = load_json_file(
-         location=INPUT_PATH / "{{ ci.relative_path }}",
+         location=INPUT_PATH / "{{ socket.relative_path }}",
     )
     {% endif -%}
-    {% if ci | is_file -%}
+    {% if socket | is_file -%}
     input_{{ py_slug }} = load_file(
-         location=INPUT_PATH / "{{ ci.relative_path }}",
+         location=INPUT_PATH / "{{ socket.relative_path }}",
     )
     {% endif -%}
     {% endfor %}
@@ -71,62 +83,68 @@ def run():
         print(f.read())
 
     # For now, let us make bogus predictions
-    {%- for ci in phase.algorithm_outputs %}
-    output_{{ ci.slug.replace("-", "_")}} =
-        {%- if ci | has_example_value %}
-            {%- if ci.example_value is string -%}
-                "{{ ci.example_value }}"
+    {%- for socket in interface["outputs"] %}
+    output_{{ socket.slug.replace("-", "_")}} =
+        {%- if socket | has_example_value %}
+            {%- if socket.example_value is string -%}
+                "{{ socket.example_value }}"
             {%- else -%}
-                {{ ci.example_value }}
+                {{ socket.example_value }}
             {%- endif %}
-        {%- elif ci | is_image %} numpy.eye(4, 2)
-        {%- elif ci | is_json %} {"content": "should match the required format"}
-        {%- elif ci | is_file %} "content: should match the required format"
+        {%- elif socket | is_image %} numpy.eye(4, 2)
+        {%- elif socket | is_json %} {"content": "should match the required format"}
+        {%- elif socket | is_file %} "content: should match the required format"
         {% endif %}
     {%- endfor %}
 
     # Save your output
-    {% for ci in phase.algorithm_outputs -%}
-    {% set py_slug = ci.slug.replace("-", "_") -%}
-    {% if ci | is_image -%}
+    {% for socket in interface["outputs"] -%}
+    {% set py_slug = socket.slug.replace("-", "_") -%}
+    {% if socket | is_image -%}
     write_array_as_image_file(
-        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        location=OUTPUT_PATH / "{{ socket.relative_path }}",
         array=output_{{ py_slug }},
     )
     {% endif -%}
-    {% if ci | is_json -%}
+    {% if socket | is_json -%}
     write_json_file(
-        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        location=OUTPUT_PATH / "{{ socket.relative_path }}",
         content=output_{{ py_slug }}
     )
     {% endif -%}
-    {% if ci | is_file -%}
+    {% if socket | is_file -%}
     write_file(
-        location=OUTPUT_PATH / "{{ ci.relative_path }}",
+        location=OUTPUT_PATH / "{{ socket.relative_path }}",
         content=output_{{ py_slug }}
     )
     {% endif -%}
     {% endfor %}
     return 0
-{%- if phase.algorithm_inputs | has_json %}
+{% endfor %}
 
+def get_interface_key():
+    # The inputs.json is a system generated file that contains information about
+    # the inputs that interface with the algorithm
+    inputs = load_json_file(
+        location=INPUT_PATH / "inputs.json",
+    )
+    socket_slugs = [sv["interface"]["slug"] for sv in inputs]
+    return tuple(sorted(socket_slugs))
 
 def load_json_file(*, location):
     # Reads a json file
     with open(location, 'r') as f:
         return json.loads(f.read())
-{%- endif %}
-{%- if phase.algorithm_outputs | has_json %}
 
-
+{%- if algorithm_output_sockets| has_json %}
 def write_json_file(*, location, content):
     # Writes a json file
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
 {%- endif %}
-{%- if phase.algorithm_inputs | has_image %}
 
 
+{%- if algorithm_input_sockets | has_image %}
 def load_image_file_as_array(*, location):
     # Use SimpleITK to read a file
     input_files = glob(str(location / "*.tif")) + glob(str(location / "*.tiff")) + glob(str(location / "*.mha"))
@@ -135,9 +153,9 @@ def load_image_file_as_array(*, location):
     # Convert it to a Numpy array
     return SimpleITK.GetArrayFromImage(result)
 {%- endif %}
-{%- if phase.algorithm_outputs | has_image %}
 
 
+{%- if algorithm_output_sockets | has_image %}
 def write_array_as_image_file(*, location, array):
     location.mkdir(parents=True, exist_ok=True)
 
@@ -151,23 +169,23 @@ def write_array_as_image_file(*, location, array):
         useCompression=True,
     )
 {%- endif %}
-{%- if phase.algorithm_inputs | has_file %}
 
 
-# Note to the challenge hosts:
+{%- if algorithm_input_sockets | has_file %}
+# Note to the developer:
 #   the following function is very generic and should likely
-#   be adopted to something more specific for your challenge
+#   be adopted to something more specific for your algorithm/challenge
 def load_file(*, location):
     # Reads the content of a file
     with open(location) as f:
         return f.read()
 {%- endif %}
-{%- if phase.algorithm_outputs | has_file %}
 
 
-# Note to the challenge hosts:
+{%- if algorithm_output_sockets | has_file %}
+# Note to the developer:
 #   the following function is very generic and should likely
-#   be adopted to something more specific for your challenge
+#   be adopted to something more specific for your algorithm/challenge
 def write_file(*, location, content):
     # Write the content to a file
     with open(location, 'w') as f:

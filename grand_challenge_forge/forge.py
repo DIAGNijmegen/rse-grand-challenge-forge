@@ -70,11 +70,33 @@ def generate_upload_to_archive_script(
 ):
     context = deepcopy(context)
 
-    context["phase"]["expected_cases"] = generate_archive_cases(
-        inputs=context["phase"]["algorithm_inputs"],
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        number_of_cases=3,
+    expected_cases_per_interface = {}
+    for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
+        interface_name = f"interface_{idx}"
+        archive_cases = generate_archive_cases(
+            inputs=interface["inputs"],
+            output_zip_file=output_zip_file,
+            target_zpath=target_zpath / interface_name,
+            number_of_cases=3,
+        )
+
+        # Make cases relative to the script
+        for case in archive_cases:
+            for k, v in case.items():
+                case[k] = Path(*v.parts[1:])
+
+        expected_cases_per_interface[interface_name] = archive_cases
+
+    all_algorithm_inputs = {}
+    for interface in context["phase"]["algorithm_interfaces"]:
+        for socket in interface["inputs"]:
+            all_algorithm_inputs[socket["slug"]] = socket
+
+    context.update(
+        {
+            "all_algorithm_inputs": all_algorithm_inputs,
+            "expected_cases_per_interface": expected_cases_per_interface,
+        }
     )
 
     copy_and_render(
@@ -90,25 +112,84 @@ def generate_archive_cases(
 ):
     result = []
     for i in range(0, number_of_cases):
-        item_files = []
+        item_files = {}
         for input_socket in inputs:
-            zpath = Path(f"case_{i}") / input_socket["relative_path"]
+            # Use deep zpath to create the files
+            zpath = (
+                target_zpath
+                / Path(f"case_{i}")
+                / input_socket["relative_path"]
+            )
 
+            # Report back relative to script paths
             generate_socket_value_stub_file(
                 output_zip_file=output_zip_file,
-                target_zpath=target_zpath / zpath,
+                target_zpath=zpath,
                 socket=input_socket,
             )
 
-            item_files.append(str(zpath))
+            item_files[input_socket["slug"]] = zpath
 
         result.append(item_files)
 
     return result
 
 
+def _interface_context(interfaces):
+    # Build context
+    algorithm_input_sockets = [
+        socket for interface in interfaces for socket in interface["inputs"]
+    ]
+    algorithm_output_sockets = [
+        socket for interface in interfaces for socket in interface["outputs"]
+    ]
+
+    algorithm_interface_keys = []
+    for interface in interfaces:
+        algorithm_interface_keys.append(
+            tuple(sorted([socket["slug"] for socket in interface["inputs"]]))
+        )
+
+    interface_names = [f"interface_{idx}" for idx, _ in enumerate(interfaces)]
+
+    return {
+        "algorithm_interface_names": interface_names,
+        "algorithm_interface_keys": algorithm_interface_keys,
+        "algorithm_input_sockets": algorithm_input_sockets,
+        "algorithm_output_sockets": algorithm_output_sockets,
+    }
+
+
 def generate_example_algorithm(*, output_zip_file, target_zpath, context):
     context = deepcopy(context)
+
+    interface_names = []
+    for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
+        interface_name = f"interface_{idx}"
+        interface_names.append(interface_name)
+
+        input_zdir = target_zpath / "test" / "input" / interface_name
+        inputs = interface["inputs"]
+
+        # create inputs.json
+        output_zip_file.writestr(
+            str(input_zdir / "inputs.json"),
+            json.dumps(
+                [socket_to_socket_value(socket) for socket in inputs], indent=4
+            ),
+        )
+
+        # Create actual input files
+        for input in inputs:
+            generate_socket_value_stub_file(
+                output_zip_file=output_zip_file,
+                target_zpath=input_zdir / input["relative_path"],
+                socket=input,
+            )
+
+    context.update(
+        _interface_context(interfaces=context["phase"]["algorithm_interfaces"])
+    )
 
     copy_and_render(
         templates_dir_name="example-algorithm",
@@ -117,29 +198,43 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
         context=context,
     )
 
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": f"example-algorithm-{context['phase']['slug']}",
-            "tarball_dirname": "model",
-            "tarball_extraction_dir": "/opt/ml/model/",
-        },
-    )
-
-    # Create input files
-    input_zdir = target_zpath / "test" / "input"
-    for input_ci in context["phase"]["algorithm_inputs"]:
-        generate_socket_value_stub_file(
-            output_zip_file=output_zip_file,
-            target_zpath=input_zdir / input_ci["relative_path"],
-            socket=input_ci,
-        )
-
 
 def generate_example_evaluation(*, output_zip_file, target_zpath, context):
+    context = deepcopy(context)
+    context.update(
+        _interface_context(interfaces=context["phase"]["algorithm_interfaces"])
+    )
+
+    input_zdir = target_zpath / "test" / "input"
+
+    predictions_json = []
+    for interface in context["phase"]["algorithm_interfaces"]:
+        predictions_json.extend(
+            generate_predictions_json(
+                inputs=interface["inputs"],
+                outputs=interface["outputs"],
+                number_of_jobs=3,
+            )
+        )
+
+    output_zip_file.writestr(
+        str(input_zdir / "predictions.json"),
+        json.dumps(predictions_json, indent=4),
+    )
+
+    generate_prediction_files(
+        output_zip_file=output_zip_file,
+        target_zpath=target_zpath / "test" / "input",
+        predictions=predictions_json,
+    )
+
+    for socket in context["phase"]["evaluation_additional_inputs"]:
+        generate_socket_value_stub_file(
+            output_zip_file=output_zip_file,
+            target_zpath=input_zdir / socket["relative_path"],
+            socket=socket,
+        )
+
     copy_and_render(
         templates_dir_name="example-evaluation-method",
         output_zip_file=output_zip_file,
@@ -147,31 +242,11 @@ def generate_example_evaluation(*, output_zip_file, target_zpath, context):
         context=context,
     )
 
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": f"example-evaluation-{context['phase']['slug']}",
-            "tarball_dirname": "ground_truth",
-            "tarball_extraction_dir": "/opt/ml/input/data/ground_truth/",
-        },
-    )
 
-    generate_predictions(
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath / "test" / "input",
-        context=context,
-        number_of_jobs=3,
-    )
-
-
-def generate_predictions(
+def generate_predictions_json(
     *,
-    output_zip_file,
-    target_zpath,
-    context,
+    inputs,
+    outputs,
     number_of_jobs,
 ):
     predictions = []
@@ -180,24 +255,20 @@ def generate_predictions(
             {
                 "pk": str(uuid.uuid4()),
                 "inputs": [
-                    socket_to_socket_value(socket)
-                    for socket in context["phase"]["algorithm_inputs"]
+                    socket_to_socket_value(socket) for socket in inputs
                 ],
                 "outputs": [
-                    socket_to_socket_value(socket)
-                    for socket in context["phase"]["algorithm_outputs"]
+                    socket_to_socket_value(socket) for socket in outputs
                 ],
                 "status": "Succeeded",
                 "started_at": "2024-11-29T10:31:25.691799Z",
                 "completed_at": "2024-11-29T10:31:50.691799Z",
             }
         )
+    return predictions
 
-    output_zip_file.writestr(
-        str(target_zpath / "predictions.json"),
-        json.dumps(predictions, indent=4),
-    )
 
+def generate_prediction_files(*, output_zip_file, target_zpath, predictions):
     for prediction in predictions:
         prediction_zpath = target_zpath / prediction["pk"]
         for socket_value in prediction["outputs"]:
@@ -222,30 +293,15 @@ def generate_algorithm_template(
         "grand-challenge-forge"
     )
 
+    generate_example_algorithm(
+        context={"phase": context["algorithm"]},
+        output_zip_file=output_zip_file,
+        target_zpath=target_zpath,
+    )
+
     copy_and_render(
-        templates_dir_name="algorithm-template",
+        templates_dir_name="algorithm-template-readme",
         output_zip_file=output_zip_file,
         target_zpath=target_zpath,
         context=context,
-    )
-
-    # Create input files
-    input_dir = target_zpath / "test" / "input"
-    for input_ci in context["algorithm"]["inputs"]:
-        generate_socket_value_stub_file(
-            output_zip_file=output_zip_file,
-            target_zpath=input_dir / input_ci["relative_path"],
-            socket=input_ci,
-        )
-
-    # Add .sh files
-    copy_and_render(
-        templates_dir_name="docker-bash-scripts",
-        output_zip_file=output_zip_file,
-        target_zpath=target_zpath,
-        context={
-            "image_tag": context["algorithm"]["slug"],
-            "tarball_dirname": "model",
-            "tarball_extraction_dir": "/opt/ml/model/",
-        },
     )

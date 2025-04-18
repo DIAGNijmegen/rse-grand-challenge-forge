@@ -4,7 +4,7 @@
 set -e
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DOCKER_IMAGE_TAG="{{ image_tag }}"
+DOCKER_IMAGE_TAG="example-evaluation-{{ phase.slug }}"
 
 DOCKER_NOOP_VOLUME="${DOCKER_IMAGE_TAG}-volume"
 
@@ -31,7 +31,7 @@ cleanup() {
 }
 
 # This allows for the Docker user to read
-chmod -R -f o+rX "$INPUT_DIR" "${SCRIPT_DIR}/{{ tarball_dirname }}"
+chmod -R -f o+rX "$INPUT_DIR" "${SCRIPT_DIR}/ground_truth"
 
 if [ -d "$OUTPUT_DIR" ]; then
   # This allows for the Docker user to write
@@ -62,7 +62,7 @@ echo "=+= Doing a forward pass"
 #    enables access to any GPUs present
 # '--volume <NAME>:/tmp'
 #   is added because on Grand Challenge this directory cannot be used to store permanent files
-# '-volume ../{{ tarball_dirname }}:"{{ tarball_extraction_dir }}":ro'
+# '-volume ../ground_truth:/opt/ml/input/data/ground_truth:ro'
 #   is added to provide access to the (optional) tarball-upload locally
 docker run --rm \
     --platform=linux/amd64 \
@@ -73,7 +73,7 @@ docker run --rm \
     --volume "$INPUT_DIR":/input:ro \
     --volume "$OUTPUT_DIR":/output \
     --volume "$DOCKER_NOOP_VOLUME":/tmp \
-    --volume "${SCRIPT_DIR}/{{ tarball_dirname }}":"{{ tarball_extraction_dir }}":ro \
+    --volume "${SCRIPT_DIR}/ground_truth":/opt/ml/input/data/ground_truth:ro \
     $DOCKER_IMAGE_TAG
 
 echo "=+= Wrote results to ${OUTPUT_DIR}"
