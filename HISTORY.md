@@ -1,5 +1,16 @@
 # History
 
+## 0.7.0 (2025-04-18)
+ - Improve error reporting for evaluation methods by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/73
+ - Upgrade Python version and minor fixes by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/75
+ - Evaluation ground truth and algorithm models tar balls by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/76
+ - Add a now what section to the pack README by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/78
+ - Remove redundant permission docker run by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/77
+ - Fix escaping string example values by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/79
+ - Remove quality assurance tests that run post-generation by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/83
+ - [Breaking] Internally generate to ZipFile-handle by @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/84
+ - Templates now handle algorithm interfaces @chrisvanrun in https://github.com/DIAGNijmegen/rse-grand-challenge-forge/pull/85
+
 ## 0.6.1 (2024-10-31)
 
 - Fix not using algorithm URL correctly in README
