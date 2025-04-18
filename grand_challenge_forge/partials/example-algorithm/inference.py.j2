@@ -123,6 +123,8 @@ def {{ interface_name }}_handler():
 {% endfor %}
 
 def get_interface_key():
+    # The inputs.json is a system generated file that contains information about
+    # the inputs that interface with the algorithm
     inputs = load_json_file(
         location=INPUT_PATH / "inputs.json",
     )
