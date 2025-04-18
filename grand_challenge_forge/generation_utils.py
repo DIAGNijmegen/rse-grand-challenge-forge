@@ -106,6 +106,7 @@ def get_jinja2_environment(searchpath=None):
             followlinks=True,
         ),
         undefined=StrictUndefined,
+        keep_trailing_newline=True,
     )
     env.filters = custom_filters
     env.filters["zip"] = zip
