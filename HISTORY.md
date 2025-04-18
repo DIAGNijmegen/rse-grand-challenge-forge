@@ -1,5 +1,8 @@
 # History
 
+## 0.7.1 (2025-04-18)
+- Fix DEBUG construct causing errors in release
+
 ## 0.7.0 (2025-04-18)
  - Improve error reporting for evaluation methods
  - Upgrade Python version and minor fixes
