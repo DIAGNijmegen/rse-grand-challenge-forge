@@ -256,8 +256,7 @@ def print_inputs():
 
 def read_predictions():
     # The prediction file tells us the location of the users' predictions
-    with open(INPUT_DIRECTORY / "predictions.json") as f:
-        return json.loads(f.read())
+    return load_json_file(location = INPUT_DIRECTORY / "predictions.json")
 
 def get_interface_key(job):
     # Each interface has a unique key that is the set of socket slugs given as input
@@ -306,12 +305,10 @@ def get_file_location(*, job_pk, values, slug):
     return INPUT_DIRECTORY / job_pk / "output" / relative_path
 
 
-{%- if algorithm_output_sockets | has_json or phase.evaluation_additional_inputs | has_json %}
 def load_json_file(*, location):
     # Reads a json file
     with open(location) as f:
         return json.loads(f.read())
-{%- endif %}
 
 {%- if algorithm_output_sockets | has_image or phase.evaluation_additional_inputs | has_image%}
 def load_image_file_as_array(*, location):
@@ -333,8 +330,7 @@ def load_file(*, location):
 
 def write_metrics(*, metrics):
     # Write a json document used for ranking results on the leaderboard
-    with open(OUTPUT_DIRECTORY / "metrics.json", "w") as f:
-        f.write(json.dumps(metrics, indent=4))
+    write_json_file(location=OUTPUT_DIRECTORY / "metrics.json", content=metrics)
 
 {%- if phase.evaluation_additional_outputs | has_file %}
 def write_file(*, location, content):
@@ -359,12 +355,10 @@ def write_array_as_image_file(*, location, array):
 {%- endif %}
 
 
-{%- if phase.evaluation_additional_outputs | has_json %}
 def write_json_file(*, location, content):
     # Writes a json file
     with open(location, 'w') as f:
         f.write(json.dumps(content, indent=4))
-{%- endif %}
 
 
 if __name__ == "__main__":
