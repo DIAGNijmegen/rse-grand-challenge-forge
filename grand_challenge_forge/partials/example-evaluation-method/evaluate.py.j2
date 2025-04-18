@@ -161,6 +161,7 @@ def process(job):
 
 {% for interface_name, interface in algorithm_interface_names|zip(phase.algorithm_interfaces) -%}
 def process_{{ interface_name }}(job,
+    {% if phase.evaluation_additional_inputs %}# The submission had additional inputs: {% endif %}
     {% for socket in phase.evaluation_additional_inputs -%}
     submission_{{ socket.slug.replace("-", "_") }},
     {% endfor %}
