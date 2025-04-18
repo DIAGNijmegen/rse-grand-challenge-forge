@@ -12,7 +12,8 @@ from jinja2 import FileSystemLoader, StrictUndefined, TemplateNotFound
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from grand_challenge_forge import PARTIALS_PATH
-from tests.utils import DEBUG
+
+DEBUG = os.getenv("GRAND_CHALLENGE_FORGE_DEBUG", "false").lower() == "true"
 
 SCRIPT_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 RESOURCES_PATH = SCRIPT_PATH / "resources"

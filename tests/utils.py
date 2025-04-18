@@ -11,8 +11,6 @@ from unittest.mock import patch
 
 from grand_challenge_forge import RESOURCES_PATH
 
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-
 TEST_RESOURCES = (
     Path(os.path.dirname(os.path.realpath(__file__))) / "resources"
 )
