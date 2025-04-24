@@ -1,5 +1,8 @@
 # History
 
+## 0.7.2 (2025-04-24)
+- Fix CLI construct causing errors in release: the zipfile wrapper is not in a module that is release accessible.
+
 ## 0.7.1 (2025-04-18)
 - Fix DEBUG construct causing errors in release
 
