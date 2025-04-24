@@ -1,9 +1,6 @@
 from grand_challenge_forge.forge import generate_algorithm_template
-from tests.utils import (
-    _test_script_run,
-    algorithm_template_context_factory,
-    zipfile_to_filesystem,
-)
+from grand_challenge_forge.generation_utils import zipfile_to_filesystem
+from tests.utils import _test_script_run, algorithm_template_context_factory
 
 
 def test_for_algorithm_template_content(tmp_path, testrun_zpath):
