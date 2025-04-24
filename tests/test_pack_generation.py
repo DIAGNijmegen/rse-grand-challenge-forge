@@ -10,6 +10,7 @@ from grand_challenge_forge.forge import (
     generate_example_evaluation,
     generate_upload_to_archive_script,
 )
+from grand_challenge_forge.generation_utils import zipfile_to_filesystem
 from grand_challenge_forge.utils import (
     change_directory,
     directly_import_module,
@@ -20,7 +21,6 @@ from tests.utils import (
     mocked_binaries,
     pack_context_factory,
     phase_context_factory,
-    zipfile_to_filesystem,
 )
 
 

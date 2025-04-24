@@ -1,11 +1,8 @@
 import os
 import subprocess
-import tempfile
-import zipfile
 from collections import Counter
 from contextlib import contextmanager
 from copy import deepcopy
-from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -410,47 +407,3 @@ def mocked_binaries():
 
     with patch.dict("os.environ", PATH=extended_path):
         yield
-
-
-@contextmanager
-def zipfile_to_filesystem(output_path):
-    """Context manager that provides an in-memory zip file handle and optionally extracts its contents.
-
-    Args
-    ----
-        output_dir (str, Path): Directory to extract the zip contents to after completion.
-
-    Yields
-    ------
-        ZipFile: A ZipFile object that can be written to.
-    """
-    zip_handle = BytesIO()
-
-    with zipfile.ZipFile(zip_handle, "w") as zip_file:
-        yield zip_file
-
-    # Extract contents to disk if output_dir is specified
-    # Use a subprocess because the ZipFile.extractall does
-    # not keep permissions: https://github.com/python/cpython/issues/59999
-
-    zip_handle.seek(0)
-    os.makedirs(output_path, exist_ok=True)
-
-    temp_zip = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
-    try:
-        temp_zip.write(zip_handle.getvalue())
-        temp_zip.close()
-
-        subprocess.run(
-            [
-                "unzip",
-                "-o",
-                temp_zip.name,
-                "-d",
-                str(output_path),
-            ],
-            check=True,
-            capture_output=True,
-        )
-    finally:
-        os.remove(temp_zip.name)

@@ -12,8 +12,8 @@ from grand_challenge_forge.forge import (
     generate_algorithm_template,
     generate_challenge_pack,
 )
+from grand_challenge_forge.generation_utils import zipfile_to_filesystem
 from grand_challenge_forge.utils import truncate_with_epsilons
-from tests.utils import zipfile_to_filesystem
 
 
 # Shared options decorator
