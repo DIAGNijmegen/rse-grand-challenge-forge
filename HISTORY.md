@@ -1,5 +1,9 @@
 # History
 
+# 0.7.3 (2025-04-25)
+- Fix CLI assuming zpath was returned.
+
+
 ## 0.7.2 (2025-04-24)
 - Fix CLI construct causing errors in release: the zipfile wrapper is not in a module that is release accessible.
 
