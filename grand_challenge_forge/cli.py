@@ -81,10 +81,11 @@ def pack(output, force, contexts, verbose=0):
                     f"🏗️Started working on pack [{index + 1} of {len(contexts)}]"
                 )
                 with zipfile_to_filesystem(output_path=output_dir) as zip_file:
-                    pack_zpath = generate_challenge_pack(
-                        target_zpath=Path(
-                            f"{resolved_context['challenge']['slug']}-challenge-pack"
-                        ),
+                    pack_zpath = Path(
+                        f"{resolved_context['challenge']['slug']}-challenge-pack"
+                    )
+                    generate_challenge_pack(
+                        target_zpath=pack_zpath,
                         context=resolved_context,
                         output_zip_file=zip_file,
                     )
@@ -133,10 +134,11 @@ def algorithm(output, force, contexts, verbose):
                 )
 
                 with zipfile_to_filesystem(output_path=output_dir) as zip_file:
-                    template_zpath = generate_algorithm_template(
-                        target_zpath=Path(
-                            f"{resolved_context['algorithm']['slug']}-template"
-                        ),
+                    template_zpath = Path(
+                        f"{resolved_context['algorithm']['slug']}-template"
+                    )
+                    generate_algorithm_template(
+                        target_zpath=template_zpath,
                         context=resolved_context,
                         output_zip_file=zip_file,
                     )
