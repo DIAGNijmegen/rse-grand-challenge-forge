@@ -22,8 +22,8 @@ def test_for_algorithm_template_content(tmp_path, testrun_zpath):
         "do_build.sh",
         "do_save.sh",
         "do_test_run.sh",
-        "test/input/interface_0",
-        "test/input/interface_1",
+        "test/input/interf0",
+        "test/input/interf1",
     ]:
         assert (template_path / filename).exists()
 

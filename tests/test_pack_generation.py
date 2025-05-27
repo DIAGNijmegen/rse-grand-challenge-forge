@@ -41,11 +41,7 @@ def test_for_pack_content(tmp_path, testrun_zpath):
     for phase in context["challenge"]["phases"]:
         assert (pack_path / phase["slug"]).exists()
 
-        assert (
-            pack_path
-            / phase["slug"]
-            / f"upload-to-archive-{phase['archive']['slug']}"
-        ).exists()
+        assert (pack_path / phase["slug"] / "upload-to-archive").exists()
 
         assert (pack_path / phase["slug"] / "example-algorithm").exists()
         for idx, interface in enumerate(phase["algorithm_interfaces"]):
@@ -56,7 +52,7 @@ def test_for_pack_content(tmp_path, testrun_zpath):
                     / "example-algorithm"
                     / "test"
                     / "input"
-                    / f"interface_{idx}"
+                    / f"interf{idx}"
                     / input["relative_path"]
                 )
                 assert expected_file.exists()
@@ -152,7 +148,7 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
     for idx, interface in enumerate(
         phase_context["phase"]["algorithm_interfaces"]
     ):
-        output_dir = algorithm_path / "test" / "output" / f"interface_{idx}"
+        output_dir = algorithm_path / "test" / "output" / f"interf{idx}"
         # Check if output is generated
         for output in interface["outputs"]:
             expected_file = output_dir / output["relative_path"]
