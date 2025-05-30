@@ -1,5 +1,8 @@
 import glob
 import json
+import zipfile
+from io import BytesIO
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,6 +27,35 @@ from tests.utils import (
 )
 
 
+def test_maximum_path_length():
+    pack_context = pack_context_factory()
+    phase = pack_context["challenge"]["phases"][0]
+    # Set a long slug to test maximum path length
+    phase["slug"] = "a" * 50  # Typical max length for a slug
+    phase["algorithm_interfaces"][0]["inputs"][0]["relative_path"] = (
+        "b" * 65  # Maximum length current relative path
+    )
+    pack_context["challenge"]["phases"] = [phase]
+
+    # Windows has a maximum path length of 260 characters
+    windows_max_path_length = 260
+    typical_download_path_length = len("C:\\Users\\Username\\Downloads")
+
+    max_path_length = windows_max_path_length - typical_download_path_length
+
+    with zipfile.ZipFile(BytesIO(), "w") as zip_file:
+        generate_challenge_pack(
+            output_zip_file=zip_file,
+            target_zpath=Path("/"),
+            context=pack_context,
+        )
+
+        for file in zip_file.filelist:
+            assert (
+                len(file.filename) <= max_path_length
+            ), f"Path {file.filename} exceeds maximum characters"
+
+
 def test_for_pack_content(tmp_path, testrun_zpath):
     context = pack_context_factory()
 
@@ -41,11 +73,7 @@ def test_for_pack_content(tmp_path, testrun_zpath):
     for phase in context["challenge"]["phases"]:
         assert (pack_path / phase["slug"]).exists()
 
-        assert (
-            pack_path
-            / phase["slug"]
-            / f"upload-to-archive-{phase['archive']['slug']}"
-        ).exists()
+        assert (pack_path / phase["slug"] / "upload-to-archive").exists()
 
         assert (pack_path / phase["slug"] / "example-algorithm").exists()
         for idx, interface in enumerate(phase["algorithm_interfaces"]):
@@ -56,7 +84,7 @@ def test_for_pack_content(tmp_path, testrun_zpath):
                     / "example-algorithm"
                     / "test"
                     / "input"
-                    / f"interface_{idx}"
+                    / f"interf{idx}"
                     / input["relative_path"]
                 )
                 assert expected_file.exists()
@@ -152,7 +180,7 @@ def test_pack_example_algorithm_run(phase_context, tmp_path, testrun_zpath):
     for idx, interface in enumerate(
         phase_context["phase"]["algorithm_interfaces"]
     ):
-        output_dir = algorithm_path / "test" / "output" / f"interface_{idx}"
+        output_dir = algorithm_path / "test" / "output" / f"interf{idx}"
         # Check if output is generated
         for output in interface["outputs"]:
             expected_file = output_dir / output["relative_path"]

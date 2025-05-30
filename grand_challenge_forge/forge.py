@@ -45,8 +45,7 @@ def generate_challenge_pack(
         generate_upload_to_archive_script(
             context=phase_context,
             output_zip_file=output_zip_file,
-            target_zpath=phase_zpath
-            / f"upload-to-archive-{phase['archive']['slug']}",
+            target_zpath=phase_zpath / "upload-to-archive",
         )
 
         generate_example_algorithm(
@@ -72,7 +71,7 @@ def generate_upload_to_archive_script(
 
     expected_cases_per_interface = {}
     for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
-        interface_name = f"interface_{idx}"
+        interface_name = f"interf{idx}"
         archive_cases = generate_archive_cases(
             inputs=interface["inputs"],
             output_zip_file=output_zip_file,
@@ -116,9 +115,7 @@ def generate_archive_cases(
         for input_socket in inputs:
             # Use deep zpath to create the files
             zpath = (
-                target_zpath
-                / Path(f"case_{i}")
-                / input_socket["relative_path"]
+                target_zpath / Path(f"case{i}") / input_socket["relative_path"]
             )
 
             # Report back relative to script paths
@@ -150,7 +147,7 @@ def _interface_context(interfaces):
             tuple(sorted([socket["slug"] for socket in interface["inputs"]]))
         )
 
-    interface_names = [f"interface_{idx}" for idx, _ in enumerate(interfaces)]
+    interface_names = [f"interf{idx}" for idx, _ in enumerate(interfaces)]
 
     return {
         "algorithm_interface_names": interface_names,
@@ -165,7 +162,7 @@ def generate_example_algorithm(*, output_zip_file, target_zpath, context):
 
     interface_names = []
     for idx, interface in enumerate(context["phase"]["algorithm_interfaces"]):
-        interface_name = f"interface_{idx}"
+        interface_name = f"interf{idx}"
         interface_names.append(interface_name)
 
         input_zdir = target_zpath / "test" / "input" / interface_name
