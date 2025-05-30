@@ -1,5 +1,9 @@
 # History
 
+
+# 0.7.4 (2025-05-30)
+- Reduce the length of some paths found in rendered templates directory structures.
+
 # 0.7.3 (2025-04-25)
 - Fix CLI assuming zpath was returned.
 
