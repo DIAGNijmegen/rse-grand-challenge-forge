@@ -274,7 +274,7 @@ def get_image_name(*, values, slug):
 {%- endif %}
 
 
-{%- if algorithm_output_sockets | has_file or phase.evaluation_additional_inputs | has_file %}
+{%- if algorithm_input_sockets | has_file or phase.evaluation_additional_inputs | has_file %}
 def get_file_name(*, values, slug):
     # This tells us the user-provided name of the input file
     for value in values:
