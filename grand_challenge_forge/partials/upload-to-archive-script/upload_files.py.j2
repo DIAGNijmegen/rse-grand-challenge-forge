@@ -70,61 +70,16 @@ EXPECTED_SOCKETS = [
 ]
 
 def main():
-    pre_flight_check()
-    upload_files()
-    return 0
-
-
-def pre_flight_check():
-    # Perform a sanity-check to see if everything is in place
-    # before we start uploading files to the archive
-
-    for case in EXPECTED_CASES:
-        prepare_contents(case)
-
-
-def upload_files():
     # Uploads files to the Grand-Challenge archive
 
     client = gcapi.Client(token=API_TOKEN)
-    archive = client.archives.detail(slug=ARCHIVE_SLUG)
-    archive_api_url = archive["api_url"]
+    total_number_of_cases = len(EXPECTED_CASES)
+    for idx, case in enumerate(EXPECTED_CASES):
+        print(f"Uploading {idx+1}/{total_number_of_cases} to {ARCHIVE_SLUG}")
+        client.add_cases_to_archive(archive=ARCHIVE_SLUG, values=case)
 
-    for case in EXPECTED_CASES:
-        print(f"Uploading {case} to {archive['title']}")
+    return 0
 
-        contents = prepare_contents(case)
-        archive_item = client.archive_items.create(archive=archive_api_url, values=[])
-        client.update_archive_item(
-            archive_item_pk=archive_item["pk"],
-            values=contents,
-        )
-
-
-def prepare_contents(case):
-    contents = {}
-
-    socket_set = set(case.keys())
-    assert socket_set in EXPECTED_SOCKETS, f"The input socket set {socket_set} is unexpected and probably incorrect!"
-
-    for slug, file in case.items():
-        file_path = Path(file)
-        assert file_path.exists(), f"File {file} does not exist"
-    {% for socket in all_algorithm_inputs.values() %}
-        {% if loop.first %}if{% else %}elif{% endif %} slug == "{{ socket.slug }}":
-            {%- if socket | is_json -%}
-            contents[slug] = json.loads(file_path.read_text())
-            {%- elif socket | is_image %}
-            contents[slug] = list(file_path.rglob("*"))
-            assert contents[slug], f"No files found in {slug}"
-            {%- else -%}
-            contents[slug] = [file_path]
-            {%- endif -%}
-    {%- endfor %}
-        else:
-            raise RuntimeError(f"Unexpected socket: {key}")
-
-    return contents
 
 
 if __name__ == "__main__":
