@@ -22,6 +22,7 @@ Happy programming!
 """
 from pathlib import Path
 import json
+import torch
 {% if algorithm_input_sockets | has_image or algorithm_output_sockets | has_image -%}
 from glob import glob
 import SimpleITK
@@ -67,8 +68,16 @@ def {{ interface_name }}_handler():
     )
     {% endif -%}
     {% endfor %}
-    # Process the inputs: any way you'd like
+
+    # Process the inputs: any way you'd like, here we show-case torch
     _show_torch_cuda_info()
+
+    # Example how to set torch to use the GPU (if available)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+    model = torch.nn.Linear(10, 1).to(device)
+    input = torch.randn(1, 10).to(device)
+    output = model(input)
 
     # Some additional resources might be required, include these in one of two ways.
 
@@ -194,8 +203,6 @@ def write_file(*, location, content):
 
 
 def _show_torch_cuda_info():
-    import torch
-
     print("=+=" * 10)
     print("Collecting Torch CUDA information")
     print(f"Torch CUDA is available: {(available := torch.cuda.is_available())}")
