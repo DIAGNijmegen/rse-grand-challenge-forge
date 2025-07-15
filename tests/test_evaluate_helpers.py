@@ -25,7 +25,7 @@ from helpers import (  # noqa: E402
 )
 
 # Some of the test below, if things go wrong, can potentially deadlock.
-# So we set a maximum runtime
+# So we set a maximum runtime for all these tests
 pytestmark = pytest.mark.timeout(4)
 
 
@@ -69,6 +69,14 @@ def stop_children(process_pid, interval):
                     pass  # Not a problem
             stopped = True
         time.sleep(interval)
+
+
+def fail_on_prediction_2(p):
+    if p["pk"] == "prediction2":
+        raise RuntimeError("Simulated failure")
+    else:
+        time.sleep(10)  # Long sleep: should be cancelled/killed
+        return f"{p['pk']} result"
 
 
 def test_prediction_processing():
@@ -125,3 +133,22 @@ def test_prediction_processing_catching_killing_of_child_processes():
     finally:
         if child_stopper and child_stopper.is_alive():
             child_stopper.terminate()
+
+
+def test_prediction_processing_canceling_processes_correctly():
+    predictions = [
+        {"pk": "prediction1"},  # Should cancel this
+        {"pk": "prediction2"},  # Should fail at this
+        {"pk": "prediction3"},  # Should cancel this
+        {"pk": "prediction4"},  # Should cancel this
+    ]
+    with mock.patch("helpers.get_max_workers", lambda: 2):
+        with pytest.raises(PredictionProcessingError) as exc:
+            run_prediction_processing(
+                fn=fail_on_prediction_2,
+                predictions=predictions,
+            )
+
+        # Returning here on time is sufficient to ensure that things work as intended
+        # Sanity: check that there is indeed only
+        assert len(exc.value.predictions) == 1
