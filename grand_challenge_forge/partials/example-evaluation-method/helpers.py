@@ -20,12 +20,13 @@ def display_processing_report(succeeded, canceled, failed):
     print(f"Succeeded ({len(succeeded)}/{total}):")
     for s in succeeded or "-":
         print(f"\t{s}")
-    print(f"Canceled ({len(canceled)}/{total}):")
-    for c in canceled or "-":
-        print(f"\t{c}")
     print(f"Failed ({len(failed)}/{total}):")
     for f in failed or "-":
         print(f"\t{f}")
+    print(f"Canceled ({len(canceled)}/{total}):")
+    for c in canceled or "-":
+        print(f"\t{c}")
+
     print("")
 
 
@@ -123,42 +124,52 @@ def _start_pool_worker(fn, predictions, max_workers, results, errors):
 
 
 def _pool_worker(*, fn, predictions, max_workers, results, errors):
-    caught_exception = False
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        try:
-            # Submit the processing tasks of the predictions
-            futures = [
-                executor.submit(fn, prediction) for prediction in predictions
-            ]
-            future_to_predictions = {
-                future: item
-                for future, item in zip(futures, predictions, strict=True)
-            }
+    executor = ProcessPoolExecutor(max_workers=max_workers)
+    try:
+        # Submit the processing tasks of the predictions
+        future_to_predictions = {}
+        for p in predictions:
+            future = executor.submit(fn, p)
+            future_to_predictions[future] = p
 
-            for future in as_completed(future_to_predictions):
+        for future in as_completed(future_to_predictions):
+            try:
+                result = future.result()
+            except Exception:
+                break
+            else:
                 prediction = future_to_predictions[future]
                 prediction_pk = prediction["pk"]
+                results[prediction_pk] = result
+    finally:
+        executor.shutdown(
+            wait=False,  # Do not wait for any resources to free themselves
+            cancel_futures=True,
+        )
+        # Aggriessively terminate any child processes
+        _terminate_child_processes()
 
-                error = future.exception()
+    _collect_errors(future_to_predictions, errors)
 
-                if error:
-                    # Cannot pickle tracestacks, so format it here
-                    tb_exception = traceback.TracebackException.from_exception(
-                        error
-                    )
-                    errors[prediction_pk] = "".join(tb_exception.format())
 
-                    if not caught_exception:  # Hard stop
-                        caught_exception = True
+def _collect_errors(future_to_predictions, errors):
+    # Collect any failures that occurred during processing
+    # Workaround for https://github.com/python/cpython/issues/136655
+    # Which prevents us relying solely on as_completed to catch exceptions
+    def failed_futures():
+        for f, p in future_to_predictions.items():
+            if not f.cancelled():
+                exc = f.exception()
+                if exc is not None:
+                    yield p, exc
 
-                        executor.shutdown(wait=False, cancel_futures=True)
-                        _terminate_child_processes()
-                else:
-                    results[prediction_pk] = future.result()
+    for prediction, exc in failed_futures():
+        tb_exception = traceback.TracebackException.from_exception(exc)
 
-        finally:
-            # Be aggresive in cleaning up any left-over processes
-            _terminate_child_processes()
+        # Cannot pickle a stack trace, so we render it here
+        formatted_tb = "".join(tb_exception.format())
+        prediction_pk = prediction["pk"]
+        errors[prediction_pk] = formatted_tb
 
 
 def _terminate_child_processes():
