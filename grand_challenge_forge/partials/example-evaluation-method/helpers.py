@@ -10,7 +10,13 @@ import psutil
 
 
 class PredictionProcessingError(Exception):
-    pass
+    def __init__(
+        self,
+        predictions,
+        message="One or more errors occurred during prediction processing.",
+    ):
+        self.predictions = predictions
+        super().__init__(message)
 
 
 def display_processing_report(succeeded, canceled, failed):
@@ -101,7 +107,7 @@ def run_prediction_processing(*, fn, predictions):
                     file=sys.stderr,
                 )
 
-            raise PredictionProcessingError()
+            raise PredictionProcessingError(errors.keys())
 
         return list(results.values())
 
@@ -146,10 +152,11 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
             wait=False,  # Do not wait for any resources to free themselves
             cancel_futures=True,
         )
-        # Aggriessively terminate any child processes
-        _terminate_child_processes()
 
     _collect_errors(future_to_predictions, errors)
+
+    # Aggressively terminate any child processes
+    _terminate_child_processes()
 
 
 def _collect_errors(future_to_predictions, errors):
@@ -158,7 +165,7 @@ def _collect_errors(future_to_predictions, errors):
     # Which prevents us relying solely on as_completed to catch exceptions
     def failed_futures():
         for f, p in future_to_predictions.items():
-            if not f.cancelled():
+            if f.done():
                 exc = f.exception()
                 if exc is not None:
                     yield p, exc
