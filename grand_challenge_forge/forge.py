@@ -258,8 +258,6 @@ def generate_predictions_json(
                     socket_to_socket_value(socket) for socket in outputs
                 ],
                 "status": "Succeeded",
-                "started_at": "2024-11-29T10:31:25.691799Z",
-                "completed_at": "2024-11-29T10:31:50.691799Z",
             }
         )
     return predictions
