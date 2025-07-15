@@ -39,10 +39,10 @@ echo "==+=="
 # Create the tarbal
 echo "==+=="
 output_tarball_name="${SCRIPT_DIR}/model.tar.gz"
-echo "Creating the optional tarball as ${output_tarball_name}. This can take a while."
+echo "Creating the tarball as ${output_tarball_name}. This can take a while."
 
 echo ""
 
 tar -czf $output_tarball_name -C "${SCRIPT_DIR}/model" .
-echo "(Optional) Uploadable tarball was created as ${output_tarball_name}"
+echo "IMPORTANT: Uploadable tarball was created as ${output_tarball_name}. Please add this as seperate model to your algorithm!"
 echo "==+=="
