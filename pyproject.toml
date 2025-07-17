@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "grand-challenge-forge"
-version = "0.7.4"
+version = "0.7.5"
 description = "Generation of challenge packs"
 license = "Apache-2.0"
 authors = ["Chris van Run"]
