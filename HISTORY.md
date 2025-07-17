@@ -1,5 +1,12 @@
 # History
 
+# 0.7.5 (2025-07-17)
+- Fix major bug in error collection for evaluation methods: it no longer stalls when futures are canceled
+- Fix missing `get_file_name` if algorithm inputs include files
+- Use latest archive helper function in gcapi for upload script
+- Add tiny example of torch device GPU usage in the hope it improves overall GPU utilization
+- Remove runtime specifics from the prediction.json, these are no longer present on the platform
+- Simplify prints in `do_save.sh` to highlight tarball upload
 
 # 0.7.4 (2025-05-30)
 - Reduce the length of some paths found in rendered templates directory structures.
