@@ -16,7 +16,6 @@ def test_for_algorithm_template_content(tmp_path, testrun_zpath):
     for filename in [
         "Dockerfile",
         "README.md",
-        "resources",
         "inference.py",
         "requirements.txt",
         "do_build.sh",
