@@ -30,12 +30,7 @@ And the intermediate processing state here:
 Happy uploading!
 """
 
-from pathlib import Path
-
 import gcapi
-{% if all_algorithm_inputs.values() | has_json -%}
-import json
-{%- endif %}
 
 API_TOKEN = "REPLACE-ME-WITH-YOUR-TOKEN"
 
@@ -75,8 +70,8 @@ def main():
     client = gcapi.Client(token=API_TOKEN)
     total_number_of_cases = len(EXPECTED_CASES)
     for idx, case in enumerate(EXPECTED_CASES):
-        print(f"Uploading {idx+1}/{total_number_of_cases} to {ARCHIVE_SLUG}")
-        client.add_cases_to_archive(archive=ARCHIVE_SLUG, values=case)
+        print(f"Uploading {idx + 1}/{total_number_of_cases} to {ARCHIVE_SLUG}")
+        client.add_cases_to_archive(archive=ARCHIVE_SLUG, archive_items=[case])
 
     return 0
 

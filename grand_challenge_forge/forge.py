@@ -82,7 +82,7 @@ def generate_upload_to_archive_script(
         # Make cases relative to the script
         for case in archive_cases:
             for k, v in case.items():
-                case[k] = Path(*v.parts[1:])
+                case[k] = Path(*v.parts[3:])
 
         expected_cases_per_interface[interface_name] = archive_cases
 
@@ -119,7 +119,7 @@ def generate_archive_cases(
             )
 
             # Report back relative to script paths
-            generate_socket_value_stub_file(
+            zpath = generate_socket_value_stub_file(
                 output_zip_file=output_zip_file,
                 target_zpath=zpath,
                 socket=input_socket,
