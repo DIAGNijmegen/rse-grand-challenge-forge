@@ -23,7 +23,7 @@ click = "*"
 jsonschema = "*"
 black = "*"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "*"
 pytest-xdist = "*"
 psutil = "*"
@@ -53,21 +53,3 @@ addopts = '--strict-markers --showlocals -n auto'
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-isolated_build = True
-envlist = py310, py311
-
-[gh-actions]
-python =
-    3.10: py310
-    3.11: py311
-
-[testenv]
-allowlist_externals = poetry
-commands =
-    poetry install -v
-    poetry run pytest {posargs}
-"""
