@@ -9,8 +9,8 @@ from pathlib import Path
 
 import psutil
 
-logger = logging.getLogger("__name__")
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class PredictionProcessingError(Exception):
@@ -27,7 +27,7 @@ def log_processing_report(futures):
     total = len(futures)
     pending = 0
     running = 0
-    success = 0
+    succeeded = 0
     failed = 0
 
     for future in futures:
@@ -38,16 +38,16 @@ def log_processing_report(futures):
             if future.exception() is not None:
                 failed += 1
             else:
-                success += 1
+                succeeded += 1
         else:
             pending += 1
 
     logger.info("--- Progress Report ---")
-    logger.info(f"  Total:    {total}")
-    logger.info(f"  Pending:  {pending} ({int(pending / total * 100)}%)")
-    logger.info(f"  Running:  {running} ({int(running / total * 100)}%)")
-    logger.info(f"  Success:  {success} ({int(success / total * 100)}%)")
-    logger.info(f"  Failed:   {failed} ({int(failed / total * 100)}%)")
+    logger.info(f"  Total:     {total}")
+    logger.info(f"  Pending:   {pending} ({int(pending / total * 100)}%)")
+    logger.info(f"  Running:   {running} ({int(running / total * 100)}%)")
+    logger.info(f"  Succeeded: {succeeded} ({int(succeeded / total * 100)}%)")
+    logger.info(f"  Failed:    {failed} ({int(failed / total * 100)}%)")
     logger.info("-----------------------")
 
 
