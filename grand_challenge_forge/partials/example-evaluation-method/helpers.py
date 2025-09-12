@@ -9,10 +9,8 @@ from pathlib import Path
 
 import psutil
 
-logger = logging.getLogger(__name__)
-
-if not logger.hasHandlers():
-    logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("__name__")
+logger.setLevel(logging.INFO)
 
 
 class PredictionProcessingError(Exception):
