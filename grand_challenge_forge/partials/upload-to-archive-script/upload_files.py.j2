@@ -54,16 +54,6 @@ EXPECTED_CASES = [
 {%- endfor %}
 ]
 
-EXPECTED_SOCKETS = [
-{%- for interface in phase.algorithm_interfaces %}
-    {
-        {%- for socket in interface.inputs %}
-        "{{ socket.slug }}",
-        {% endfor %}
-    },
-{%- endfor %}
-]
-
 def main():
     # Uploads files to the Grand-Challenge archive
 
