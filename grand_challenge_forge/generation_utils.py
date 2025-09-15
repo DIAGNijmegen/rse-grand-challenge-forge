@@ -55,7 +55,7 @@ def generate_socket_value_stub_file(*, output_zip_file, target_zpath, socket):
                 indent=4,
             ),
         )
-        return
+        return target_zpath
 
     # Copy over an example
 
@@ -71,6 +71,8 @@ def generate_socket_value_stub_file(*, output_zip_file, target_zpath, socket):
         source,
         arcname=str(target_zpath),
     )
+
+    return target_zpath
 
 
 def socket_to_socket_value(socket):
