@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 import os
 import sys
@@ -7,6 +8,17 @@ from multiprocessing import Manager, Process
 from pathlib import Path
 
 import psutil
+
+logger = logging.getLogger(__name__)
+
+
+def setup_logger(level=logging.INFO):
+    # Configure root logger
+    logging.basicConfig(
+        level=level,
+        format="[%(levelname)s]%(name)s: %(message)s",
+        stream=sys.stdout,
+    )
 
 
 class PredictionProcessingError(Exception):
@@ -19,21 +31,24 @@ class PredictionProcessingError(Exception):
         super().__init__(message)
 
 
-def display_processing_report(succeeded, canceled, failed):
-    print("PROCESSING REPORT")
-    total = len(succeeded) + len(canceled) + len(failed)
+def log_processing_report(futures):
+    total = len(futures)
+    running = 0
+    succeeded = 0
 
-    print(f"Succeeded ({len(succeeded)}/{total}):")
-    for s in succeeded or "-":
-        print(f"\t{s}")
-    print(f"Failed ({len(failed)}/{total}):")
-    for f in failed or "-":
-        print(f"\t{f}")
-    print(f"Canceled ({len(canceled)}/{total}):")
-    for c in canceled or "-":
-        print(f"\t{c}")
+    for future in futures:
+        print
+        if future.running():
+            running += 1
+        elif future.done() and future.exception() is None:
+            succeeded += 1
 
-    print("")
+    report = "Progress Report:"
+    report += f" {int(succeeded / total * 100)}%"
+    if succeeded != total:
+        report += f" ( {succeeded}/{total}"
+        report += f", Running: {running} )"
+    logger.info(report)
 
 
 def get_max_workers():
@@ -94,12 +109,6 @@ def run_prediction_processing(*, fn, predictions):
         finally:
             pool_worker.terminate()
 
-        failed = set(errors.keys())
-        succeeded = set(results.keys())
-        canceled = set(p["pk"] for p in predictions) - (failed | succeeded)
-
-        display_processing_report(succeeded, canceled, failed)
-
         if errors:
             for prediction_pk, tb_str in errors.items():
                 print(
@@ -139,6 +148,7 @@ def _pool_worker(*, fn, predictions, max_workers, results, errors):
             future_to_predictions[future] = p
 
         for future in as_completed(future_to_predictions):
+            log_processing_report(futures=future_to_predictions.keys())
             try:
                 result = future.result()
             except Exception:
