@@ -47,16 +47,16 @@ import logging
 
 logger = logging.getLogger("evaluate")
 
-setup_logger(
-    # Optionally: change this to the less verbose INFO
-    level=logging.DEBUG,
-)
-
 
 INPUT_DIRECTORY = Path("/input")
 OUTPUT_DIRECTORY = Path("/output")
 
 def main():
+    setup_logger(
+        # Optionally: change this to the more verbose DEBUG
+        level=logging.INFO,
+    )
+
     log_inputs()
 
     metrics = {}
@@ -244,7 +244,7 @@ def process_{{ interface_name }}(job,
         truth = f.read()
     report += truth
 
-    logger.debug(report)
+    logger.info(report)
 
     # TODO: compare the results to your ground truth and compute some metrics
 
@@ -257,9 +257,9 @@ def process_{{ interface_name }}(job,
 
 def log_inputs():
     # Just for convenience, in the logs you can then see what files you have to work with
-    logger.debug("Input Files:")
+    logger.info("Input Files:")
     for line in tree(INPUT_DIRECTORY):
-        logger.debug(line)
+        logger.info(line)
 
 
 def read_predictions():

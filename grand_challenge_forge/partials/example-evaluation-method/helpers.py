@@ -9,7 +9,7 @@ from pathlib import Path
 
 import psutil
 
-logger = logging.getLogger("helpers")
+logger = logging.getLogger(__name__)
 
 
 def setup_logger(level=logging.INFO):
