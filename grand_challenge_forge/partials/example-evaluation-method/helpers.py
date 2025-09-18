@@ -17,6 +17,7 @@ def setup_logger(level=logging.INFO):
     logging.basicConfig(
         level=level,
         format="[%(levelname)s]%(name)s: %(message)s",
+        stream=sys.stdout,
     )
 
 
